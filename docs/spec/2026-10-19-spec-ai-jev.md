@@ -81,6 +81,8 @@ This release implements:
   and one click away, so a failing command's own words are reachable without asking the model to repeat them.
 - Links a model writes are clickable and open in the hardened preview: only http(s) is ever emitted as a link, the
   view starts under the app's header, and the header says what is previewed and closes it.
+- `Ctrl+=`, `Ctrl+-` and `Ctrl+0` zoom the window in half steps between -3 and 3; the level is saved with the window
+  bounds and restored next start.
 - Approval cards for confirm, select, input, and editor requests.
 - The spec.ai.jev logo and the Freebuff dark palette.
 

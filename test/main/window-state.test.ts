@@ -2,7 +2,15 @@
 // Copyright (c) 2026 the spec.ai.jev authors
 
 import { describe, expect, it } from "vitest";
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_HEIGHT, MIN_WIDTH, restoreBounds } from "../../src/main/window-state.ts";
+import {
+	clampZoom,
+	DEFAULT_HEIGHT,
+	DEFAULT_WIDTH,
+	MIN_HEIGHT,
+	MIN_WIDTH,
+	restoreBounds,
+	restoreZoom,
+} from "../../src/main/window-state.ts";
 
 /**
  * The window comes back where it was, unless that place is no longer a place: a rectangle off every display is an app
@@ -46,5 +54,15 @@ describe("restored window bounds", () => {
 		expect(restoreBounds({ x: 1860, y: 100, width: 900, height: 600 }, [laptop])).toMatchObject({ x: 1860 });
 		// 20 px is not something a title bar can be dragged by.
 		expect(restoreBounds({ x: 1900, y: 100, width: 900, height: 600 }, [laptop])).toEqual({ width: 900, height: 600 });
+	});
+
+	it("keeps a zoom inside Electron's own range, in half steps", () => {
+		expect(clampZoom(2.3)).toBe(2.5);
+		expect(clampZoom(-9)).toBe(-3);
+		expect(clampZoom(Number.NaN)).toBe(0);
+		expect(clampZoom("big")).toBe(0);
+		expect(restoreZoom({ zoom: 1.5 })).toBe(1.5);
+		expect(restoreZoom({})).toBe(0);
+		expect(restoreZoom(undefined)).toBe(0);
 	});
 });

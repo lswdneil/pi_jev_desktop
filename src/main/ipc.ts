@@ -28,6 +28,11 @@ import { NotRunningError } from "./supervisor.ts";
 export interface ApiDependencies {
 	readonly version: string;
 	readonly platform: string;
+	/** The window's zoom, clamped by the main process rather than trusted from the page. */
+	readonly app: {
+		zoom(): Promise<unknown>;
+		setZoom(level: number): Promise<unknown>;
+	};
 	readonly supervisor: {
 		getStatus(): unknown;
 		restart(): Promise<unknown>;
@@ -157,6 +162,12 @@ function sessionPathOf(payload: unknown): string {
 	return path;
 }
 
+function zoomLevelOf(payload: unknown): number {
+	const level = field(payload, "level");
+	if (typeof level !== "number" || !Number.isFinite(level)) throw new InvalidPayloadError("a zoom needs a number");
+	return level;
+}
+
 function workspacePathOf(payload: unknown): string {
 	const path = field(payload, "path");
 	if (typeof path !== "string" || path.trim() === "") throw new InvalidPayloadError("a workspace needs a path");
@@ -229,6 +240,8 @@ export function createApi(deps: ApiDependencies): Api {
 	const handlers: Record<InvokeChannel, (payload: unknown) => Promise<unknown>> = {
 		"app:version": async () => deps.version,
 		"app:platform": async () => deps.platform,
+		"app:zoom": async () => deps.app.zoom(),
+		"app:set-zoom": async (payload) => deps.app.setZoom(zoomLevelOf(payload)),
 		"harness:status": async () => deps.supervisor.getStatus(),
 		"harness:restart": async () => deps.supervisor.restart(),
 		"harness:stop": async () => {

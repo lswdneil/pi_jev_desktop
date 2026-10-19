@@ -30,6 +30,20 @@ export const MIN_WIDTH = 720;
 export const MIN_HEIGHT = 480;
 export const DEFAULT_WIDTH = 1180;
 export const DEFAULT_HEIGHT = 780;
+/** Electron's own bounds for zoom: three steps either way, each half a step of the log scale. */
+export const ZOOM_MIN = -3;
+export const ZOOM_MAX = 3;
+
+export function clampZoom(value: unknown): number {
+	if (typeof value !== "number" || !Number.isFinite(value)) return 0;
+	return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(value * 2) / 2));
+}
+
+/** The zoom level a window should open with. Saved beside the bounds, because both describe the same window. */
+export function restoreZoom(saved: unknown): number {
+	const record = typeof saved === "object" && saved !== null ? (saved as Record<string, unknown>) : {};
+	return clampZoom(record.zoom);
+}
 
 function finite(value: unknown): number | undefined {
 	return typeof value === "number" && Number.isFinite(value) ? value : undefined;

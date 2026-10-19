@@ -24,7 +24,7 @@ import { expectedHarness, type Harness, findHarness, launchCommand } from "./har
 import { readFilePreview, saveFile } from "./files.ts";
 import { searchProjectFiles } from "./search.ts";
 import { applicationMenu } from "./menu.ts";
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_HEIGHT, MIN_WIDTH, restoreBounds } from "./window-state.ts";
+import { clampZoom, DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_HEIGHT, MIN_WIDTH, restoreBounds, restoreZoom } from "./window-state.ts";
 import { createApi } from "./ipc.ts";
 import { isPreviewContents, PreviewPanel } from "./preview.ts";
 import { APP_ORIGIN, appPermission, contentSecurityPolicy, developmentCsp, isAllowedNavigation, windowPreferences } from "./security.ts";
@@ -318,6 +318,8 @@ const judgments = {
  * shape fixed while the panel comes and goes with the window.
  */
 const previewPanel: { current: PreviewPanel | undefined } = { current: undefined };
+/** The window the page lives in: zoom applies to it, and a replaced window becomes the current one. */
+const mainWindows: { current: BrowserWindow | undefined } = { current: undefined };
 
 /** The version the window shows and the updater compares against: this build's, not Electron's. */
 const version = appVersion({ buildRoot: __dirname, electronVersion: app.getVersion() });
@@ -347,6 +349,14 @@ const update = {
 const api = createApi({
 	version,
 	platform: process.platform,
+	app: {
+		zoom: async () => mainWindows.current?.webContents.getZoomLevel() ?? 0,
+		setZoom: async (level: number) => {
+			const next = clampZoom(level);
+			mainWindows.current?.webContents.setZoomLevel(next);
+			return next;
+		},
+	},
 	supervisor,
 	workspace,
 	sessions,
@@ -481,15 +491,19 @@ function savedWindowBounds(): unknown {
 
 function rememberWindowBounds(window: BrowserWindow): void {
 	try {
-		writeFileSync(windowStateFile(), JSON.stringify(window.getNormalBounds()));
+		writeFileSync(
+			windowStateFile(),
+			JSON.stringify({ ...window.getNormalBounds(), zoom: window.webContents.getZoomLevel() }),
+		);
 	} catch {
 		// A profile that cannot be written still has a working window; the next start just uses the default size.
 	}
 }
 
 function createWindow(log: ShellLogger): BrowserWindow {
+	const saved = savedWindowBounds();
 	const bounds = restoreBounds(
-		savedWindowBounds(),
+		saved,
 		screen.getAllDisplays().map((display) => display.workArea),
 		{ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT },
 	);
@@ -502,6 +516,8 @@ function createWindow(log: ShellLogger): BrowserWindow {
 		title: "spec.ai.jev",
 		webPreferences: windowPreferences(preloadPath),
 	});
+	mainWindows.current = window;
+	window.webContents.setZoomLevel(restoreZoom(saved));
 
 	window.once("ready-to-show", () => window.show());
 	// Written on close rather than on every move: the size a person settled on is the size they want next time.

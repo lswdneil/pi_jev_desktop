@@ -86,6 +86,7 @@ export function App(): React.JSX.Element {
 	const [quickOpen, setQuickOpen] = useState(false);
 	const [openFile, setOpenFile] = useState<{ readonly path: string; readonly nonce: number } | undefined>(undefined);
 	const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
+	const zoom = useRef(0);
 	const [modelBusy, setModelBusy] = useState(false);
 
 	const report = useCallback((message: string) => setError(message), []);
@@ -115,17 +116,44 @@ export function App(): React.JSX.Element {
 		if (view !== "conversation" && previewUrl !== undefined) closePreview();
 	}, [view, previewUrl, closePreview]);
 
-	// Ctrl+P (Cmd+P) is the one shortcut every editor shares; it toggles the quick-open list from anywhere.
+	useEffect(() => {
+		if (api === undefined) return;
+		let alive = true;
+		void api.app
+			.zoom()
+			.then((level) => {
+				if (alive) zoom.current = level;
+			})
+			.catch(() => {});
+		return () => {
+			alive = false;
+		};
+	}, [api]);
+
+	// Ctrl+P (Cmd+P) is the one shortcut every editor shares; Ctrl+= / Ctrl+- / Ctrl+0 are the ones every window has.
 	useEffect(() => {
 		const onKeyDown = (event: KeyboardEvent): void => {
-			if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "p") {
+			if (!(event.ctrlKey || event.metaKey)) return;
+			if (event.key.toLowerCase() === "p") {
 				event.preventDefault();
 				setQuickOpen((open) => !open);
+				return;
+			}
+			if (event.key === "=" || event.key === "+" || event.key === "-" || event.key === "0") {
+				if (api === undefined) return;
+				event.preventDefault();
+				const next = event.key === "0" ? 0 : event.key === "-" ? zoom.current - 0.5 : zoom.current + 0.5;
+				void api.app
+					.setZoom(next)
+					.then((level) => {
+						zoom.current = level;
+					})
+					.catch(() => {});
 			}
 		};
 		window.addEventListener("keydown", onKeyDown);
 		return () => window.removeEventListener("keydown", onKeyDown);
-	}, []);
+	}, [api]);
 
 	useEffect(() => {
 		if (api === undefined) return;

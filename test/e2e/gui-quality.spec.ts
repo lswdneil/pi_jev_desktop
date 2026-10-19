@@ -152,6 +152,35 @@ test("comes back at the size it was closed at", async () => {
 	}
 });
 
+test("zooms with Ctrl+= and remembers the level", async () => {
+	const profileDir = mkdtempSync(join(tmpdir(), "mu-e2e-zoom-"));
+	const levelOf = (app: Awaited<ReturnType<typeof launchApp>>["app"]) =>
+		app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.webContents.getZoomLevel() ?? 0);
+	const first = await launchApp({ profileDir });
+	try {
+		await completeFirstRun(first.page);
+		await first.page.keyboard.press("Control+=");
+		await first.page.keyboard.press("Control+=");
+		await expect.poll(() => levelOf(first.app)).toBe(1);
+		await first.app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.close());
+		await first.app.waitForEvent("close", { timeout: 30_000 });
+	} finally {
+		await first.close();
+	}
+
+	const second = await launchApp({ profileDir });
+	try {
+		await expect.poll(() => levelOf(second.app)).toBe(1);
+		// The shortcut is a page listener: the window has to be showing its own UI before a key can reach it.
+		await expect(second.page.getByTestId("nav-conversation")).toBeVisible();
+		await second.page.keyboard.press("Control+0");
+		await expect.poll(() => levelOf(second.app)).toBe(0);
+	} finally {
+		await second.close();
+		rmSync(profileDir, { recursive: true, force: true });
+	}
+});
+
 test("shows the judgment-native home after starting a new task", async () => {
 	const profile = await launchApp();
 	try {

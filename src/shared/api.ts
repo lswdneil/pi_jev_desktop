@@ -155,6 +155,10 @@ export interface MuApi {
 	readonly app: {
 		version(): Promise<string>;
 		platform(): Promise<string>;
+		/** The window's zoom level, in the same units `setZoom` takes. */
+		zoom(): Promise<number>;
+		/** Zoom the window; the main process clamps it and answers with what it applied. */
+		setZoom(level: number): Promise<number>;
 	};
 	readonly harness: {
 		status(): Promise<HarnessStatus>;
@@ -234,6 +238,8 @@ export interface MuApi {
 export const IPC_CHANNELS = {
 	appVersion: "app:version",
 	appPlatform: "app:platform",
+	appZoom: "app:zoom",
+	appSetZoom: "app:set-zoom",
 	harnessStatus: "harness:status",
 	harnessRestart: "harness:restart",
 	harnessStop: "harness:stop",
@@ -276,6 +282,8 @@ export const IPC_CHANNELS = {
 export const INVOKE_CHANNELS = [
 	IPC_CHANNELS.appVersion,
 	IPC_CHANNELS.appPlatform,
+	IPC_CHANNELS.appZoom,
+	IPC_CHANNELS.appSetZoom,
 	IPC_CHANNELS.harnessStatus,
 	IPC_CHANNELS.harnessRestart,
 	IPC_CHANNELS.harnessStop,

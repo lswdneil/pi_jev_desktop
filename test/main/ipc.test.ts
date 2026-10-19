@@ -20,6 +20,13 @@ function build(overrides: Partial<ApiDependencies> = {}): {
 	const dependencies: ApiDependencies = {
 		version: "0.1.0",
 		platform: "linux",
+		app: {
+			zoom: async () => 0.5,
+			setZoom: async (level) => {
+				calls.push(`set-zoom:${level}`);
+				return level;
+			},
+		},
 		supervisor: {
 			getStatus: () => ({ state: "stopped" }),
 			restart: async () => {
@@ -168,6 +175,8 @@ describe("the allow-list", () => {
 		expect([...INVOKE_CHANNELS]).toEqual([
 			"app:version",
 			"app:platform",
+			"app:zoom",
+			"app:set-zoom",
 			"harness:status",
 			"harness:restart",
 			"harness:stop",
@@ -579,6 +588,12 @@ describe("the simple ones", () => {
 		const { api } = build();
 		await expect(api.dispatch("app:version", undefined)).resolves.toEqual({ ok: true, value: "0.1.0" });
 		await expect(api.dispatch("app:platform", undefined)).resolves.toEqual({ ok: true, value: "linux" });
+		await expect(api.dispatch("app:zoom", undefined)).resolves.toEqual({ ok: true, value: 0.5 });
+		await expect(api.dispatch("app:set-zoom", { level: 1 })).resolves.toEqual({ ok: true, value: 1 });
+		await expect(api.dispatch("app:set-zoom", { level: "big" })).resolves.toMatchObject({
+			ok: false,
+			error: { code: "invalid-payload" },
+		});
 	});
 
 	it("answers with the status, before and after stopping", async () => {
