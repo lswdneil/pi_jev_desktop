@@ -17,6 +17,7 @@ This is the first vertical slice. It adds:
 - A model picker that changes the running session.
 - The conversation, tool runs, approval cards, file history, and judgment ledger.
 - A log of the questions answered in the window, since the harness keeps only the effect of an answer.
+- Images on a prompt: attach, drop or paste up to six (PNG, JPEG, WebP, GIF) and they travel with the message.
 - A file preview with an editor and a line diff; saves are hash-checked, so an edit is never written over what the
   agent changed in between.
 - The Freebuff dark palette, with the spec.ai.jev logo as the global brand mark.

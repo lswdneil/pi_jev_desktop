@@ -194,6 +194,20 @@ function runPrompt(text) {
 	finish("Hello from the fixture");
 }
 
+/**
+ * A prompt that carried images. The answer names how many arrived and what type they were, so a test can tell that the
+ * bytes crossed the bridge rather than that a chip was drawn.
+ */
+function runWithImages(text, images) {
+	emit({ type: "agent_start" });
+	emit({ type: "turn_start" });
+	emit({ type: "message_start", message: { role: "user", content: [{ type: "text", text: String(text) }] } });
+	const summary = `images: ${images.length} ${images.map((image) => image.mimeType).join(", ")}`;
+	emit({ type: "message_start", message: assistant("") });
+	emit(delta(summary));
+	finish(summary);
+}
+
 const reader = createInterface({ input: process.stdin });
 reader.on("line", (line) => {
 	let command;
@@ -270,7 +284,11 @@ reader.on("line", (line) => {
 			break;
 		case "prompt":
 			answer(command.id, "prompt", { disposition: "started" });
-			runPrompt(String(command.message ?? ""));
+			if (Array.isArray(command.images) && command.images.length > 0) {
+				runWithImages(command.message ?? "", command.images);
+			} else {
+				runPrompt(String(command.message ?? ""));
+			}
 			break;
 		case "abort":
 			answer(command.id, "abort");

@@ -9,7 +9,15 @@
  * failure carries where mu should have been, which is the only part of the message a user can act on.
  */
 
-import type { AgentEvent, HarnessStatus, ModelChoice, PromptResult, SessionSnapshot, UiAnswer } from "../shared/api.ts";
+import type {
+	AgentEvent,
+	HarnessStatus,
+	ModelChoice,
+	PromptImage,
+	PromptResult,
+	SessionSnapshot,
+	UiAnswer,
+} from "../shared/api.ts";
 import { type HistoryMessage, messageText } from "../shared/conversation.ts";
 import type { RpcSessionState } from "../shared/pi-protocol.ts";
 import type { Harness } from "./harness.ts";
@@ -99,10 +107,16 @@ export class AgentSupervisor {
 		this.setStatus({ state: "stopped" });
 	}
 
-	async prompt(message: string): Promise<PromptResult> {
+	async prompt(message: string, images: readonly PromptImage[] = []): Promise<PromptResult> {
 		const text = message.trim();
-		if (text === "") throw new Error("a prompt cannot be empty");
-		const response = await this.requireConnection().request({ type: "prompt", message: text });
+		if (text === "" && images.length === 0) throw new Error("a prompt cannot be empty");
+		const response = await this.requireConnection().request({
+			type: "prompt",
+			message: text,
+			...(images.length === 0
+				? {}
+				: { images: images.map((image) => ({ type: "image" as const, mimeType: image.mimeType, data: image.data })) }),
+		});
 		if (!response.success) throw new Error(response.error);
 		if (response.command !== "prompt") throw new Error(`the agent answered a prompt with ${response.command}`);
 		return { disposition: (response.data as { disposition: PromptResult["disposition"] }).disposition };

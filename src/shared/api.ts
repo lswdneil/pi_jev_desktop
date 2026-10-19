@@ -59,6 +59,23 @@ export interface PromptResult {
 	readonly disposition: PromptDisposition;
 }
 
+/**
+ * An image on its way into a prompt: base64 data without the `data:` prefix, and the type the model is told.
+ *
+ * Only raster formats the providers accept, and only as much as a message can carry; the bridge enforces both, because
+ * a renderer-side check is a convenience, not a boundary.
+ */
+export interface PromptImage {
+	readonly mimeType: string;
+	readonly data: string;
+}
+
+/** What the composer accepts, in one place: the page and the bridge read the same list. */
+export const PROMPT_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"] as const;
+export const MAX_PROMPT_IMAGES = 6;
+/** ~5 MB decoded, which is what the providers take for one image. */
+export const MAX_PROMPT_IMAGE_CHARS = 7_000_000;
+
 /** A loaded agent session, as the renderer needs it. */
 export interface SessionSnapshot {
 	readonly sessionId: string;
@@ -138,7 +155,7 @@ export interface MuApi {
 		/** Restart the agent after the user fixed something the failure screen pointed at. */
 		restart(): Promise<HarnessStatus>;
 		stop(): Promise<void>;
-		prompt(message: string): Promise<PromptResult>;
+		prompt(message: string, images?: readonly PromptImage[]): Promise<PromptResult>;
 		abort(): Promise<void>;
 		snapshot(): Promise<SessionSnapshot>;
 		/** The session's existing messages, so a window that opens into a running session is not blank. */

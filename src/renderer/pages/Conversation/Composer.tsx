@@ -1,10 +1,21 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 the spec.ai.jev authors
 
-import type { KeyboardEvent } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
+
+/** An image the composer holds before it is sent. `data` is base64 without the `data:` prefix. */
+export interface AttachedImage {
+	readonly id: string;
+	readonly name: string;
+	readonly mimeType: string;
+	readonly data: string;
+}
 
 export function Composer({
 	draft,
+	images,
+	onAddImages,
+	onRemoveImage,
 	onDraftChange,
 	onSend,
 	onStop,
@@ -15,6 +26,9 @@ export function Composer({
 	large = false,
 }: {
 	readonly draft: string;
+	readonly images: readonly AttachedImage[];
+	readonly onAddImages: (files: readonly File[]) => void;
+	readonly onRemoveImage: (id: string) => void;
 	readonly onDraftChange: (value: string) => void;
 	readonly onSend: () => void;
 	readonly onStop: () => void;
@@ -24,6 +38,9 @@ export function Composer({
 	readonly text: (key: string) => string;
 	readonly large?: boolean;
 }): React.JSX.Element {
+	const fileInput = useRef<HTMLInputElement | null>(null);
+	const [dragging, setDragging] = useState(false);
+
 	const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>): void => {
 		if (!event.nativeEvent.isComposing && event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
 			event.preventDefault();
@@ -31,19 +48,61 @@ export function Composer({
 		}
 	};
 
+	/** A paste of an image arrives as a file on the clipboard; text pastes into the textarea as it always did. */
+	const onPaste = (event: React.ClipboardEvent<HTMLTextAreaElement>): void => {
+		const files = [...event.clipboardData.files].filter((file) => file.type.startsWith("image/"));
+		if (files.length === 0) return;
+		event.preventDefault();
+		onAddImages(files);
+	};
+
 	return (
 		<>
-			<textarea
-				value={draft}
-				onChange={(event) => onDraftChange(event.target.value)}
-				onKeyDown={onKeyDown}
-				placeholder={text("conversation.placeholder")}
-				aria-label={text("conversation.message")}
-				rows={large ? 5 : 4}
-				className={large ? "composer-large" : undefined}
-				disabled={!running || busy}
-				data-testid="composer"
-			/>
+			<div
+				className={dragging ? "composer-drop dragging" : "composer-drop"}
+				onDragOver={(event) => {
+					if (!event.dataTransfer.types.includes("Files")) return;
+					event.preventDefault();
+					setDragging(true);
+				}}
+				onDragLeave={() => setDragging(false)}
+				onDrop={(event) => {
+					if (event.dataTransfer.files.length === 0) return;
+					event.preventDefault();
+					setDragging(false);
+					onAddImages([...event.dataTransfer.files]);
+				}}
+			>
+				<textarea
+					value={draft}
+					onChange={(event) => onDraftChange(event.target.value)}
+					onKeyDown={onKeyDown}
+					onPaste={onPaste}
+					placeholder={text("conversation.placeholder")}
+					aria-label={text("conversation.message")}
+					rows={large ? 5 : 4}
+					className={large ? "composer-large" : undefined}
+					disabled={!running || busy}
+					data-testid="composer"
+				/>
+				{dragging ? <p className="composer-hint">{text("conversation.dropImage")}</p> : null}
+			</div>
+			{images.length === 0 ? null : (
+				<ul className="attachments" data-testid="attachments">
+					{images.map((image) => (
+						<li key={image.id} className="attachment" title={image.name}>
+							<img src={`data:${image.mimeType};base64,${image.data}`} alt={image.name} />
+							<button
+								type="button"
+								aria-label={`${text("conversation.removeImage")}: ${image.name}`}
+								onClick={() => onRemoveImage(image.id)}
+							>
+								×
+							</button>
+						</li>
+					))}
+				</ul>
+			)}
 			<div className="row">
 				<button type="button" data-testid="send" onClick={onSend} disabled={!running || busy || draft.trim() === ""}>
 					{text("conversation.send")}
@@ -51,6 +110,29 @@ export function Composer({
 				<button type="button" data-testid="stop" onClick={onStop} disabled={!running}>
 					{text("conversation.stop")}
 				</button>
+				<button
+					type="button"
+					data-testid="attach"
+					className="attach"
+					onClick={() => fileInput.current?.click()}
+					disabled={!running || busy}
+					title={text("conversation.attach")}
+				>
+					+ {text("conversation.attach")}
+				</button>
+				<input
+					ref={fileInput}
+					type="file"
+					accept="image/png,image/jpeg,image/webp,image/gif"
+					multiple
+					hidden
+					data-testid="attach-input"
+					onChange={(event) => {
+						const files = [...(event.target.files ?? [])];
+						if (files.length > 0) onAddImages(files);
+						event.target.value = "";
+					}}
+				/>
 				{queued === 0 ? null : (
 					<span className="muted" data-testid="queue">
 						{text("conversation.queued")} {queued}

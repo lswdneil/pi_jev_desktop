@@ -29,8 +29,8 @@ function build(overrides: Partial<ApiDependencies> = {}): {
 			stop: async () => {
 				calls.push("stop");
 			},
-			prompt: async (message) => {
-				calls.push(`prompt:${message}`);
+			prompt: async (message, images) => {
+				calls.push(`prompt:${message}${images.length === 0 ? "" : `:+${images.length}`}`);
 				return { disposition: "started" };
 			},
 			abort: async () => {
@@ -236,6 +236,30 @@ describe("payload checks", () => {
 		const result = await api.dispatch("harness:prompt", { message: "say hello" });
 		expect(result).toEqual({ ok: true, value: { disposition: "started" } });
 		expect(calls).toEqual(["prompt:say hello"]);
+	});
+
+	it("carries images a prompt was given, and refuses what providers cannot take", async () => {
+		const { api, calls } = build();
+		const image = { mimeType: "image/png", data: "iVBORw0KGgo=" };
+
+		await expect(api.dispatch("harness:prompt", { message: "look", images: [image] })).resolves.toMatchObject({ ok: true });
+		expect(calls).toEqual(["prompt:look:+1"]);
+
+		await expect(
+			api.dispatch("harness:prompt", { message: "look", images: [{ mimeType: "image/svg+xml", data: "AAAA" }] }),
+		).resolves.toMatchObject({ ok: false, error: { code: "invalid-payload" } });
+		await expect(
+			api.dispatch("harness:prompt", { message: "look", images: [{ mimeType: "image/png", data: "not base64!" }] }),
+		).resolves.toMatchObject({ ok: false, error: { code: "invalid-payload" } });
+		await expect(
+			api.dispatch("harness:prompt", { message: "look", images: Array.from({ length: 7 }, () => image) }),
+		).resolves.toMatchObject({ ok: false, error: { code: "invalid-payload" } });
+		await expect(
+			api.dispatch("harness:prompt", {
+				message: "look",
+				images: [{ mimeType: "image/png", data: "A".repeat(7_000_001) }],
+			}),
+		).resolves.toMatchObject({ ok: false, error: { code: "invalid-payload" } });
 	});
 
 	it("only previews http and https", async () => {

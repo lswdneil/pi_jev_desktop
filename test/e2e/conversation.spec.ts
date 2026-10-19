@@ -13,6 +13,53 @@ import { completeFirstRun, launchApp } from "./helpers/app.ts";
  */
 
 test.describe("conversation", () => {
+	test("sends an attached image with the prompt", async () => {
+		const profile = await launchApp();
+		const { page } = profile;
+		try {
+			await completeFirstRun(page);
+			await expect(page.locator(".chip")).toContainText("running", { timeout: 60_000 });
+
+			// A 1x1 PNG: the fixture answers with how many images arrived and what type they were.
+			const png = Buffer.from(
+				"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+				"base64",
+			);
+			await page.locator('[data-testid="attach-input"]').setInputFiles({ name: "pixel.png", mimeType: "image/png", buffer: png });
+
+			await expect(page.locator('[data-testid="attachments"] img')).toHaveCount(1);
+			await page.locator('[data-testid="composer"]').fill("what is this");
+			await page.locator('[data-testid="send"]').click();
+
+			await expect(page.locator('.message[data-role="assistant"] .text').last()).toHaveText("images: 1 image/png", {
+				timeout: 30_000,
+			});
+			// Sent means gone: the chip and the draft both clear.
+			await expect(page.locator('[data-testid="attachments"]')).toHaveCount(0);
+			await expect(page.locator('[data-testid="composer"]')).toHaveValue("");
+		} finally {
+			await profile.close();
+		}
+	});
+
+	test("refuses a file that is not an image the providers take", async () => {
+		const profile = await launchApp();
+		const { page } = profile;
+		try {
+			await completeFirstRun(page);
+			await expect(page.locator(".chip")).toContainText("running", { timeout: 60_000 });
+
+			await page
+				.locator('[data-testid="attach-input"]')
+				.setInputFiles({ name: "notes.svg", mimeType: "image/svg+xml", buffer: Buffer.from("<svg/>") });
+
+			await expect(page.locator('[data-testid="error"]')).toContainText(/PNG, JPEG, WebP and GIF/);
+			await expect(page.locator('[data-testid="attachments"]')).toHaveCount(0);
+		} finally {
+			await profile.close();
+		}
+	});
+
 	test("shows an answer as it arrives, and stops when asked", async () => {
 		const profile = await launchApp();
 		const { page } = profile;

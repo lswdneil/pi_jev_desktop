@@ -63,7 +63,8 @@ const api: MuApi = {
 		onStatus: (listener) => subscribe<HarnessStatus>(IPC_CHANNELS.harnessStatusEvent, listener),
 		restart: () => invoke<HarnessStatus>(IPC_CHANNELS.harnessRestart),
 		stop: () => invoke<void>(IPC_CHANNELS.harnessStop),
-		prompt: (message) => invoke<PromptResult>(IPC_CHANNELS.harnessPrompt, { message }),
+		prompt: (message, images) =>
+			invoke<PromptResult>(IPC_CHANNELS.harnessPrompt, images === undefined ? { message } : { message, images }),
 		abort: () => invoke<void>(IPC_CHANNELS.harnessAbort),
 		snapshot: () => invoke<SessionSnapshot>(IPC_CHANNELS.harnessSnapshot),
 		history: () => invoke<readonly HistoryMessage[]>(IPC_CHANNELS.harnessHistory),

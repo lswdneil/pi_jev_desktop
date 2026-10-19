@@ -69,6 +69,8 @@ This release implements:
 - Recent projects with their folder path, and an `x` that forgets the shortcut without touching the folder.
 - A log of the questions answered in the window. The harness keeps only the effect of an answer, so the window is the
   one place that can show what was asked and what was said.
+- Images on a prompt: chosen, dropped or pasted, held as thumbnails, and sent with the text. The bridge takes PNG,
+  JPEG, WebP and GIF only, at most six per message and 5 MB each.
 - Approval cards for confirm, select, input, and editor requests.
 - The spec.ai.jev logo and the Freebuff dark palette.
 

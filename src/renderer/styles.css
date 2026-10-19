@@ -671,6 +671,79 @@ button:disabled {
 	margin-top: 10px;
 }
 
+.composer-drop {
+	position: relative;
+	border-radius: 10px;
+	transition: outline-color 120ms ease;
+}
+
+.composer-drop.dragging {
+	outline: 2px dashed var(--accent);
+	outline-offset: 4px;
+}
+
+.composer-hint {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	margin: 0;
+	border-radius: 10px;
+	background: color-mix(in srgb, var(--panel) 82%, transparent);
+	color: var(--accent);
+	font-size: 12px;
+	pointer-events: none;
+}
+
+.attachments {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 8px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.attachment {
+	position: relative;
+}
+
+.attachment img {
+	display: block;
+	width: 56px;
+	height: 56px;
+	object-fit: cover;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+}
+
+.attachment button {
+	position: absolute;
+	top: -7px;
+	right: -7px;
+	padding: 0 4px;
+	border-radius: 999px;
+	border-color: var(--line);
+	background: var(--panel);
+	color: var(--muted);
+	font-size: 11px;
+	line-height: 1.4;
+}
+
+.attachment button:hover {
+	color: var(--bad);
+}
+
+button.attach {
+	border-color: transparent;
+	background: transparent;
+	color: var(--muted);
+}
+
+button.attach:hover:not(:disabled) {
+	color: var(--accent);
+}
+
 .panels {
 	display: flex;
 	flex-direction: column;

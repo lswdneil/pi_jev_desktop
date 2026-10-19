@@ -11,14 +11,14 @@
  */
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import type { MuApi } from "../../../shared/api.ts";
+import { MAX_PROMPT_IMAGES, type MuApi, PROMPT_IMAGE_TYPES } from "../../../shared/api.ts";
 import { type ConversationEvent, type ConversationState, visibleMessages } from "../../../shared/conversation.ts";
 import type { ConversationStore } from "../../lib/conversation-store.ts";
 import { presentationText } from "../../../shared/presentation.ts";
 import { Markdown } from "../../lib/markdown-view.tsx";
 import { shellText } from "../../lib/shell-strings.ts";
 import { ApprovalCard } from "./ApprovalCard.tsx";
-import { Composer } from "./Composer.tsx";
+import { type AttachedImage, Composer } from "./Composer.tsx";
 
 /**
  * What the log says a person answered. The three words the card's buttons produce are codes so a language switch
@@ -47,6 +47,7 @@ export function ConversationPage({
 }): React.JSX.Element {
 	const state: ConversationState = useSyncExternalStore(store.subscribe, store.getSnapshot);
 	const [draft, setDraft] = useState("");
+	const [images, setImages] = useState<readonly AttachedImage[]>([]);
 	const [busy, setBusy] = useState(false);
 	const listRef = useRef<HTMLDivElement | null>(null);
 	const followEnd = useRef(true);
@@ -87,8 +88,14 @@ export function ConversationPage({
 		sending.current = true;
 		setBusy(true);
 		void api.harness
-			.prompt(message)
-			.then(() => setDraft(""))
+			.prompt(
+				message,
+				images.map((image) => ({ mimeType: image.mimeType, data: image.data })),
+			)
+			.then(() => {
+				setDraft("");
+				setImages([]);
+			})
 			.catch((error: unknown) => onError(error instanceof Error ? error.message : String(error)))
 			.finally(() => {
 				sending.current = false;
@@ -98,6 +105,40 @@ export function ConversationPage({
 
 	const stop = (): void => {
 		void api.harness.abort().catch((error: unknown) => onError(error instanceof Error ? error.message : String(error)));
+	};
+
+	/**
+	 * Read images into the draft. The bridge checks all of this again — this is the part that can say why on screen
+	 * before a round trip, not the part that makes it safe.
+	 */
+	const addImages = (files: readonly File[]): void => {
+		const room = MAX_PROMPT_IMAGES - images.length;
+		if (room <= 0) {
+			onError(text("conversation.imageLimit"));
+			return;
+		}
+		if (files.length > room) onError(text("conversation.imageLimit"));
+		for (const file of files.slice(0, room)) {
+			if (!(PROMPT_IMAGE_TYPES as readonly string[]).includes(file.type)) {
+				onError(text("conversation.imageType"));
+				continue;
+			}
+			if (file.size > 5 * 1024 * 1024) {
+				onError(text("conversation.imageTooLarge"));
+				continue;
+			}
+			const reader = new FileReader();
+			reader.onload = () => {
+				const result = typeof reader.result === "string" ? reader.result : "";
+				const data = result.slice(result.indexOf(",") + 1);
+				if (data === "") return;
+				const id = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+				setImages((current) =>
+					current.length >= MAX_PROMPT_IMAGES ? current : [...current, { id, name: file.name, mimeType: file.type, data }],
+				);
+			};
+			reader.readAsDataURL(file);
+		}
 	};
 
 	return (
@@ -110,6 +151,9 @@ export function ConversationPage({
 					<div className="composer-hero">
 						<Composer
 							draft={draft}
+							images={images}
+							onAddImages={addImages}
+							onRemoveImage={(id) => setImages((current) => current.filter((image) => image.id !== id))}
 							onDraftChange={setDraft}
 							onSend={send}
 							onStop={stop}
@@ -202,6 +246,9 @@ export function ConversationPage({
 			<section className="panel">
 				<Composer
 					draft={draft}
+					images={images}
+					onAddImages={addImages}
+					onRemoveImage={(id) => setImages((current) => current.filter((image) => image.id !== id))}
 					onDraftChange={setDraft}
 					onSend={send}
 					onStop={stop}

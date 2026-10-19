@@ -9,7 +9,17 @@
  * checks, and the error mapping are all testable without Electron.
  */
 
-import { type ApiFailure, type ApiResult, INVOKE_CHANNELS, type InvokeChannel, type UiAnswer } from "../shared/api.ts";
+import {
+	type ApiFailure,
+	type ApiResult,
+	INVOKE_CHANNELS,
+	type InvokeChannel,
+	MAX_PROMPT_IMAGES,
+	MAX_PROMPT_IMAGE_CHARS,
+	PROMPT_IMAGE_TYPES,
+	type PromptImage,
+	type UiAnswer,
+} from "../shared/api.ts";
 import type { SettingsChange } from "../shared/settings.ts";
 import { FileConflictError } from "./files.ts";
 import { NotRunningError } from "./supervisor.ts";
@@ -22,7 +32,7 @@ export interface ApiDependencies {
 		getStatus(): unknown;
 		restart(): Promise<unknown>;
 		stop(): Promise<void>;
-		prompt(message: string): Promise<unknown>;
+		prompt(message: string, images: readonly PromptImage[]): Promise<unknown>;
 		abort(): Promise<void>;
 		snapshot(): Promise<unknown>;
 		history(): Promise<unknown>;
@@ -82,13 +92,35 @@ class InvalidPayloadError extends Error {
 /** A prompt longer than this is not a prompt; it is a pasted file. The agent gets one either way, off the bridge. */
 const MAX_PROMPT_CHARS = 200_000;
 
-function promptOf(payload: unknown): string {
+function promptOf(payload: unknown): { message: string; images: readonly PromptImage[] } {
 	const message = field(payload, "message");
 	if (typeof message !== "string" || message.trim() === "") throw new InvalidPayloadError("a prompt needs a message");
 	if (message.length > MAX_PROMPT_CHARS) {
 		throw new InvalidPayloadError(`a prompt may be at most ${MAX_PROMPT_CHARS} characters`);
 	}
-	return message;
+	return { message, images: imagesOf(field(payload, "images")) };
+}
+
+/**
+ * The images a prompt carries. The renderer already refuses what it cannot read, but this is the boundary: a type the
+ * providers accept, base64 data with no `data:` prefix, and a bounded number and size.
+ */
+function imagesOf(value: unknown): readonly PromptImage[] {
+	if (value === undefined) return [];
+	if (!Array.isArray(value)) throw new InvalidPayloadError("images must be a list");
+	if (value.length > MAX_PROMPT_IMAGES) throw new InvalidPayloadError(`a prompt may carry at most ${MAX_PROMPT_IMAGES} images`);
+	return value.map((entry) => {
+		const mimeType = field(entry, "mimeType");
+		const data = field(entry, "data");
+		if (typeof mimeType !== "string" || !(PROMPT_IMAGE_TYPES as readonly string[]).includes(mimeType)) {
+			throw new InvalidPayloadError(`an image must be one of ${PROMPT_IMAGE_TYPES.join(", ")}`);
+		}
+		if (typeof data !== "string" || data === "" || data.length > MAX_PROMPT_IMAGE_CHARS) {
+			throw new InvalidPayloadError("an image must carry base64 data within the size limit");
+		}
+		if (!/^[A-Za-z0-9+/=\r\n]+$/.test(data)) throw new InvalidPayloadError("an image must carry base64 data");
+		return { mimeType, data };
+	});
 }
 
 function urlOf(payload: unknown): string {
@@ -193,7 +225,10 @@ export function createApi(deps: ApiDependencies): Api {
 			await deps.supervisor.stop();
 			return deps.supervisor.getStatus();
 		},
-		"harness:prompt": async (payload) => deps.supervisor.prompt(promptOf(payload)),
+		"harness:prompt": async (payload) => {
+			const prompt = promptOf(payload);
+			return deps.supervisor.prompt(prompt.message, prompt.images);
+		},
 		"harness:abort": async () => {
 			await deps.supervisor.abort();
 			return undefined;
