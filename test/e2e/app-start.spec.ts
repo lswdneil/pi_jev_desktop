@@ -192,7 +192,7 @@ test.describe("the security baseline", () => {
 			const workspaceMethods = await page.evaluate(() => Object.keys(window.mu.workspace).sort());
 			expect(workspaceMethods).toEqual(["choose", "current", "open", "readFile", "saveFile", "searchFiles"]);
 			const sessionMethods = await page.evaluate(() => Object.keys(window.mu.sessions).sort());
-			expect(sessionMethods).toEqual(["list", "listAll", "open", "openAcross", "rename"]);
+			expect(sessionMethods).toEqual(["list", "listAll", "open", "openAcross", "remove", "rename"]);
 
 			// There is no generic sender: a page cannot name a channel of its own.
 			const generic = await page.evaluate(() =>
