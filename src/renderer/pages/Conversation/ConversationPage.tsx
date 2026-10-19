@@ -129,7 +129,7 @@ export function ConversationPage({
 				{visible.map((message) =>
 					message.tool === undefined ? (
 						<article key={message.id} className={`message message-${message.role}`} data-role={message.role}>
-							<span className="who">{message.role}</span>
+							<span className="who">{text(`role.${message.role}`)}</span>
 							<div className="text">
 								<Markdown text={message.text} />
 							</div>
