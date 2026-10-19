@@ -11,3 +11,10 @@ test-results/
 # ran it.
 shell-metrics.json
 render-probes.json
+
+# The packaged mu runtime, staged by `npm run stage:harness`. It is a built package of ~34 MB, not source; the release
+# pipeline stages it from a mu build, and a checkout stays without it.
+resources/harness/mu-agent/
+
+# Installer output.
+dist/
