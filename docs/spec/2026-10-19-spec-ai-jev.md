@@ -75,6 +75,8 @@ This release implements:
   keeps appending to a file that no longer exists.
 - Quick open (Ctrl+P) over the project's own files, ranked by name, with `node_modules`, build output and the staged
   runtime skipped. The file it opens lands in the Files panel, through the same read and edit path.
+- The window reopens at the size and place it was closed at, unless that rectangle no longer touches a display, in
+  which case it keeps the size and lets the platform place it.
 - Approval cards for confirm, select, input, and editor requests.
 - The spec.ai.jev logo and the Freebuff dark palette.
 

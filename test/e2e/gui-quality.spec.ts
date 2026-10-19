@@ -127,6 +127,31 @@ test("quick open finds a project file and opens it in the Files panel", async ()
 	}
 });
 
+test("comes back at the size it was closed at", async () => {
+	const profileDir = mkdtempSync(join(tmpdir(), "mu-e2e-window-"));
+	const first = await launchApp({ profileDir });
+	try {
+		await completeFirstRun(first.page);
+		await first.app.evaluate(({ BrowserWindow }) => {
+			BrowserWindow.getAllWindows()[0]?.setBounds({ x: 60, y: 40, width: 980, height: 700 });
+		});
+		// Closing the window is the moment the shell records where it was; the app exits with it.
+		await first.app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.close());
+		await first.app.waitForEvent("close", { timeout: 30_000 });
+	} finally {
+		await first.close();
+	}
+
+	const second = await launchApp({ profileDir });
+	try {
+		const bounds = await second.app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.getBounds());
+		expect(bounds).toMatchObject({ width: 980, height: 700 });
+	} finally {
+		await second.close();
+		rmSync(profileDir, { recursive: true, force: true });
+	}
+});
+
 test("shows the judgment-native home after starting a new task", async () => {
 	const profile = await launchApp();
 	try {

@@ -10,11 +10,11 @@
  * to. The policy is then set on every response the scheme handler produces, so a document cannot exist without it.
  */
 
-import { existsSync, rmSync, statSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
-import { BrowserWindow, Menu, app, dialog, ipcMain, protocol, session } from "electron";
+import { BrowserWindow, Menu, app, dialog, ipcMain, protocol, screen, session } from "electron";
 import { IPC_CHANNELS, type JudgmentRecord } from "../shared/api.ts";
 import { artifactUrl } from "../shared/update.ts";
 import { APP_SCHEME, resolveAppRequest } from "./app-protocol.ts";
@@ -24,6 +24,7 @@ import { expectedHarness, type Harness, findHarness, launchCommand } from "./har
 import { readFilePreview, saveFile } from "./files.ts";
 import { searchProjectFiles } from "./search.ts";
 import { applicationMenu } from "./menu.ts";
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_HEIGHT, MIN_WIDTH, restoreBounds } from "./window-state.ts";
 import { createApi } from "./ipc.ts";
 import { isPreviewContents, PreviewPanel } from "./preview.ts";
 import { APP_ORIGIN, appPermission, contentSecurityPolicy, developmentCsp, isAllowedNavigation, windowPreferences } from "./security.ts";
@@ -465,12 +466,37 @@ const logFile = shellLogPath(agentDir);
  */
 let rendererRecoveries = 0;
 
+/** The window's last size and place, in the profile's own folder; a window that cannot read it opens at the default. */
+function windowStateFile(): string {
+	return join(app.getPath("userData"), "window-state.json");
+}
+
+function savedWindowBounds(): unknown {
+	try {
+		return JSON.parse(readFileSync(windowStateFile(), "utf8")) as unknown;
+	} catch {
+		return undefined;
+	}
+}
+
+function rememberWindowBounds(window: BrowserWindow): void {
+	try {
+		writeFileSync(windowStateFile(), JSON.stringify(window.getNormalBounds()));
+	} catch {
+		// A profile that cannot be written still has a working window; the next start just uses the default size.
+	}
+}
+
 function createWindow(log: ShellLogger): BrowserWindow {
+	const bounds = restoreBounds(
+		savedWindowBounds(),
+		screen.getAllDisplays().map((display) => display.workArea),
+		{ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT },
+	);
 	const window = new BrowserWindow({
-		width: 1180,
-		height: 780,
-		minWidth: 720,
-		minHeight: 480,
+		...bounds,
+		minWidth: MIN_WIDTH,
+		minHeight: MIN_HEIGHT,
 		show: false,
 		backgroundColor: "#101014",
 		title: "spec.ai.jev",
@@ -478,6 +504,8 @@ function createWindow(log: ShellLogger): BrowserWindow {
 	});
 
 	window.once("ready-to-show", () => window.show());
+	// Written on close rather than on every move: the size a person settled on is the size they want next time.
+	window.on("close", () => rememberWindowBounds(window));
 	// Nothing opens a second window: a link either stays inside the app or does not open.
 	window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
 	window.webContents.on("will-navigate", (event, url) => {

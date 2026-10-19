@@ -44,12 +44,15 @@ export async function launchApp(
 	options: {
 		readonly harness?: HarnessChoice;
 		readonly env?: Readonly<Record<string, string>>;
+		/** Reuse a browser profile across launches: the place the window state and the language live. */
+		readonly profileDir?: string;
 		/** Writes into the temporary home before the app starts: models.json, a key file, a session. */
 		readonly prepareHome?: (home: string) => void;
 	} = {},
 ): Promise<Profile> {
 	const home = mkdtempSync(join(tmpdir(), "mu-e2e-home-"));
-	const profile = mkdtempSync(join(tmpdir(), "mu-e2e-profile-"));
+	const profile = options.profileDir ?? mkdtempSync(join(tmpdir(), "mu-e2e-profile-"));
+	const ownsProfile = options.profileDir === undefined;
 	const harness = options.harness ?? "fixture";
 	const checkoutRoot = process.env.PI_JEV_HARNESS?.trim() || undefined;
 	const muRoot =
@@ -117,7 +120,7 @@ export async function launchApp(
 				// already gone
 			} finally {
 				rmSync(home, { recursive: true, force: true });
-				rmSync(profile, { recursive: true, force: true });
+				if (ownsProfile) rmSync(profile, { recursive: true, force: true });
 			}
 		},
 	};
