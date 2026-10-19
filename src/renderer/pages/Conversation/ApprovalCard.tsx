@@ -24,17 +24,19 @@ export function ApprovalCard({
 	readonly api: MuApi;
 	readonly onError: (message: string) => void;
 	/** The answer travels out, not in: the card takes itself down once the harness has it. */
-	readonly onAnswered: (id: string) => void;
+	readonly onAnswered: (approval: PendingApproval, answer: string) => void;
 	readonly text: (key: string) => string;
 }): React.JSX.Element {
 	const [answerText, setAnswerText] = useState("");
 	const [sending, setSending] = useState(false);
 
 	const answer = (body: { value?: string; confirmed?: boolean; cancelled?: true }): void => {
+		// The label is what the session log keeps: the harness only keeps the effect of the answer.
+		const label = body.cancelled === true ? "cancelled" : body.confirmed === true ? "allowed" : body.confirmed === false ? "denied" : (body.value ?? "");
 		setSending(true);
 		void api.harness
 			.respond({ id: approval.id, ...body })
-			.then(() => onAnswered(approval.id))
+			.then(() => onAnswered(approval, label))
 			.catch((error: unknown) => onError(error instanceof Error ? error.message : String(error)))
 			.finally(() => setSending(false));
 	};

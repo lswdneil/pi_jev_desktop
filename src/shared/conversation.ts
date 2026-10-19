@@ -51,6 +51,23 @@ export interface ChangedFile {
 	readonly at: number;
 }
 
+/**
+ * A question the agent asked and the person answered.
+ *
+ * The harness keeps the answer only as the effect it had (a tool ran or did not), so the window is the one place that
+ * can say what was asked and what was said. It lasts as long as the window's session does, which is why it is a log
+ * beside the conversation rather than a claim about the session file.
+ */
+export interface AnsweredApproval {
+	readonly id: string;
+	readonly title: string;
+	readonly method: PendingApproval["method"];
+	readonly message: string | undefined;
+	/** `allowed`, `denied`, `cancelled`, or the text that was typed. */
+	readonly answer: string;
+	readonly at: number;
+}
+
 export interface BoardState {
 	readonly turn: number;
 	/** What the agent is doing right now, in one line: the running tool, or "thinking". */
@@ -64,6 +81,8 @@ export interface ConversationState {
 	/** The assistant message being written, kept apart so a delta does not copy the message list. */
 	readonly streaming: { readonly id: string; readonly text: string } | undefined;
 	readonly approval: PendingApproval | undefined;
+	/** Every question answered in this window, oldest first. */
+	readonly decisions: readonly AnsweredApproval[];
 	readonly running: boolean;
 	readonly queue: { readonly steering: number; readonly followUp: number };
 	readonly files: readonly ChangedFile[];
@@ -86,6 +105,7 @@ export interface ConversationState {
 const MAX_STEPS = 40;
 const MAX_FILES = 200;
 const MAX_NOTICES = 30;
+const MAX_DECISIONS = 50;
 
 /** How many messages stay mounted. Older ones are history the panels summarise, not rows to scroll through. */
 export const VISIBLE_MESSAGES = 200;
@@ -107,6 +127,7 @@ export function initialConversation(): ConversationState {
 		messages: [],
 		streaming: undefined,
 		approval: undefined,
+		decisions: [],
 		running: false,
 		queue: { steering: 0, followUp: 0 },
 		files: [],
@@ -352,6 +373,24 @@ export function reduceConversation(state: ConversationState, event: Conversation
 
 function bump(state: ConversationState, next: Omit<ConversationState, "revision">): ConversationState {
 	return { ...next, revision: state.revision + 1 };
+}
+
+/** Keep what was asked and what was said, because the answer's only other trace is a tool that did or did not run. */
+export function recordDecision(
+	state: ConversationState,
+	approval: PendingApproval,
+	answer: string,
+	at: number,
+): ConversationState {
+	const decision: AnsweredApproval = {
+		id: approval.id,
+		title: approval.title,
+		method: approval.method,
+		message: approval.message,
+		answer,
+		at,
+	};
+	return bump(state, { ...state, decisions: [...state.decisions, decision].slice(-MAX_DECISIONS) });
 }
 
 /** Fold a batch, which is what a subscriber replaying buffered events wants. */

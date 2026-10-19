@@ -43,6 +43,10 @@ const STRINGS: Readonly<Record<ShellLanguage, ShellStrings>> = {
 		"approval.cancel": "Cancel",
 		"approval.send": "Send",
 		"approval.placeholder": "Type your answer",
+		"decision.log": "Decisions this session",
+		"decision.allowed": "Allowed",
+		"decision.denied": "Denied",
+		"decision.cancelled": "Cancelled",
 		"conversation.eyebrow": "A judgment-native agent workspace",
 		"conversation.hero": "What are we building?",
 		"conversation.heroBody":
@@ -160,6 +164,10 @@ const STRINGS: Readonly<Record<ShellLanguage, ShellStrings>> = {
 		"approval.cancel": "取消",
 		"approval.send": "提交",
 		"approval.placeholder": "输入你的回答",
+		"decision.log": "本次会话的决定",
+		"decision.allowed": "已允许",
+		"decision.denied": "已拒绝",
+		"decision.cancelled": "已取消",
 		"conversation.eyebrow": "判断过程可见的 Agent 工作台",
 		"conversation.hero": "我们在构建什么？",
 		"conversation.heroBody":
@@ -275,6 +283,10 @@ const STRINGS: Readonly<Record<ShellLanguage, ShellStrings>> = {
 		"approval.cancel": "取消",
 		"approval.send": "送出",
 		"approval.placeholder": "輸入你的回答",
+		"decision.log": "本次工作階段的決定",
+		"decision.allowed": "已允許",
+		"decision.denied": "已拒絕",
+		"decision.cancelled": "已取消",
 		"conversation.eyebrow": "判斷過程可見的 Agent 工作台",
 		"conversation.hero": "我們在構建什麼？",
 		"conversation.heroBody":

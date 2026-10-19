@@ -14,7 +14,9 @@ import {
 	type ConversationEvent,
 	type ConversationState,
 	type HistoryMessage,
+	type PendingApproval,
 	initialConversation,
+	recordDecision,
 	reduceAll,
 	seedConversation,
 } from "../../shared/conversation.ts";
@@ -37,6 +39,12 @@ export class ConversationStore {
 
 	readonly getSnapshot = (): ConversationState => this.state;
 	readonly getEpoch = (): number => this.epoch;
+
+	/** Remember a question the person answered. The card leaves the screen; this keeps it in the session's log. */
+	answer(approval: PendingApproval, answer: string): void {
+		this.state = recordDecision(this.state, approval, answer, Date.now());
+		for (const listener of this.listeners) listener();
+	}
 
 	/** Buffer an event and schedule one fold per frame. */
 	push(event: ConversationEvent): void {

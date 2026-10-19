@@ -13,8 +13,10 @@ This is the first vertical slice. It adds:
 - Recent-project shortcuts for returning to a workspace without reopening the folder dialog.
 - A session rail with the current session, saved sessions, search, rename, and model; selecting a saved session switches the live agent.
 - Sessions from other projects in the same rail; opening one moves the agent to that project first.
+- Recent-project rows with their folder, and a way to forget a shortcut.
 - A model picker that changes the running session.
 - The conversation, tool runs, approval cards, file history, and judgment ledger.
+- A log of the questions answered in the window, since the harness keeps only the effect of an answer.
 - A file preview with an editor and a line diff; saves are hash-checked, so an edit is never written over what the
   agent changed in between.
 - The Freebuff dark palette, with the spec.ai.jev logo as the global brand mark.

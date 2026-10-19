@@ -66,6 +66,9 @@ This release implements:
 - A judgment drawer that shows what a ledger record carries (spec, mode, provider, time, source, request, id).
 - Sessions from other projects in the rail: opening one moves the agent to that project's folder first, then switches
   to the session, so a conversation never comes back inside the wrong workspace.
+- Recent projects with their folder path, and an `x` that forgets the shortcut without touching the folder.
+- A log of the questions answered in the window. The harness keeps only the effect of an answer, so the window is the
+  one place that can show what was asked and what was said.
 - Approval cards for confirm, select, input, and editor requests.
 - The spec.ai.jev logo and the Freebuff dark palette.
 
@@ -149,6 +152,4 @@ These require their own specs and acceptance tests.
 
 ## Next slices
 
-1. Project list with metadata, search, and removal.
-2. Approval history for a session (the judgment drawer is done).
-3. Installer, signing key, and update verification.
+1. Installer, signing key, and update verification.

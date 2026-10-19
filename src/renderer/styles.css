@@ -828,6 +828,32 @@ select:focus {
 	margin: 0 0 4px;
 }
 
+.decisions-log summary {
+	cursor: pointer;
+	color: var(--muted);
+	font-size: 12px;
+}
+
+.decisions-log summary:hover {
+	color: var(--text);
+}
+
+.decisions-log ul {
+	margin: 8px 0 0;
+	padding-left: 16px;
+	font-size: 12px;
+}
+
+.decisions-log li {
+	margin: 0 0 6px;
+	overflow-wrap: anywhere;
+}
+
+.decision-answer {
+	color: var(--accent);
+	font-weight: 600;
+}
+
 .steps,
 .files,
 .judgments,

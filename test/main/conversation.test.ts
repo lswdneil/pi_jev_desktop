@@ -3,9 +3,11 @@
 
 import { describe, expect, it } from "vitest";
 import {
+	type PendingApproval,
 	type ConversationEvent,
 	type ConversationState,
 	initialConversation,
+	recordDecision,
 	reduceAll,
 	reduceConversation,
 	seedConversation,
@@ -360,5 +362,48 @@ describe("the protocol growing", () => {
 		expect(state.notices[0]?.event.params).toEqual({ url: "https://x.test" });
 		// A notice with a code is a line, not a question.
 		expect(state.approval).toBeUndefined();
+	});
+
+	it("keeps the question and the answer the harness does not store", () => {
+		const approval: PendingApproval = {
+			id: "ui-danger",
+			method: "confirm",
+			title: "Run rm -rf build?",
+			message: "This deletes the build folder.",
+			options: undefined,
+			placeholder: undefined,
+		};
+
+		const answered = recordDecision(initialConversation(), approval, "denied", 1_700_000_000_000);
+
+		expect(answered.decisions).toEqual([
+			{
+				id: "ui-danger",
+				title: "Run rm -rf build?",
+				method: "confirm",
+				message: "This deletes the build folder.",
+				answer: "denied",
+				at: 1_700_000_000_000,
+			},
+		]);
+		expect(answered.revision).toBe(1);
+	});
+
+	it("keeps the newest decisions when the log is full", () => {
+		const approval: PendingApproval = {
+			id: "ui",
+			method: "input",
+			title: "Which branch?",
+			message: undefined,
+			options: undefined,
+			placeholder: "main",
+		};
+		let state = initialConversation();
+		for (let index = 0; index < 60; index++) {
+			state = recordDecision(state, { ...approval, id: `ui-${index}` }, "main", index);
+		}
+		expect(state.decisions).toHaveLength(50);
+		expect(state.decisions[0]?.id).toBe("ui-10");
+		expect(state.decisions.at(-1)?.id).toBe("ui-59");
 	});
 });

@@ -36,6 +36,12 @@ test.describe("approvals", () => {
 			await expect(page.locator('[data-testid="approval"]')).toHaveCount(0);
 			await expect(page.locator('.message[data-role="tool"].tool-error')).toHaveCount(1);
 			await expect(page.locator(".chip")).toContainText("running");
+
+			// The harness keeps only the effect of the answer; the window keeps what was asked and what was said.
+			const log = page.locator('[data-testid="decisions-log"]');
+			await log.locator("summary").click();
+			await expect(log).toContainText("Denied");
+			await expect(log).toContainText("Run rm -rf build?");
 		} finally {
 			await profile.close();
 		}

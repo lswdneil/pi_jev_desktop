@@ -20,7 +20,16 @@ import { shellText } from "../../lib/shell-strings.ts";
 import { ApprovalCard } from "./ApprovalCard.tsx";
 import { Composer } from "./Composer.tsx";
 
-/** How many messages stay mounted. Older ones are history the panels summarise, not rows to scroll through. */
+/**
+ * What the log says a person answered. The three words the card's buttons produce are codes so a language switch
+ * re-renders them; anything else is text someone typed, shown as they typed it.
+ */
+function answerText(answer: string, text: (key: string) => string): string {
+	return answer === "allowed" || answer === "denied" || answer === "cancelled"
+		? text(`decision.${answer}`)
+		: `"${answer}"`;
+}
+
 export function ConversationPage({
 	api,
 	store,
@@ -156,7 +165,10 @@ export function ConversationPage({
 					api={api}
 					onError={onError}
 					text={text}
-					onAnswered={(id) => store.push({ type: "extension_ui_response", id } as unknown as ConversationEvent)}
+					onAnswered={(approval, answer) => {
+						store.answer(approval, answer);
+						store.push({ type: "extension_ui_response", id: approval.id } as unknown as ConversationEvent);
+					}}
 				/>
 			)}
 
@@ -168,6 +180,23 @@ export function ConversationPage({
 						</p>
 					))}
 				</section>
+			)}
+
+			{state.decisions.length === 0 ? null : (
+				<details className="panel decisions-log" data-testid="decisions-log">
+					<summary>
+						{text("decision.log")} ({state.decisions.length})
+					</summary>
+					<ul>
+						{state.decisions.map((decision, index) => (
+							<li key={`${decision.id}-${index}`} data-decision={decision.answer}>
+								<span className="decision-answer">{answerText(decision.answer, text)}</span>{" "}
+								<span>{decision.title}</span>
+								{decision.message === undefined ? null : <div className="muted">{decision.message}</div>}
+							</li>
+						))}
+					</ul>
+				</details>
 			)}
 
 			<section className="panel">
