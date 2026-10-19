@@ -107,6 +107,14 @@ test.describe("panels", () => {
 			await expect(page.locator('[data-judgment="ledger-1"]')).toContainText("active");
 			await expect(page.locator('[data-judgment="ledger-2"]')).toContainText("tool.admission");
 			await expect(page.locator('[data-judgment="ledger-2"]')).toContainText("shadow");
+
+			// A row opens what the record actually carries: the id, the mode, the provider and its request.
+			await page.locator('[data-judgment="ledger-1"] button').click();
+			const detail = page.locator('[data-testid="judgment-detail"]');
+			await expect(detail).toContainText("turn.continue");
+			await expect(detail).toContainText("active");
+			await expect(detail).toContainText("ledger-1");
+			await expect(page.locator('[data-testid="judgment-copy"]')).toBeVisible();
 		} finally {
 			await profile.close();
 		}

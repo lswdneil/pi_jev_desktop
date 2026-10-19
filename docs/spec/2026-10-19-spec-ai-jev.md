@@ -61,7 +61,9 @@ This release implements:
 - A model picker backed by `get_available_models` / `set_model`.
 - Conversation streaming, stop, new session, and history restoration.
 - Tool execution rows, file changes, and the judgment ledger.
-- Read-only file preview for paths inside the selected workspace.
+- A file preview with a line editor and a diff of the pending change. Saves are refused when the file changed on
+  disk since it was read, and files outside the workspace, binaries and files past 1 MB stay read-only.
+- A judgment drawer that shows what a ledger record carries (spec, mode, provider, time, source, request, id).
 - Approval cards for confirm, select, input, and editor requests.
 - The spec.ai.jev logo and the Freebuff dark palette.
 
@@ -138,7 +140,6 @@ The logo is the supplied spec.ai.jev infinity mark. It is used in the rail and a
 ## Non-goals for this slice
 
 - Cross-project session history and search.
-- File editor and diff viewer.
 - Remote sessions and team collaboration.
 - Signed installer and update installation.
 - Full migration from the frozen `mu/desktop` AionUi profile.
@@ -149,6 +150,5 @@ These require their own specs and acceptance tests.
 
 1. Cross-project session history and archived-session management.
 2. Project list with metadata, search, and removal.
-3. Approval history and a judgment detail drawer.
-4. File diff, editor, and save.
-5. Installer, signing key, and update verification.
+3. Approval history for a session (the judgment drawer is done).
+4. Installer, signing key, and update verification.

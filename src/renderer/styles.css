@@ -941,6 +941,63 @@ select:focus {
 	user-select: none;
 }
 
+.judgment-row {
+	display: block;
+	width: 100%;
+	padding: 6px 8px;
+	border: 1px solid transparent;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	text-align: left;
+	overflow-wrap: anywhere;
+}
+
+.judgment-row:hover {
+	background: var(--surface-hover);
+}
+
+.judgment-row.active {
+	border-color: var(--accent);
+	background: var(--panel-2);
+}
+
+.judgment-message {
+	display: block;
+	margin-top: 2px;
+}
+
+.judgment-detail {
+	margin: 6px 0 10px;
+	padding: 8px 10px;
+	border-left: 2px solid var(--accent);
+	border-radius: 0 8px 8px 0;
+	background: var(--panel-2);
+	font-size: 12px;
+}
+
+.judgment-detail dt {
+	color: var(--muted);
+	font-size: 11px;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.judgment-detail dd {
+	margin: 2px 0 8px;
+	overflow-wrap: anywhere;
+}
+
+.judgment-detail dd:last-child {
+	margin-bottom: 0;
+}
+
+.judgment-detail button {
+	padding: 2px 6px;
+	font-size: 11px;
+}
+
 .option {
 	display: grid;
 	grid-template-columns: minmax(140px, 1fr) minmax(0, 1.2fr);

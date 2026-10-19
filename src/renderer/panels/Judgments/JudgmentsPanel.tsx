@@ -23,6 +23,8 @@ export function JudgmentsPanel({
 }): React.JSX.Element {
 	const [records, setRecords] = useState<readonly JudgmentRecord[]>([]);
 	const [error, setError] = useState("");
+	const [selected, setSelected] = useState<string | undefined>(undefined);
+	const [copied, setCopied] = useState(false);
 
 	const load = useCallback(() => {
 		void api.judgments
@@ -41,6 +43,7 @@ export function JudgmentsPanel({
 	}, [load]);
 
 	const newest = records.slice().reverse().slice(0, 30);
+	const detail = newest.find((record) => record.id === selected);
 	return (
 		<section className="panel" data-testid="judgments-panel">
 			<h2>{text("panel.judgments")}</h2>
@@ -55,10 +58,64 @@ export function JudgmentsPanel({
 					<ul className="judgments">
 						{newest.map((record) => (
 							<li key={record.id} data-judgment={record.id}>
-								<code>{record.specId}</code>{" "}
-								<span className={`chip chip-${record.mode === "active" ? "running" : "stopped"}`}>{record.mode}</span>{" "}
-								<span className="muted">{record.providerId}</span>
-								{record.userMessage === undefined ? null : <div className="muted">{record.userMessage}</div>}
+								<button
+									type="button"
+									className={`judgment-row${record.id === selected ? " active" : ""}`}
+									onClick={() => {
+										setSelected(record.id === selected ? undefined : record.id);
+										setCopied(false);
+									}}
+								>
+									<code>{record.specId}</code>{" "}
+									<span className={`chip chip-${record.mode === "active" ? "running" : "stopped"}`}>{record.mode}</span>{" "}
+									<span className="muted">{record.providerId}</span>
+									{record.userMessage === undefined ? null : (
+										<span className="muted judgment-message">{record.userMessage}</span>
+									)}
+								</button>
+								{record.id === selected && detail !== undefined ? (
+									<dl className="judgment-detail" data-testid="judgment-detail">
+										<dt>{text("panel.spec")}</dt>
+										<dd>
+											<code>{detail.specId}</code>
+										</dd>
+										<dt>{text("panel.mode")}</dt>
+										<dd>{detail.mode}</dd>
+										<dt>{text("panel.provider")}</dt>
+										<dd>{detail.providerId}</dd>
+										{detail.timestamp === undefined ? null : (
+											<>
+												<dt>{text("panel.time")}</dt>
+												<dd>{detail.timestamp}</dd>
+											</>
+										)}
+										{detail.source === undefined ? null : (
+											<>
+												<dt>{text("panel.source")}</dt>
+												<dd>{detail.source}</dd>
+											</>
+										)}
+										{detail.userMessage === undefined ? null : (
+											<>
+												<dt>{text("panel.message")}</dt>
+												<dd>{detail.userMessage}</dd>
+											</>
+										)}
+										<dt>{text("panel.id")}</dt>
+										<dd>
+											<code>{detail.id}</code>{" "}
+											<button
+												type="button"
+												data-testid="judgment-copy"
+												onClick={() => {
+													void navigator.clipboard.writeText(detail.id).then(() => setCopied(true));
+												}}
+											>
+												{copied ? text("panel.copied") : text("panel.copyId")}
+											</button>
+										</dd>
+									</dl>
+								) : null}
 							</li>
 						))}
 					</ul>
