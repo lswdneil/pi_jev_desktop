@@ -35,6 +35,13 @@ extraResources:
 
 asar: true
 compression: normal
+# Chromium ships a `.pak` per locale, and the unpacked set is ~48 MB of text nobody in this app reads: the shell's own
+# copy is localised in the renderer, and en-US is the fallback every missing one resolves to. Keep the three the
+# product speaks, drop the rest; electron-builder rejects a list without en-US.
+electronLanguages:
+  - en-US
+  - zh-CN
+  - zh-TW
 # The menus and the auto-updater policy belong to the app, not to the installer.
 removePackageScripts: true
 
