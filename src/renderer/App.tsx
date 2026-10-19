@@ -27,18 +27,19 @@ import { JudgmentsPanel } from "./panels/Judgments/JudgmentsPanel.tsx";
 
 type View = "conversation" | "settings";
 
-function statusLabel(status: HarnessStatus): string {
+/** The chip in the rail's footer. `layout` stays as it is: it names where mu came from, which is the diagnostic. */
+function statusLabel(status: HarnessStatus, text: (key: string) => string): string {
 	switch (status.state) {
 		case "stopped":
-			return "stopped";
+			return text("status.stopped");
 		case "starting":
-			return "starting";
+			return text("status.starting");
 		case "running":
-			return `running · ${status.layout}`;
+			return `${text("status.running")} · ${status.layout}`;
 		case "restarting":
-			return `restarting ${status.attempt}/${status.of}`;
+			return `${text("status.restarting")} ${status.attempt}/${status.of}`;
 		case "failed":
-			return "failed";
+			return text("status.failed");
 	}
 }
 
@@ -544,7 +545,12 @@ export function App(): React.JSX.Element {
 						aria-label={text("app.searchSessions")}
 					/>
 					<div className="session-card">
-						<span>{snapshot?.sessionName ?? (snapshot?.sessionId === undefined ? text("app.noSession") : `session · ${snapshot.sessionId.slice(0, 12)}`)}</span>
+						<span>
+							{snapshot?.sessionName ??
+								(snapshot?.sessionId === undefined
+									? text("app.noSession")
+									: `${text("app.session")} · ${snapshot.sessionId.slice(0, 12)}`)}
+						</span>
 						{snapshot?.model === undefined ? null : <small>{snapshot.model}</small>}
 					</div>
 					{renaming ? (
@@ -680,7 +686,7 @@ export function App(): React.JSX.Element {
 
 				<div className="rail-footer">
 					<div className="rail-status">
-						<span className={`chip chip-${status.state}`}>{statusLabel(status)}</span>
+						<span className={`chip chip-${status.state}`}>{statusLabel(status, text)}</span>
 						{version === "" ? null : <span className="muted">v{version}</span>}
 					</div>
 					<button type="button" onClick={() => void restart()} disabled={busy} data-testid="restart">

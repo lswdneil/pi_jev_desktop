@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	type PendingApproval,
+	waitingTitle,
 	type ConversationEvent,
 	type ConversationState,
 	initialConversation,
@@ -405,5 +406,11 @@ describe("the protocol growing", () => {
 		expect(state.decisions).toHaveLength(50);
 		expect(state.decisions[0]?.id).toBe("ui-10");
 		expect(state.decisions.at(-1)?.id).toBe("ui-59");
+	});
+
+	it("reads the waiting line back into the question it was made from", () => {
+		expect(waitingTitle("waiting: Run rm -rf build?")).toBe("Run rm -rf build?");
+		expect(waitingTitle("thinking")).toBeUndefined();
+		expect(waitingTitle(undefined)).toBeUndefined();
 	});
 });

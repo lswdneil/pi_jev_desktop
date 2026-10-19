@@ -61,6 +61,9 @@ test("translates the main conversation controls and panel navigation", async () 
 		await expect(profile.page.getByTestId("tab-board")).toHaveText("任务板");
 		await expect(profile.page.getByTestId("composer")).toHaveAccessibleName("消息");
 		await expect(profile.page.getByTestId("board-panel")).toContainText("空闲");
+		// The rail's own chrome is Chinese too: the status chip and the session card used to stay English.
+		await expect(profile.page.locator(".chip")).toContainText("运行中");
+		await expect(profile.page.locator(".session-card")).toContainText("会话 ·");
 		await profile.page.screenshot({ path: join(__dirname, "../../test-results/branding-zh.png") });
 	} finally {
 		await profile.close();

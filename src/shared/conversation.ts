@@ -122,6 +122,19 @@ export function visibleMessages(state: ConversationState, limit: number = VISIBL
 	return rows.length <= limit ? rows : rows.slice(-limit);
 }
 
+/**
+ * The question the run is blocked on, when the board's current line is one.
+ *
+ * `BoardState.current` is a display string with two reserved shapes — `thinking` and `waiting: <title>` — because the
+ * board and the reducer are the only two places that read it. The title is the harness's own words, so it is not
+ * translated; the word in front of it is.
+ */
+export const WAITING_PREFIX = "waiting: ";
+
+export function waitingTitle(current: string | undefined): string | undefined {
+	return current !== undefined && current.startsWith(WAITING_PREFIX) ? current.slice(WAITING_PREFIX.length) : undefined;
+}
+
 export function initialConversation(): ConversationState {
 	return {
 		messages: [],
@@ -348,7 +361,11 @@ export function reduceConversation(state: ConversationState, event: Conversation
 				options: "options" in request ? request.options : undefined,
 				placeholder: "placeholder" in request ? request.placeholder : undefined,
 			};
-			return bump(state, { ...state, approval: pending, board: { ...state.board, current: `waiting: ${request.title}` } });
+			return bump(state, {
+				...state,
+				approval: pending,
+				board: { ...state.board, current: `${WAITING_PREFIX}${request.title}` },
+			});
 		}
 
 		case "extension_ui_response":
