@@ -11,6 +11,9 @@
  */
 
 import { type BrowserWindow, type Session, WebContentsView, session } from "electron";
+
+/** The height of the app's own header (`.bar`): the preview begins below it, never over it. */
+const PREVIEW_TOP = 64;
 import { PREVIEW_PARTITION, previewDownload, previewNavigation, previewPermission } from "./security.ts";
 
 /** Nothing this session asks for is granted, no download starts, and it may only follow http(s). */
@@ -51,6 +54,8 @@ export class PreviewPanel {
 
 	constructor(window: BrowserWindow) {
 		this.window = window;
+		// The view is positioned in the window's content coordinates, which change with the window.
+		window.on("resize", () => this.layout());
 	}
 
 	/** Show a URL. Reusing one view keeps its history and its cookies in the preview partition. */
@@ -100,10 +105,19 @@ export class PreviewPanel {
 	}
 
 	private attach(view: WebContentsView): void {
-		const { width, height } = this.window.getContentBounds();
-		// The conversation keeps the left two thirds; the preview takes the right third.
-		const split = Math.round(Math.min(Math.max(width * 0.34, 320), 720));
-		view.setBounds({ x: width - split, y: 0, width: split, height });
+		this.layout();
 		if (!this.window.contentView.children.includes(view)) this.window.contentView.addChildView(view);
+	}
+
+	/**
+	 * The conversation keeps the left two thirds; the preview takes the right third, starting under the app's header so
+	 * the window's own controls (including the one that closes this view) stay where a person can reach them.
+	 */
+	private layout(): void {
+		const view = this.view;
+		if (view === undefined) return;
+		const { width, height } = this.window.getContentBounds();
+		const split = Math.round(Math.min(Math.max(width * 0.34, 320), 720));
+		view.setBounds({ x: width - split, y: PREVIEW_TOP, width: split, height: Math.max(0, height - PREVIEW_TOP) });
 	}
 }

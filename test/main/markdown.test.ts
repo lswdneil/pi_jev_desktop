@@ -49,6 +49,40 @@ describe("blocks", () => {
 	});
 });
 
+describe("links", () => {
+	it("reads a labelled link and a bare address as previewable links", () => {
+		expect(inlineSpans("see [the docs](https://example.com/a)")).toEqual([
+			{ kind: "text", text: "see " },
+			{ kind: "link", text: "the docs", href: "https://example.com/a" },
+		]);
+		expect(inlineSpans("https://example.com/x?y=1")).toEqual([
+			{ kind: "link", text: "https://example.com/x?y=1", href: "https://example.com/x?y=1" },
+		]);
+	});
+
+	it("leaves a trailing full stop out of a bare link", () => {
+		const spans = inlineSpans("read https://example.com/docs.");
+		expect(spans).toEqual([
+			{ kind: "text", text: "read " },
+			{ kind: "link", text: "https://example.com/docs", href: "https://example.com/docs" },
+			{ kind: "text", text: "." },
+		]);
+	});
+
+	it("never turns anything but http(s) into a link", () => {
+		expect(inlineSpans("[click](javascript:alert(1))")).toEqual([
+			{ kind: "text", text: "[click](javascript:alert(1))" },
+		]);
+		expect(inlineSpans("file:///etc/passwd")).toEqual([{ kind: "text", text: "file:///etc/passwd" }]);
+	});
+
+	it("keeps an address inside code as code", () => {
+		expect(inlineSpans("`https://example.com`")).toEqual([
+			{ kind: "code", text: "https://example.com" },
+		]);
+	});
+});
+
 describe("inline spans", () => {
 	it("separates code, bold and italic", () => {
 		expect(inlineSpans("run `npm test` and **do not** skip *it*")).toEqual([

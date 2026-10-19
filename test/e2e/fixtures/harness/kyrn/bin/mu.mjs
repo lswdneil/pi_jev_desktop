@@ -187,9 +187,11 @@ function runPrompt(text) {
 	}
 
 	if (text.includes("markdown")) {
-		const answer = "## Result\n\nUse `npm test`.\n\n```sh\nnpm test -- --run\n```";
+		const link = process.env.MU_FIXTURE_LINK_URL ?? "https://example.com/docs";
+		const answer = `## Result\n\nUse \`npm test\`.\n\n\`\`\`sh\nnpm test -- --run\n\`\`\`\n\nSee [the build](${link}).`;
 		emit({ type: "message_start", message: assistant("") });
 		for (const chunk of ["## Result\n\nUse `npm test`.", "\n\n```sh\nnpm test -- --run\n```"]) emit(delta(chunk));
+		emit(delta(`\n\nSee [the build](${link}).`));
 		finish(answer);
 		return;
 	}

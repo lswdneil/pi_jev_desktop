@@ -13,8 +13,10 @@
  */
 
 export interface InlineSpan {
-	readonly kind: "text" | "code" | "strong" | "em";
+	readonly kind: "text" | "code" | "strong" | "em" | "link";
 	readonly text: string;
+	/** Only on `link`: an http(s) address, which is the only kind the preview opens. */
+	readonly href?: string;
 }
 
 export type Block =
@@ -33,6 +35,10 @@ export function inlineSpans(text: string): InlineSpan[] {
 		{ kind: "strong", pattern: /^\*\*([^*]+)\*\*/ },
 		{ kind: "em", pattern: /^\*([^*]+)\*/ },
 	];
+	// Links are the one span with a second field, so they are matched here rather than in the table above. Only
+	// http(s) becomes a link: `javascript:`, `file:` and `data:` stay text, which is the whole rule.
+	const markdownLink = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/;
+	const bareLink = /^(https?:\/\/[^\s<>()]+)/;
 	let buffer = "";
 	const flush = (): void => {
 		if (buffer !== "") spans.push({ kind: "text", text: buffer });
@@ -40,6 +46,23 @@ export function inlineSpans(text: string): InlineSpan[] {
 	};
 
 	while (rest !== "") {
+		const labelled = markdownLink.exec(rest);
+		if (labelled !== null) {
+			flush();
+			spans.push({ kind: "link", text: labelled[1] ?? "", href: labelled[2] ?? "" });
+			rest = rest.slice(labelled[0].length);
+			continue;
+		}
+		const bare = bareLink.exec(rest);
+		if (bare !== null) {
+			flush();
+			const href = (bare[1] ?? "").replace(/[.,;:]+$/, "");
+			if (href.length > "https://".length) {
+				spans.push({ kind: "link", text: href, href });
+				rest = rest.slice(href.length);
+				continue;
+			}
+		}
 		const match = patterns.map((entry) => ({ entry, found: entry.pattern.exec(rest) })).find((candidate) => candidate.found !== null);
 		if (match?.found) {
 			flush();

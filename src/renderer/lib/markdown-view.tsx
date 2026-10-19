@@ -6,23 +6,36 @@
  *
  * The parser (`shared/markdown.ts`) returns blocks and spans; this turns them into React elements. Nothing here builds
  * HTML from a string, so a model that writes markup cannot write markup — the worst it can do is have a paragraph that
- * says `<script>`.
+ * says `<script>`. Links are data too: the parser emits http(s) addresses, and a click asks the app to preview one.
  */
 
 import { type Block, type InlineSpan, parseMarkdown } from "../../shared/markdown.ts";
 
-export function Markdown({ text }: { readonly text: string }): React.JSX.Element {
+export function Markdown({
+	text,
+	onOpenLink,
+}: {
+	readonly text: string;
+	/** A link a model wrote: http(s) only, since that is all the parser emits. */
+	readonly onOpenLink?: (url: string) => void;
+}): React.JSX.Element {
 	const blocks = parseMarkdown(text);
 	return (
 		<div className="markdown" data-markdown-blocks={blocks.length}>
 			{blocks.map((block, index) => (
-				<BlockView key={index} block={block} />
+				<BlockView key={index} block={block} onOpenLink={onOpenLink} />
 			))}
 		</div>
 	);
 }
 
-function BlockView({ block }: { readonly block: Block }): React.JSX.Element {
+function BlockView({
+	block,
+	onOpenLink,
+}: {
+	readonly block: Block;
+	readonly onOpenLink: ((url: string) => void) | undefined;
+}): React.JSX.Element {
 	switch (block.kind) {
 		case "code":
 			return (
@@ -31,7 +44,7 @@ function BlockView({ block }: { readonly block: Block }): React.JSX.Element {
 				</pre>
 			);
 		case "heading": {
-			const content = <Spans spans={block.spans} />;
+			const content = <Spans spans={block.spans} onOpenLink={onOpenLink} />;
 			if (block.level === 1) return <h1>{content}</h1>;
 			if (block.level === 2) return <h2>{content}</h2>;
 			return <h3>{content}</h3>;
@@ -39,7 +52,7 @@ function BlockView({ block }: { readonly block: Block }): React.JSX.Element {
 		case "quote":
 			return (
 				<blockquote>
-					<Spans spans={block.spans} />
+					<Spans spans={block.spans} onOpenLink={onOpenLink} />
 				</blockquote>
 			);
 		case "list":
@@ -47,7 +60,7 @@ function BlockView({ block }: { readonly block: Block }): React.JSX.Element {
 				<ol data-block="list">
 					{block.items.map((item, index) => (
 						<li key={index}>
-							<Spans spans={item} />
+							<Spans spans={item} onOpenLink={onOpenLink} />
 						</li>
 					))}
 				</ol>
@@ -55,7 +68,7 @@ function BlockView({ block }: { readonly block: Block }): React.JSX.Element {
 				<ul data-block="list">
 					{block.items.map((item, index) => (
 						<li key={index}>
-							<Spans spans={item} />
+							<Spans spans={item} onOpenLink={onOpenLink} />
 						</li>
 					))}
 				</ul>
@@ -63,19 +76,43 @@ function BlockView({ block }: { readonly block: Block }): React.JSX.Element {
 		case "paragraph":
 			return (
 				<p data-block="paragraph">
-					<Spans spans={block.spans} />
+					<Spans spans={block.spans} onOpenLink={onOpenLink} />
 				</p>
 			);
 	}
 }
 
-function Spans({ spans }: { readonly spans: readonly InlineSpan[] }): React.JSX.Element {
+function Spans({
+	spans,
+	onOpenLink,
+}: {
+	readonly spans: readonly InlineSpan[];
+	readonly onOpenLink: ((url: string) => void) | undefined;
+}): React.JSX.Element {
 	return (
 		<>
 			{spans.map((span, index) => {
 				if (span.kind === "code") return <code key={index}>{span.text}</code>;
 				if (span.kind === "strong") return <strong key={index}>{span.text}</strong>;
 				if (span.kind === "em") return <em key={index}>{span.text}</em>;
+				if (span.kind === "link") {
+					const href = span.href ?? "";
+					return (
+						<a
+							key={index}
+							href={href}
+							data-testid="message-link"
+							// The conversation never navigates itself: a link is a preview request, and the panel it opens
+							// has the app's own navigation rules.
+							onClick={(event) => {
+								event.preventDefault();
+								onOpenLink?.(href);
+							}}
+						>
+							{span.text}
+						</a>
+					);
+				}
 				return <span key={index}>{span.text}</span>;
 			})}
 		</>

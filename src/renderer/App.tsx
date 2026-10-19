@@ -52,6 +52,14 @@ function projectName(path: string): string {
 	return path.split(/[\\/]/).filter(Boolean).at(-1) ?? path;
 }
 
+function hostOf(url: string): string {
+	try {
+		return new URL(url).host;
+	} catch {
+		return url;
+	}
+}
+
 export function App(): React.JSX.Element {
 	const [api] = useState<MuApi | undefined>(bridge);
 	const { language, setLanguage, text } = useLanguage();
@@ -77,9 +85,35 @@ export function App(): React.JSX.Element {
 	const [panelTab, setPanelTab] = useState<"board" | "files" | "judgments">("board");
 	const [quickOpen, setQuickOpen] = useState(false);
 	const [openFile, setOpenFile] = useState<{ readonly path: string; readonly nonce: number } | undefined>(undefined);
+	const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
 	const [modelBusy, setModelBusy] = useState(false);
 
 	const report = useCallback((message: string) => setError(message), []);
+
+	/** Links are preview requests: the hardened view in the right third, never a navigation of this page. */
+	const openPreview = useCallback(
+		(url: string) => {
+			if (api === undefined) return;
+			void api.preview
+				.open(url)
+				.then(() => setPreviewUrl(url))
+				.catch((failure: unknown) => report(failure instanceof Error ? failure.message : String(failure)));
+		},
+		[api, report],
+	);
+
+	const closePreview = useCallback(() => {
+		if (api === undefined) return;
+		void api.preview
+			.close()
+			.catch(() => {})
+			.finally(() => setPreviewUrl(undefined));
+	}, [api]);
+
+	// Settings and the first run are full-window screens; a native view over them would be a panel nobody can close.
+	useEffect(() => {
+		if (view !== "conversation" && previewUrl !== undefined) closePreview();
+	}, [view, previewUrl, closePreview]);
 
 	// Ctrl+P (Cmd+P) is the one shortcut every editor shares; it toggles the quick-open list from anywhere.
 	useEffect(() => {
@@ -700,6 +734,14 @@ export function App(): React.JSX.Element {
 					<span className="bar-kicker">{text("app.workspace")}</span>
 					<strong className="bar-title">{workspaceName === "" ? text("app.chooseWorkspace") : workspaceName}</strong>
 					<span className="grow" />
+					{previewUrl === undefined ? null : (
+						<span className="preview-chip" data-testid="preview-status">
+							<code>{hostOf(previewUrl)}</code>
+							<button type="button" data-testid="close-preview" onClick={closePreview}>
+								{text("preview.close")}
+							</button>
+						</span>
+					)}
 					{models.length === 0 ? null : (
 						<label className="model-select">
 							<span className="muted">{text("app.model")}</span>
@@ -748,6 +790,7 @@ export function App(): React.JSX.Element {
 							running={running && !busy}
 							active={view === "conversation"}
 							onError={report}
+							onOpenLink={openPreview}
 							language={language}
 						/>
 						<aside className="panels">

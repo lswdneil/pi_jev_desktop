@@ -36,6 +36,7 @@ export function ConversationPage({
 	running,
 	active,
 	onError,
+	onOpenLink,
 	language,
 }: {
 	readonly api: MuApi;
@@ -43,6 +44,7 @@ export function ConversationPage({
 	readonly running: boolean;
 	readonly active: boolean;
 	readonly onError: (message: string) => void;
+	readonly onOpenLink: (url: string) => void;
 	readonly language: string;
 }): React.JSX.Element {
 	const state: ConversationState = useSyncExternalStore(store.subscribe, store.getSnapshot);
@@ -184,7 +186,7 @@ export function ConversationPage({
 						<article key={message.id} className={`message message-${message.role}`} data-role={message.role}>
 							<span className="who">{text(`role.${message.role}`)}</span>
 							<div className="text">
-								<Markdown text={message.text} />
+								<Markdown text={message.text} onOpenLink={onOpenLink} />
 							</div>
 						</article>
 					) : (

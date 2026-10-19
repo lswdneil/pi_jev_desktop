@@ -887,6 +887,35 @@ button.attach:hover:not(:disabled) {
 	overflow-wrap: anywhere;
 }
 
+.markdown a {
+	color: var(--link);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.markdown a:hover {
+	color: var(--accent);
+}
+
+.preview-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 5px 3px 9px;
+	border: 1px solid var(--line);
+	border-radius: 999px;
+	font-size: 11px;
+}
+
+.preview-chip code {
+	color: var(--accent);
+}
+
+.preview-chip button {
+	padding: 2px 8px;
+	font-size: 11px;
+}
+
 .markdown h1,
 .markdown h2,
 .markdown h3 {

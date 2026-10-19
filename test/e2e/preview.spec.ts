@@ -38,6 +38,49 @@ function serve(): Promise<{ server: Server; origin: string }> {
 }
 
 test.describe("the preview", () => {
+	test("a link in a message opens the preview, and the window closes it", async () => {
+		const { server, origin } = await serve();
+		const profile = await launchApp({ env: { MU_FIXTURE_LINK_URL: `${origin}/docs` } });
+		try {
+			const { page } = profile;
+			await completeFirstRun(page);
+			await expect(page.locator(".chip")).toContainText("running", { timeout: 60_000 });
+
+			await page.getByTestId("composer").fill("markdown");
+			await page.getByTestId("send").click();
+			const link = page.getByTestId("message-link").last();
+			await expect(link).toHaveText("the build");
+			await link.click();
+
+			// The chip is the app's own knowledge of the view; the view is what the main process actually attached.
+			await expect(page.getByTestId("preview-status")).toContainText(new URL(origin).host);
+			const attached = () =>
+				profile.app.evaluate(({ BrowserWindow }) => {
+					const window = BrowserWindow.getAllWindows()[0];
+					return (window?.contentView.children ?? []).filter((child) => "webContents" in child).length;
+				});
+			await expect.poll(attached).toBe(1);
+
+			// It starts under the app's header, so the model picker and this very close button stay reachable.
+			const bounds = await profile.app.evaluate(({ BrowserWindow }) => {
+				const window = BrowserWindow.getAllWindows()[0];
+				const view = (window?.contentView.children ?? []).find((child) => "webContents" in child) as unknown as
+					| { getBounds(): Electron.Rectangle }
+					| undefined;
+				return view?.getBounds();
+			});
+			expect(bounds?.y).toBeGreaterThanOrEqual(60);
+			expect(bounds?.x).toBeGreaterThan(0);
+
+			await page.getByTestId("close-preview").click();
+			await expect(page.getByTestId("preview-status")).toHaveCount(0);
+			await expect.poll(attached).toBe(0);
+		} finally {
+			await profile.close();
+			await new Promise<void>((resolve) => server.close(() => resolve()));
+		}
+	});
+
 	test("shows an http page in its own session, and grants it nothing", async () => {
 		const { server, origin } = await serve();
 		const profile = await launchApp();
