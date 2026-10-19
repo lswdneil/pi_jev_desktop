@@ -73,6 +73,8 @@ This release implements:
   JPEG, WebP and GIF only, at most six per message and 5 MB each.
 - Deleting a saved session, after a second click in the row. A session the agent has open is left first, so nothing
   keeps appending to a file that no longer exists.
+- Quick open (Ctrl+P) over the project's own files, ranked by name, with `node_modules`, build output and the staged
+  runtime skipped. The file it opens lands in the Files panel, through the same read and edit path.
 - Approval cards for confirm, select, input, and editor requests.
 - The spec.ai.jev logo and the Freebuff dark palette.
 

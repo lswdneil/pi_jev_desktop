@@ -14,7 +14,7 @@
  * overwrite.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FilePreview, MuApi } from "../../../shared/api.ts";
 import type { ChangedFile } from "../../../shared/conversation.ts";
 import { diffLines } from "../../../shared/diff.ts";
@@ -33,10 +33,13 @@ export function FilesPanel({
 	files,
 	api,
 	text,
+	openFile,
 }: {
 	readonly files: readonly ChangedFile[];
 	readonly api: MuApi;
 	readonly text: (key: string) => string;
+	/** A file quick-open asked for; its nonce changes on every request so the same file can be reopened. */
+	readonly openFile: { readonly path: string; readonly nonce: number } | undefined;
 }): React.JSX.Element {
 	const newest = files.slice().reverse().slice(0, 40);
 	const [selected, setSelected] = useState<string | undefined>(undefined);
@@ -68,6 +71,13 @@ export function FilesPanel({
 			.catch((failure: unknown) => setError(failure instanceof Error ? failure.message : String(failure)))
 			.finally(() => setLoading(false));
 	};
+
+	const openedNonce = useRef<number | undefined>(undefined);
+	useEffect(() => {
+		if (openFile === undefined || openedNonce.current === openFile.nonce) return;
+		openedNonce.current = openFile.nonce;
+		open(openFile.path);
+	}, [openFile]);
 
 	const close = (): void => {
 		setSelected(undefined);

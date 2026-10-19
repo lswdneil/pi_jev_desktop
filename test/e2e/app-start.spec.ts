@@ -190,7 +190,7 @@ test.describe("the security baseline", () => {
 				"stop",
 			]);
 			const workspaceMethods = await page.evaluate(() => Object.keys(window.mu.workspace).sort());
-			expect(workspaceMethods).toEqual(["choose", "current", "open", "readFile", "saveFile"]);
+			expect(workspaceMethods).toEqual(["choose", "current", "open", "readFile", "saveFile", "searchFiles"]);
 			const sessionMethods = await page.evaluate(() => Object.keys(window.mu.sessions).sort());
 			expect(sessionMethods).toEqual(["list", "listAll", "open", "openAcross", "rename"]);
 

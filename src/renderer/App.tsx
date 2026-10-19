@@ -7,6 +7,7 @@ import type { AgentEvent, HarnessStatus, ModelChoice, MuApi, SessionSnapshot, Se
 import type { ConversationEvent } from "../shared/conversation.ts";
 import { ConversationStore } from "./lib/conversation-store.ts";
 import { hasOnboarded, markOnboarded, useLanguage } from "./lib/i18n.ts";
+import { QuickOpen } from "./lib/QuickOpen.tsx";
 import { forgetWorkspace, readRecentWorkspaces, rememberWorkspace } from "./lib/recent-workspaces.ts";
 import { ConversationPage } from "./pages/Conversation/ConversationPage.tsx";
 import { FirstRunPage } from "./pages/FirstRun/FirstRunPage.tsx";
@@ -72,9 +73,24 @@ export function App(): React.JSX.Element {
 	const [renaming, setRenaming] = useState(false);
 	const [sessionName, setSessionName] = useState("");
 	const [confirmDelete, setConfirmDelete] = useState<string | undefined>(undefined);
+	const [panelTab, setPanelTab] = useState<"board" | "files" | "judgments">("board");
+	const [quickOpen, setQuickOpen] = useState(false);
+	const [openFile, setOpenFile] = useState<{ readonly path: string; readonly nonce: number } | undefined>(undefined);
 	const [modelBusy, setModelBusy] = useState(false);
 
 	const report = useCallback((message: string) => setError(message), []);
+
+	// Ctrl+P (Cmd+P) is the one shortcut every editor shares; it toggles the quick-open list from anywhere.
+	useEffect(() => {
+		const onKeyDown = (event: KeyboardEvent): void => {
+			if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "p") {
+				event.preventDefault();
+				setQuickOpen((open) => !open);
+			}
+		};
+		window.addEventListener("keydown", onKeyDown);
+		return () => window.removeEventListener("keydown", onKeyDown);
+	}, []);
 
 	useEffect(() => {
 		if (api === undefined) return;
@@ -729,11 +745,32 @@ export function App(): React.JSX.Element {
 							language={language}
 						/>
 						<aside className="panels">
-							{view === "conversation" ? <Panels store={store} api={api} text={text} /> : null}
+							{view === "conversation" ? (
+								<Panels
+									store={store}
+									api={api}
+									text={text}
+									tab={panelTab}
+									onTab={setPanelTab}
+									openFile={openFile}
+								/>
+							) : null}
 						</aside>
 					</div>
 				</>
 			)}
+			{quickOpen && api !== undefined ? (
+				<QuickOpen
+					api={api}
+					text={text}
+					onClose={() => setQuickOpen(false)}
+					onOpen={(path) => {
+						setOpenFile({ path, nonce: Date.now() });
+						setPanelTab("files");
+						setQuickOpen(false);
+					}}
+				/>
+			) : null}
 			</main>
 		</div>
 	);
@@ -744,12 +781,17 @@ function Panels({
 	store,
 	api,
 	text,
+	tab,
+	onTab,
+	openFile,
 }: {
 	readonly store: ConversationStore;
 	readonly api: MuApi;
 	readonly text: (key: string) => string;
+	readonly tab: "board" | "files" | "judgments";
+	readonly onTab: (tab: "board" | "files" | "judgments") => void;
+	readonly openFile: { readonly path: string; readonly nonce: number } | undefined;
 }): React.JSX.Element {
-	const [tab, setTab] = useState<"board" | "files" | "judgments">("board");
 	const state = useSyncExternalStore(store.subscribe, store.getSnapshot);
 	return (
 		<>
@@ -760,7 +802,7 @@ function Panels({
 						type="button"
 						className={tab === name ? "active" : ""}
 						aria-pressed={tab === name}
-						onClick={() => setTab(name)}
+						onClick={() => onTab(name)}
 						data-testid={`tab-${name}`}
 					>
 						{text(`panel.${name}`)}
@@ -768,7 +810,7 @@ function Panels({
 				))}
 			</nav>
 			{tab === "board" ? <BoardPanel board={state.board} text={text} /> : null}
-			{tab === "files" ? <FilesPanel files={state.files} api={api} text={text} /> : null}
+			{tab === "files" ? <FilesPanel files={state.files} api={api} text={text} openFile={openFile} /> : null}
 			{tab === "judgments" ? <JudgmentsPanel api={api} text={text} /> : null}
 		</>
 	);

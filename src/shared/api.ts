@@ -111,6 +111,13 @@ export interface WorkspaceState {
 	readonly path: string;
 }
 
+/** One file the quick-open list offers: relative to the project root, with `/` separators. */
+export interface FileHit {
+	readonly path: string;
+	readonly name: string;
+	readonly score: number;
+}
+
 export interface WorkspaceChoice extends WorkspaceState {
 	readonly cancelled: boolean;
 	readonly status: HarnessStatus;
@@ -179,6 +186,8 @@ export interface MuApi {
 		readFile(path: string): Promise<FilePreview>;
 		/** Save an edit to a file the panel read, quoting the hash it was read at. */
 		saveFile(path: string, text: string, expectedHash: string): Promise<SavedFile>;
+		/** Files in the current project whose names answer the query, best first. */
+		searchFiles(query: string): Promise<readonly FileHit[]>;
 	};
 	readonly sessions: {
 		/** Saved sessions for the current workspace, newest first. */
@@ -241,6 +250,7 @@ export const IPC_CHANNELS = {
 	workspaceOpen: "workspace:open",
 	workspaceReadFile: "workspace:read-file",
 	workspaceSaveFile: "workspace:write-file",
+	workspaceSearchFiles: "workspace:search-files",
 	sessionsList: "sessions:list",
 	sessionsListAll: "sessions:list-all",
 	sessionsOpen: "sessions:open",
@@ -282,6 +292,7 @@ export const INVOKE_CHANNELS = [
 	IPC_CHANNELS.workspaceOpen,
 	IPC_CHANNELS.workspaceReadFile,
 	IPC_CHANNELS.workspaceSaveFile,
+	IPC_CHANNELS.workspaceSearchFiles,
 	IPC_CHANNELS.sessionsList,
 	IPC_CHANNELS.sessionsListAll,
 	IPC_CHANNELS.sessionsOpen,

@@ -17,6 +17,7 @@ import {
 	EVENT_CHANNELS,
 	type EventChannel,
 	type FilePreview,
+	type FileHit,
 	type HarnessStatus,
 	IPC_CHANNELS,
 	type InvokeChannel,
@@ -81,6 +82,7 @@ const api: MuApi = {
 		readFile: (path) => invoke<FilePreview>(IPC_CHANNELS.workspaceReadFile, { path }),
 		saveFile: (path, text, expectedHash) =>
 			invoke<SavedFile>(IPC_CHANNELS.workspaceSaveFile, { path, text, expectedHash }),
+		searchFiles: (query) => invoke<readonly FileHit[]>(IPC_CHANNELS.workspaceSearchFiles, { query }),
 	},
 	sessions: {
 		list: () => invoke<readonly SessionSummary[]>(IPC_CHANNELS.sessionsList),

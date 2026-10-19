@@ -48,6 +48,7 @@ export interface ApiDependencies {
 		open(path: string): Promise<unknown>;
 		readFile(path: string): Promise<unknown>;
 		saveFile(path: string, text: string, expectedHash: string): Promise<unknown>;
+		searchFiles(query: string): Promise<unknown>;
 	};
 	/** Saved sessions for the current workspace. */
 	readonly sessions: {
@@ -189,6 +190,14 @@ function fileEditOf(payload: unknown): { path: string; text: string; expectedHas
 	return { path, text, expectedHash };
 }
 
+/** A query, not a pattern: no path, no glob, nothing that could name a folder outside the project. */
+function searchQueryOf(payload: unknown): string {
+	const query = field(payload, "query");
+	if (typeof query !== "string") throw new InvalidPayloadError("a file search needs a query");
+	if (query.length > 200) throw new InvalidPayloadError("a file search query may be at most 200 characters");
+	return query;
+}
+
 /** An answer: exactly one of a value, a confirmation, or a cancellation, and always an id. */
 function answerOf(payload: unknown): UiAnswer {
 	const id = field(payload, "id");
@@ -258,6 +267,7 @@ export function createApi(deps: ApiDependencies): Api {
 			const edit = fileEditOf(payload);
 			return deps.workspace.saveFile(edit.path, edit.text, edit.expectedHash);
 		},
+		"workspace:search-files": async (payload) => deps.workspace.searchFiles(searchQueryOf(payload)),
 		"sessions:list": async () => deps.sessions.list(),
 		"sessions:list-all": async () => deps.sessions.listAll(),
 		"sessions:open": async (payload) => {

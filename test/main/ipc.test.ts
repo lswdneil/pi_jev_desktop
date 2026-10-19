@@ -76,6 +76,10 @@ function build(overrides: Partial<ApiDependencies> = {}): {
 				calls.push(`save-file:${path}:${text}:${expectedHash.slice(0, 4)}`);
 				return { path, hash: "b".repeat(64), size: text.length };
 			},
+			searchFiles: async (query) => {
+				calls.push(`search-files:${query}`);
+				return [{ path: "src/app.ts", name: "app.ts", score: 85 }];
+			},
 		},
 		sessions: {
 			list: async () => {
@@ -180,6 +184,7 @@ describe("the allow-list", () => {
 			"workspace:open",
 			"workspace:read-file",
 			"workspace:write-file",
+			"workspace:search-files",
 			"sessions:list",
 			"sessions:list-all",
 			"sessions:open",
@@ -307,6 +312,7 @@ describe("failures", () => {
 				open: async (path) => ({ path, cancelled: false, status: { state: "running" } }),
 				readFile: async (path) => ({ path, text: "", truncated: false, binary: false }),
 				saveFile: async (path) => ({ path, hash: "c".repeat(64), size: 0 }),
+				searchFiles: async () => [],
 			},
 		});
 
@@ -337,6 +343,7 @@ describe("failures", () => {
 				open: async (path) => ({ path, cancelled: false, status: { state: "running" } }),
 				readFile: async (path) => ({ path, text: "", truncated: false, binary: false }),
 				saveFile: async (path) => ({ path, hash: "c".repeat(64), size: 0 }),
+				searchFiles: async () => [],
 			},
 		});
 
@@ -473,12 +480,25 @@ describe("settings and consent", () => {
 		await expect(
 			api.dispatch("workspace:write-file", { path: "/workspace/file.ts", text: "hello", expectedHash: "nope" }),
 		).resolves.toMatchObject({ ok: false, error: { code: "invalid-payload" } });
+		await expect(api.dispatch("workspace:search-files", { query: "app" })).resolves.toMatchObject({
+			ok: true,
+			value: [{ path: "src/app.ts", name: "app.ts" }],
+		});
+		await expect(api.dispatch("workspace:search-files", { query: "x".repeat(201) })).resolves.toMatchObject({
+			ok: false,
+			error: { code: "invalid-payload" },
+		});
+		await expect(api.dispatch("workspace:search-files", {})).resolves.toMatchObject({
+			ok: false,
+			error: { code: "invalid-payload" },
+		});
 		expect(calls).toEqual([
 			"workspace-current",
 			"workspace-choose",
 			"workspace-open:/workspace/known",
 			"read-file:/workspace/file.ts",
 			`save-file:/workspace/file.ts:hello:${hash.slice(0, 4)}`,
+			"search-files:app",
 		]);
 	});
 
@@ -492,6 +512,7 @@ describe("settings and consent", () => {
 				saveFile: async (path) => {
 					throw new FileConflictError(`the file changed on disk since it was read: ${path}`);
 				},
+				searchFiles: async () => [],
 			},
 		});
 		await expect(

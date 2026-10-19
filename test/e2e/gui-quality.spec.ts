@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2025-2026 the mu authors
 
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { completeFirstRun, FIXTURE_HARNESS, launchApp } from "./helpers/app.ts";
@@ -92,6 +94,33 @@ test("keeps the old messages when a new session is cancelled", async () => {
 		await expect(profile.page.locator(".message")).toHaveCount(2);
 	} finally {
 		await profile.close();
+	}
+});
+
+test("quick open finds a project file and opens it in the Files panel", async () => {
+	const workspace = mkdtempSync(join(tmpdir(), "mu-e2e-quick-open-"));
+	mkdirSync(join(workspace, "src"), { recursive: true });
+	writeFileSync(join(workspace, "src", "app.ts"), "export const value = 1;\n");
+	const profile = await launchApp({ env: { MU_WORKSPACE: workspace } });
+	try {
+		const { page } = profile;
+		await completeFirstRun(page);
+		await expect(page.locator(".chip")).toContainText("running", { timeout: 60_000 });
+
+		await page.keyboard.press("Control+P");
+		await expect(page.getByTestId("quick-open")).toBeVisible();
+		await page.getByTestId("quick-open-input").fill("app");
+
+		const hit = page.getByTestId("quick-open-hit").first();
+		await expect(hit).toContainText("src/app.ts");
+		await hit.click();
+
+		await expect(page.getByTestId("quick-open")).toHaveCount(0);
+		await expect(page.getByTestId("tab-files")).toHaveAttribute("aria-pressed", "true");
+		await expect(page.getByTestId("file-preview")).toContainText("export const value = 1;");
+	} finally {
+		await profile.close();
+		rmSync(workspace, { recursive: true, force: true });
 	}
 });
 

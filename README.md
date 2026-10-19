@@ -14,6 +14,7 @@ This is the first vertical slice. It adds:
 - A session rail with the current session, saved sessions, search, rename, and model; selecting a saved session switches the live agent.
 - Sessions from other projects in the same rail; opening one moves the agent to that project first.
 - Deleting a saved session (two clicks; the agent leaves it first if it is the open one).
+- Quick open with `Ctrl+P`: type part of a name, press Enter, and the file opens in the Files panel.
 - Recent-project rows with their folder, and a way to forget a shortcut.
 - A model picker that changes the running session.
 - The conversation, tool runs, approval cards, file history, and judgment ledger.
