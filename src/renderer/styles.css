@@ -856,6 +856,91 @@ select:focus {
 	white-space: pre;
 }
 
+.file-row.active,
+.file-row.active code {
+	color: var(--accent);
+}
+
+.file-size {
+	font-size: 11px;
+	white-space: nowrap;
+}
+
+.file-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 8px 0;
+}
+
+.file-editor {
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 220px;
+	max-height: 420px;
+	margin-top: 8px;
+	padding: 10px;
+	border: 1px solid var(--accent);
+	border-radius: 8px;
+	background: var(--code-bg);
+	color: var(--text);
+	font: 11px/1.5 "Cascadia Mono", Consolas, monospace;
+	tab-size: 4;
+	resize: vertical;
+}
+
+.diff {
+	margin-top: 10px;
+	padding-top: 8px;
+	border-top: 1px dashed var(--line);
+	font: 11px/1.5 "Cascadia Mono", Consolas, monospace;
+}
+
+.diff-counts {
+	display: flex;
+	gap: 10px;
+	margin: 0 0 6px;
+}
+
+.diff-add {
+	color: var(--ok);
+}
+
+.diff-remove {
+	color: var(--bad);
+}
+
+.diff-rows {
+	max-height: 260px;
+	overflow: auto;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--panel-2);
+}
+
+.diff-row {
+	display: grid;
+	grid-template-columns: 3ch 3ch 1ch minmax(0, 1fr);
+	gap: 6px;
+	padding: 0 8px;
+	white-space: pre;
+}
+
+.diff-row.diff-add {
+	background: rgb(34 197 94 / 12%);
+}
+
+.diff-row.diff-remove {
+	background: rgb(239 68 68 / 12%);
+}
+
+.diff-num,
+.diff-sign {
+	color: var(--muted);
+	text-align: right;
+	user-select: none;
+}
+
 .option {
 	display: grid;
 	grid-template-columns: minmax(140px, 1fr) minmax(0, 1.2fr);

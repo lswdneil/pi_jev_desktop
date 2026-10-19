@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 import { INVOKE_CHANNELS } from "../../src/shared/api.ts";
+import { FileConflictError } from "../../src/main/files.ts";
 import { type ApiDependencies, createApi } from "../../src/main/ipc.ts";
 import { NotRunningError } from "../../src/main/supervisor.ts";
 
@@ -69,7 +70,11 @@ function build(overrides: Partial<ApiDependencies> = {}): {
 			},
 			readFile: async (path) => {
 				calls.push(`read-file:${path}`);
-				return { path, text: "hello", truncated: false, binary: false };
+				return { path, text: "hello", truncated: false, binary: false, hash: "a".repeat(64), size: 5, editable: true };
+			},
+			saveFile: async (path, text, expectedHash) => {
+				calls.push(`save-file:${path}:${text}:${expectedHash.slice(0, 4)}`);
+				return { path, hash: "b".repeat(64), size: text.length };
 			},
 		},
 		sessions: {
@@ -159,6 +164,7 @@ describe("the allow-list", () => {
 			"workspace:choose",
 			"workspace:open",
 			"workspace:read-file",
+			"workspace:write-file",
 			"sessions:list",
 			"sessions:open",
 			"sessions:rename",
@@ -258,6 +264,7 @@ describe("failures", () => {
 				choose: async () => ({ path: "/workspace", cancelled: true, status: { state: "stopped" } }),
 				open: async (path) => ({ path, cancelled: false, status: { state: "running" } }),
 				readFile: async (path) => ({ path, text: "", truncated: false, binary: false }),
+				saveFile: async (path) => ({ path, hash: "c".repeat(64), size: 0 }),
 			},
 		});
 
@@ -287,6 +294,7 @@ describe("failures", () => {
 				choose: async () => ({ path: "/workspace", cancelled: true, status: { state: "stopped" } }),
 				open: async (path) => ({ path, cancelled: false, status: { state: "running" } }),
 				readFile: async (path) => ({ path, text: "", truncated: false, binary: false }),
+				saveFile: async (path) => ({ path, hash: "c".repeat(64), size: 0 }),
 			},
 		});
 
@@ -411,12 +419,42 @@ describe("settings and consent", () => {
 			ok: false,
 			error: { code: "invalid-payload" },
 		});
+		const hash = "a".repeat(64);
+		await expect(
+			api.dispatch("workspace:write-file", { path: "/workspace/file.ts", text: "hello", expectedHash: hash }),
+		).resolves.toMatchObject({ ok: true, value: { path: "/workspace/file.ts", size: 5 } });
+		// A save without the hash it read is refused here, before the file layer is asked to write anything.
+		await expect(api.dispatch("workspace:write-file", { path: "/workspace/file.ts", text: "hello" })).resolves.toMatchObject({
+			ok: false,
+			error: { code: "invalid-payload" },
+		});
+		await expect(
+			api.dispatch("workspace:write-file", { path: "/workspace/file.ts", text: "hello", expectedHash: "nope" }),
+		).resolves.toMatchObject({ ok: false, error: { code: "invalid-payload" } });
 		expect(calls).toEqual([
 			"workspace-current",
 			"workspace-choose",
 			"workspace-open:/workspace/known",
 			"read-file:/workspace/file.ts",
+			`save-file:/workspace/file.ts:hello:${hash.slice(0, 4)}`,
 		]);
+	});
+
+	it("reports a file that changed under the editor as a conflict, not a failure", async () => {
+		const { api } = build({
+			workspace: {
+				current: async () => ({ path: "/workspace/project" }),
+				choose: async () => ({ path: "/workspace/project", cancelled: true, status: { state: "stopped" } }),
+				open: async (path) => ({ path, cancelled: false, status: { state: "stopped" } }),
+				readFile: async (path) => ({ path, text: "", truncated: false, binary: false, hash: "", size: 0, editable: false }),
+				saveFile: async (path) => {
+					throw new FileConflictError(`the file changed on disk since it was read: ${path}`);
+				},
+			},
+		});
+		await expect(
+			api.dispatch("workspace:write-file", { path: "/workspace/file.ts", text: "x", expectedHash: "a".repeat(64) }),
+		).resolves.toMatchObject({ ok: false, error: { code: "conflict" } });
 	});
 
 	it("lists and opens saved sessions through named channels", async () => {

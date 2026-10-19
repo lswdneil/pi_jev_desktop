@@ -13,6 +13,7 @@
  */
 
 import type { HistoryMessage } from "./conversation.ts";
+import type { FilePreview, SavedFile } from "./files.ts";
 import type { SettingsChange, SettingsSnapshot } from "./settings.ts";
 import type { UpdateCheck, UpdateInstallOutcome } from "./update.ts";
 
@@ -86,12 +87,7 @@ export interface SessionSummary {
 	readonly updatedAt: string;
 }
 
-export interface FilePreview {
-	readonly path: string;
-	readonly text: string;
-	readonly truncated: boolean;
-	readonly binary: boolean;
-}
+export type { FilePreview, SavedFile } from "./files.ts";
 
 /** The folder the agent runs in, and the result of choosing a different one. */
 export interface WorkspaceState {
@@ -164,6 +160,8 @@ export interface MuApi {
 		open(path: string): Promise<WorkspaceChoice>;
 		/** Read a text file inside the current project for the Files panel. */
 		readFile(path: string): Promise<FilePreview>;
+		/** Save an edit to a file the panel read, quoting the hash it was read at. */
+		saveFile(path: string, text: string, expectedHash: string): Promise<SavedFile>;
 	};
 	readonly sessions: {
 		/** Saved sessions for the current workspace, newest first. */
@@ -219,6 +217,7 @@ export const IPC_CHANNELS = {
 	workspaceChoose: "workspace:choose",
 	workspaceOpen: "workspace:open",
 	workspaceReadFile: "workspace:read-file",
+	workspaceSaveFile: "workspace:write-file",
 	sessionsList: "sessions:list",
 	sessionsOpen: "sessions:open",
 	sessionsRename: "sessions:rename",
@@ -256,6 +255,7 @@ export const INVOKE_CHANNELS = [
 	IPC_CHANNELS.workspaceChoose,
 	IPC_CHANNELS.workspaceOpen,
 	IPC_CHANNELS.workspaceReadFile,
+	IPC_CHANNELS.workspaceSaveFile,
 	IPC_CHANNELS.sessionsList,
 	IPC_CHANNELS.sessionsOpen,
 	IPC_CHANNELS.sessionsRename,
@@ -280,7 +280,7 @@ export type EventChannel = (typeof EVENT_CHANNELS)[number];
 
 /** Why a call failed, in a shape the renderer can branch on instead of parsing messages. */
 export interface ApiFailure {
-	readonly code: "unknown-channel" | "invalid-payload" | "not-running" | "failed";
+	readonly code: "unknown-channel" | "invalid-payload" | "not-running" | "conflict" | "failed";
 	readonly message: string;
 }
 

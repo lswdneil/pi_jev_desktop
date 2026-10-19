@@ -24,6 +24,7 @@ import {
 	type MuApi,
 	type JudgmentRecord,
 	type PromptResult,
+	type SavedFile,
 	type SessionSnapshot,
 	type SessionSummary,
 	type UiAnswer,
@@ -77,6 +78,8 @@ const api: MuApi = {
 		choose: () => invoke<WorkspaceChoice>(IPC_CHANNELS.workspaceChoose),
 		open: (path) => invoke<WorkspaceChoice>(IPC_CHANNELS.workspaceOpen, { path }),
 		readFile: (path) => invoke<FilePreview>(IPC_CHANNELS.workspaceReadFile, { path }),
+		saveFile: (path, text, expectedHash) =>
+			invoke<SavedFile>(IPC_CHANNELS.workspaceSaveFile, { path, text, expectedHash }),
 	},
 	sessions: {
 		list: () => invoke<readonly SessionSummary[]>(IPC_CHANNELS.sessionsList),

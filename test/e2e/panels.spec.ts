@@ -2,6 +2,9 @@
 // Copyright (c) 2025-2026 the mu authors
 
 import { expect, test } from "@playwright/test";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { completeFirstRun, launchApp } from "./helpers/app.ts";
 
 /**
@@ -49,6 +52,43 @@ test.describe("panels", () => {
 			await expect(page.locator('[data-testid="files-panel"]')).toContainText("write");
 		} finally {
 			await profile.close();
+		}
+	});
+
+	test("the files panel edits a file, and refuses to overwrite one that changed", async () => {
+		const workspace = mkdtempSync(join(tmpdir(), "mu-e2e-workspace-"));
+		mkdirSync(join(workspace, "src"), { recursive: true });
+		const file = join(workspace, "src", "app.ts");
+		writeFileSync(file, "export const value = 1;\n");
+		const profile = await launchApp({ env: { MU_WORKSPACE: workspace } });
+		const { page } = profile;
+		try {
+			await completeFirstRun(page);
+			await expect(page.locator(".chip")).toContainText("running", { timeout: 60_000 });
+
+			await page.locator('[data-testid="composer"]').fill("write");
+			await page.locator('[data-testid="send"]').click();
+			await page.locator('[data-testid="tab-files"]').click();
+			await page.locator('[data-file="src/app.ts"] button').click();
+			await expect(page.locator('[data-testid="file-preview"]')).toContainText("export const value = 1;");
+
+			await page.locator('[data-testid="file-edit"]').click();
+			await page.locator('[data-testid="file-editor"]').fill("export const value = 2;\n");
+			await expect(page.locator('[data-testid="file-diff"]')).toContainText("+1");
+			await page.locator('[data-testid="file-save"]').click();
+			await expect(page.locator('[data-testid="file-preview"]')).toContainText("Saved");
+			expect(readFileSync(file, "utf8")).toBe("export const value = 2;\n");
+
+			// The agent writes while the editor is open: saving is a conflict to look at, not an overwrite.
+			await page.locator('[data-testid="file-edit"]').click();
+			await page.locator('[data-testid="file-editor"]').fill("export const value = 3;\n");
+			writeFileSync(file, "export const value = 9;\n");
+			await page.locator('[data-testid="file-save"]').click();
+			await expect(page.locator('[data-testid="file-reload"]')).toBeVisible();
+			expect(readFileSync(file, "utf8")).toBe("export const value = 9;\n");
+		} finally {
+			await profile.close();
+			rmSync(workspace, { recursive: true, force: true });
 		}
 	});
 

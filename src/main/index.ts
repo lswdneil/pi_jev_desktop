@@ -21,7 +21,7 @@ import { APP_SCHEME, resolveAppRequest } from "./app-protocol.ts";
 import { spawnAgentProcess } from "./agent-process.ts";
 import { consentState, runConsentCommand, runHarnessCommand } from "./consent.ts";
 import { expectedHarness, type Harness, findHarness, launchCommand } from "./harness.ts";
-import { readFilePreview } from "./files.ts";
+import { readFilePreview, saveFile } from "./files.ts";
 import { createApi } from "./ipc.ts";
 import { isPreviewContents, PreviewPanel } from "./preview.ts";
 import { APP_ORIGIN, appPermission, contentSecurityPolicy, developmentCsp, isAllowedNavigation, windowPreferences } from "./security.ts";
@@ -199,6 +199,9 @@ const workspace = {
 	},
 	async readFile(path: string): Promise<unknown> {
 		return readFilePreview(currentWorkspace(currentHarness()), path);
+	},
+	async saveFile(path: string, text: string, expectedHash: string): Promise<unknown> {
+		return saveFile(currentWorkspace(currentHarness()), path, text, expectedHash);
 	},
 };
 

@@ -11,6 +11,7 @@
 
 import { type ApiFailure, type ApiResult, INVOKE_CHANNELS, type InvokeChannel, type UiAnswer } from "../shared/api.ts";
 import type { SettingsChange } from "../shared/settings.ts";
+import { FileConflictError } from "./files.ts";
 import { NotRunningError } from "./supervisor.ts";
 
 /** What the handlers need. Narrow on purpose: a test passes a few functions, not an app. */
@@ -36,6 +37,7 @@ export interface ApiDependencies {
 		choose(): Promise<unknown>;
 		open(path: string): Promise<unknown>;
 		readFile(path: string): Promise<unknown>;
+		saveFile(path: string, text: string, expectedHash: string): Promise<unknown>;
 	};
 	/** Saved sessions for the current workspace. */
 	readonly sessions: {
@@ -137,6 +139,21 @@ function filePathOf(payload: unknown): string {
 	return path;
 }
 
+/** A textedit over the bridge: within the same 1 MB the reader accepts, and always quoting what it read. */
+const MAX_FILE_CHARS = 2_000_000;
+
+function fileEditOf(payload: unknown): { path: string; text: string; expectedHash: string } {
+	const path = filePathOf(payload);
+	const text = field(payload, "text");
+	const expectedHash = field(payload, "expectedHash");
+	if (typeof text !== "string") throw new InvalidPayloadError("a save needs the file's text");
+	if (text.length > MAX_FILE_CHARS) throw new InvalidPayloadError(`a save may be at most ${MAX_FILE_CHARS} characters`);
+	if (typeof expectedHash !== "string" || !/^[0-9a-f]{64}$/.test(expectedHash)) {
+		throw new InvalidPayloadError("a save needs the hash of the file it read");
+	}
+	return { path, text, expectedHash };
+}
+
 /** An answer: exactly one of a value, a confirmation, or a cancellation, and always an id. */
 function answerOf(payload: unknown): UiAnswer {
 	const id = field(payload, "id");
@@ -199,6 +216,10 @@ export function createApi(deps: ApiDependencies): Api {
 		"workspace:choose": async () => deps.workspace.choose(),
 		"workspace:open": async (payload) => deps.workspace.open(workspacePathOf(payload)),
 		"workspace:read-file": async (payload) => deps.workspace.readFile(filePathOf(payload)),
+		"workspace:write-file": async (payload) => {
+			const edit = fileEditOf(payload);
+			return deps.workspace.saveFile(edit.path, edit.text, edit.expectedHash);
+		},
 		"sessions:list": async () => deps.sessions.list(),
 		"sessions:open": async (payload) => {
 			await deps.sessions.open(sessionPathOf(payload));
@@ -238,6 +259,7 @@ export function createApi(deps: ApiDependencies): Api {
 			} catch (error) {
 				if (error instanceof InvalidPayloadError) return failure("invalid-payload", error.message);
 				if (error instanceof NotRunningError) return failure("not-running", error.message);
+				if (error instanceof FileConflictError) return failure("conflict", error.message);
 				return failure("failed", error instanceof Error ? error.message : String(error));
 			}
 		},
