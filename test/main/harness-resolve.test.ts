@@ -67,6 +67,26 @@ describe("finding the harness", () => {
 		expect(harness).toEqual({ root: bundled, layout: "package", source: "bundled" });
 	});
 
+	it("takes the runtime a checkout staged, before a sibling checkout", () => {
+		// `npm run stage:harness` writes exactly what a package carries; a clone that ran it needs no MU_ROOT and no
+		// second checkout beside it.
+		const staged = "/work/pi_jev_desktop/resources/harness/mu-agent";
+		const harness = findHarness(
+			"/work/pi_jev_desktop",
+			onDisk([`${staged}/kyrn/bin/mu.mjs`, `${staged}/dist/bundle/cli.js`, "/work/KYRN/kyrn/bin/mu.mjs"]),
+		);
+		expect(harness).toEqual({ root: staged, layout: "package", source: "bundled" });
+	});
+
+	it("still lets MU_ROOT win over the staged copy, for work on the runtime itself", () => {
+		const staged = "/work/pi_jev_desktop/resources/harness/mu-agent";
+		const harness = findHarness(
+			"/work/pi_jev_desktop",
+			onDisk([`${staged}/kyrn/bin/mu.mjs`, "/opt/mu/kyrn/bin/mu.mjs"], { env: { MU_ROOT: "/opt/mu" } }),
+		);
+		expect(harness).toMatchObject({ root: "/opt/mu", source: "env" });
+	});
+
 	it("finds a checkout two repositories side by side", () => {
 		const harness = findHarness("/work/desktop-next", onDisk(["/work/KYRN/kyrn/bin/mu.mjs"]));
 		expect(harness).toEqual({ root: "/work/KYRN", layout: "repo", source: "beside" });

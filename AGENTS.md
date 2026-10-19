@@ -39,6 +39,10 @@ npm run package                                              # NSIS installer in
 node scripts/install-rehearsal.mjs                           # silent install, a real turn, uninstall
 ```
 
+Development resolves the harness in this order: `MU_ROOT`/`KYRN_ROOT`, a packaged app's `resources/harness/mu-agent`, this
+checkout's staged `resources/harness/mu-agent`, a sibling checkout, then a global npm install. Staging once makes the
+clone self-contained; `MU_ROOT` remains the override for work on the runtime itself.
+
 ## Conventions
 
 - Language: user-facing copy is localised in `src/renderer` for `en`, `zh`, and `zh-TW`; add all three.

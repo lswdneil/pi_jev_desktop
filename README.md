@@ -33,7 +33,9 @@ The product specification and clickable design prototype live in `docs/`.
 
 ## Run
 
-The app expects a mu checkout that contains `kyrn/bin/mu.mjs`.
+The app needs a mu harness: a checkout that contains `kyrn/bin/mu.mjs`, or the runtime staged into this repository's
+`resources/harness/mu-agent` (`npm run stage:harness`). `MU_ROOT` names a checkout and wins over everything else; without
+it, a staged runtime is what a clone runs, and the same folder is what an installer ships.
 
 ```powershell
 $env:MU_ROOT = "C:\Users\wd_al\Downloads\DSH-Beta\mu-work"
@@ -42,6 +44,11 @@ npm run typecheck
 npm test
 npm run build
 npm run dev
+```
+
+```powershell
+npm run stage:harness   # copies a built mu-agent into resources/harness/mu-agent (git-ignored)
+npm run dev             # no MU_ROOT needed once that folder exists
 ```
 
 `MU_WORKSPACE` selects the initial project folder. Without it, a repository checkout starts in its own root and a

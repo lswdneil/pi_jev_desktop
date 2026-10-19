@@ -169,6 +169,12 @@ export function findHarness(desktopRoot: string | undefined, patch: Partial<Harn
 	const bundled = deps.resourcesPath ? bundledHarnessRoot(deps.resourcesPath, deps.platform) : undefined;
 	if (bundled && holdsMu(bundled, deps)) return found(bundled, "bundled");
 
+	// A checkout that has staged the runtime carries the same package a build would: it is what `npm run stage:harness`
+	// puts in `resources/harness/mu-agent`, and using it here is what lets a clone run without MU_ROOT and without a
+	// second checkout beside it. `MU_ROOT` still wins, for a developer working on the runtime itself.
+	const staged = desktopRoot ? p.join(desktopRoot, "resources", "harness", PACKAGE_NAME) : undefined;
+	if (staged && holdsMu(staged, deps)) return found(staged, "bundled");
+
 	const besides = desktopRoot ? [p.join(desktopRoot, "..", "KYRN"), p.join(desktopRoot, "..")] : [];
 	for (const beside of besides) {
 		const root = p.resolve(beside);
