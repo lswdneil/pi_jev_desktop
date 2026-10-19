@@ -19,6 +19,7 @@ This is the first vertical slice. It adds:
 - Tool rows keep the tool's own answer, one click away, clipped to 4 000 characters.
 - Links in an answer open in the built-in hardened preview; the header shows what is open and closes it.
 - `Ctrl+=` / `Ctrl+-` / `Ctrl+0` zoom the window; the level is remembered.
+- The panels are a keyboard-operable tablist and the agent's state is announced (live region).
 - Recent-project rows with their folder, and a way to forget a shortcut.
 - A model picker that changes the running session.
 - The conversation, tool runs, approval cards, file history, and judgment ledger.

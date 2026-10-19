@@ -167,6 +167,7 @@ export function FilesPanel({
 							<textarea
 								className="file-editor"
 								data-testid="file-editor"
+								aria-label={text("panel.editor")}
 								value={draft}
 								spellCheck={false}
 								onChange={(event) => {

@@ -119,11 +119,34 @@ test("quick open finds a project file and opens it in the Files panel", async ()
 		await hit.click();
 
 		await expect(page.getByTestId("quick-open")).toHaveCount(0);
-		await expect(page.getByTestId("tab-files")).toHaveAttribute("aria-pressed", "true");
+		await expect(page.getByTestId("tab-files")).toHaveAttribute("aria-selected", "true");
 		await expect(page.getByTestId("file-preview")).toContainText("export const value = 1;");
 	} finally {
 		await profile.close();
 		rmSync(workspace, { recursive: true, force: true });
+	}
+});
+
+test("the panels are a tablist a keyboard can drive", async () => {
+	const profile = await launchApp();
+	try {
+		const { page } = profile;
+		await completeFirstRun(page);
+		await expect(page.getByRole("tablist", { name: "Panels" })).toBeVisible();
+
+		await page.getByTestId("tab-files").click();
+		await expect(page.getByTestId("tab-files")).toHaveAttribute("aria-selected", "true");
+
+		// Roving focus is what makes a tablist a tablist: the arrows move both the selection and the focus.
+		await page.getByTestId("tab-files").focus();
+		await page.keyboard.press("ArrowRight");
+		await expect(page.getByTestId("tab-judgments")).toHaveAttribute("aria-selected", "true");
+		await expect(page.getByTestId("tab-judgments")).toBeFocused();
+
+		// The agent's state is a live region, so a status change is announced rather than merely drawn.
+		await expect(page.locator(".chip")).toHaveAttribute("aria-live", "polite");
+	} finally {
+		await profile.close();
 	}
 });
 

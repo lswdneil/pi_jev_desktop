@@ -83,6 +83,8 @@ This release implements:
   view starts under the app's header, and the header says what is previewed and closes it.
 - `Ctrl+=`, `Ctrl+-` and `Ctrl+0` zoom the window in half steps between -3 and 3; the level is saved with the window
   bounds and restored next start.
+- The right-hand panels are a real tablist (roving focus, arrow keys, `aria-selected`), the agent's state is a live
+  region, and the file editor has a label — the parts of a desktop UI a screen reader needs.
 - Approval cards for confirm, select, input, and editor requests.
 - The spec.ai.jev logo and the Freebuff dark palette.
 

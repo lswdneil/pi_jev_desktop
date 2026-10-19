@@ -748,7 +748,9 @@ export function App(): React.JSX.Element {
 
 				<div className="rail-footer">
 					<div className="rail-status">
-						<span className={`chip chip-${status.state}`}>{statusLabel(status, text)}</span>
+						<span className={`chip chip-${status.state}`} role="status" aria-live="polite">
+							{statusLabel(status, text)}
+						</span>
 						{version === "" ? null : <span className="muted">v{version}</span>}
 					</div>
 					<button type="button" onClick={() => void restart()} disabled={busy} data-testid="restart">
@@ -872,23 +874,41 @@ function Panels({
 	const state = useSyncExternalStore(store.subscribe, store.getSnapshot);
 	return (
 		<>
-			<nav className="tabs">
+			{/* A tablist, not three buttons: a screen reader should hear "tab 2 of 3, selected" and the arrows should work. */}
+			<nav className="tabs" role="tablist" aria-label={text("panel.sections")}>
 				{(["board", "files", "judgments"] as const).map((name) => (
 					<button
 						key={name}
 						type="button"
+						role="tab"
+						id={`tab-${name}`}
+						aria-selected={tab === name}
+						aria-controls={`panel-${name}`}
+						tabIndex={tab === name ? 0 : -1}
 						className={tab === name ? "active" : ""}
-						aria-pressed={tab === name}
 						onClick={() => onTab(name)}
+						onKeyDown={(event) => {
+							if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+							event.preventDefault();
+							const order = ["board", "files", "judgments"] as const;
+							const step = event.key === "ArrowRight" ? 1 : -1;
+							const next = order[(order.indexOf(tab) + step + order.length) % order.length];
+							if (next !== undefined) {
+								onTab(next);
+								document.getElementById(`tab-${next}`)?.focus();
+							}
+						}}
 						data-testid={`tab-${name}`}
 					>
 						{text(`panel.${name}`)}
 					</button>
 				))}
 			</nav>
-			{tab === "board" ? <BoardPanel board={state.board} text={text} /> : null}
-			{tab === "files" ? <FilesPanel files={state.files} api={api} text={text} openFile={openFile} /> : null}
-			{tab === "judgments" ? <JudgmentsPanel api={api} text={text} /> : null}
+			<div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
+				{tab === "board" ? <BoardPanel board={state.board} text={text} /> : null}
+				{tab === "files" ? <FilesPanel files={state.files} api={api} text={text} openFile={openFile} /> : null}
+				{tab === "judgments" ? <JudgmentsPanel api={api} text={text} /> : null}
+			</div>
 		</>
 	);
 }
