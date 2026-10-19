@@ -1,0 +1,75 @@
+name: desktop package
+
+# One job, Windows x64: that is the artifact this product ships today, the installer the install rehearsal runs, and the
+# feed the updater reads. macOS and Linux targets are configured in electron-builder.yml but are not built here yet;
+# they need their own signing secrets rather than a matrix that pretends one certificate signs all three.
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    env:
+      # electron-builder reads these itself; empty secrets simply mean an unsigned build. The installer still works,
+      # and Windows SmartScreen will say who signed it (nobody).
+      CSC_LINK: ${{ secrets.CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: verify
+        run: |
+          npm run typecheck
+          npm test
+          npm run build
+          npm run budget
+
+      - name: stage the mu runtime from npm
+        shell: pwsh
+        run: |
+          # The runtime is a built package, not source: the `mu-agent` tarball plus its dependencies is exactly what
+          # `scripts/stage-harness.mjs` expects. The version is pinned here so a build does not move under the product.
+          npm pack mu-agent@0.1.8
+          tar -xzf mu-agent-0.1.8.tgz
+          npm install --omit=dev --prefix package
+          "MU_HARNESS_ROOT=$PWD/package" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: package
+        run: npm run package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spec.ai.jev-0.1.0-x64
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+            dist/latest.yml
+          if-no-files-found: error
+
+      # A draft, not a release: the bytes a tag produces are the bytes someone has to install and the updater has to
+      # prove, and publishing is a person's decision (see docs/release.md).
+      - name: draft release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: |
+            dist/*.exe
+            dist/*.blockmap
+            dist/latest.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
