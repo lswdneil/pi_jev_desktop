@@ -57,15 +57,28 @@ headings `#facc15`.
 ## Verification
 
 ```powershell
-npm run typecheck
-npm test
-npm run build
-npm run budget
+npm run verify          # typecheck, tests, build, size budget
 npm run test:e2e
 ```
 
 The integration tests use temporary `HOME`, `USERPROFILE`, browser profile, and harness data; they do not touch a
 developer's real mu state.
+
+## Source control
+
+Changes land in small, verifiable stages: run `npm run verify`, commit with a conventional subject, push to
+`origin/main`. `AGENTS.md` states the rule, and `.gitignore` keeps build output and the staged runtime out of history.
+
+## Packaging
+
+```powershell
+$env:MU_ROOT = "C:\Users\wd_al\Downloads\DSH-Beta\mu-work"
+npm run package:dir      # build + stage the mu runtime + unpacked app in dist/
+npm run smoke:package    # launch it and wait for the agent to report "running ·"
+```
+
+`scripts/stage-harness.mjs` copies the built `mu-agent` package into `resources/harness/mu-agent` (~34 MB, git-ignored);
+it accepts `--from <folder>` and `MU_HARNESS_ROOT` when the runtime lives elsewhere.
 
 ## License
 
