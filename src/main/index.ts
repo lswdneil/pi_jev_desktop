@@ -10,10 +10,10 @@
  * to. The policy is then set on every response the scheme handler produces, so a document cannot exist without it.
  */
 
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { BrowserWindow, Menu, app, dialog, ipcMain, protocol, session } from "electron";
 import { IPC_CHANNELS, type JudgmentRecord } from "../shared/api.ts";
 import { artifactUrl } from "../shared/update.ts";
@@ -179,6 +179,19 @@ const workspace = {
 		if (result.canceled || chosen === undefined) {
 			return { path: currentWorkspace(harness), cancelled: true, status: supervisor.getStatus() };
 		}
+		workspaceRoot = chosen;
+		const status = await supervisor.restart();
+		return { path: chosen, cancelled: false, status };
+	},
+	async open(path: string): Promise<{ path: string; cancelled: boolean; status: unknown }> {
+		const chosen = resolve(path);
+		let isDirectory = false;
+		try {
+			isDirectory = statSync(chosen).isDirectory();
+		} catch {
+			isDirectory = false;
+		}
+		if (!isDirectory) throw new Error(`not a project folder: ${chosen}`);
 		workspaceRoot = chosen;
 		const status = await supervisor.restart();
 		return { path: chosen, cancelled: false, status };

@@ -7,6 +7,7 @@ import type { AgentEvent, HarnessStatus, ModelChoice, MuApi, SessionSnapshot, Se
 import type { ConversationEvent } from "../shared/conversation.ts";
 import { ConversationStore } from "./lib/conversation-store.ts";
 import { hasOnboarded, markOnboarded, useLanguage } from "./lib/i18n.ts";
+import { readRecentWorkspaces, rememberWorkspace } from "./lib/recent-workspaces.ts";
 import { ConversationPage } from "./pages/Conversation/ConversationPage.tsx";
 import { FirstRunPage } from "./pages/FirstRun/FirstRunPage.tsx";
 import { SettingsPage } from "./pages/Settings/SettingsPage.tsx";
@@ -58,6 +59,7 @@ export function App(): React.JSX.Element {
 	const operation = useRef(false);
 	const [sessionRevision, setSessionRevision] = useState(0);
 	const [workspacePath, setWorkspacePath] = useState("");
+	const [recentWorkspaces, setRecentWorkspaces] = useState<string[]>(readRecentWorkspaces);
 	const [models, setModels] = useState<readonly ModelChoice[]>([]);
 	const [sessions, setSessions] = useState<readonly SessionSummary[]>([]);
 	const [modelBusy, setModelBusy] = useState(false);
@@ -211,6 +213,7 @@ export function App(): React.JSX.Element {
 			const choice = await api.workspace.choose();
 			if (choice.cancelled) return;
 			setWorkspacePath(choice.path);
+			setRecentWorkspaces(rememberWorkspace(choice.path));
 			store.reset();
 			setSessionRevision((revision) => revision + 1);
 			setStatus(choice.status);
@@ -221,6 +224,30 @@ export function App(): React.JSX.Element {
 			setBusy(false);
 		}
 	}, [api, store, report]);
+
+	const openWorkspace = useCallback(
+		async (path: string) => {
+			if (api === undefined || operation.current) return;
+			operation.current = true;
+			setBusy(true);
+			setError("");
+			try {
+				const choice = await api.workspace.open(path);
+				if (choice.cancelled) return;
+				setWorkspacePath(choice.path);
+				setRecentWorkspaces(rememberWorkspace(choice.path));
+				store.reset();
+				setSessionRevision((revision) => revision + 1);
+				setStatus(choice.status);
+			} catch (failure) {
+				report(failure instanceof Error ? failure.message : String(failure));
+			} finally {
+				operation.current = false;
+				setBusy(false);
+			}
+		},
+		[api, store, report],
+	);
 
 	const chooseModel = useCallback(
 		async (value: string) => {
@@ -325,6 +352,29 @@ export function App(): React.JSX.Element {
 						<span className="muted">{text("app.openProject")}</span>
 					</button>
 				</section>
+
+				{recentWorkspaces.length === 0 ? null : (
+					<section className="rail-section">
+						<h2>{text("app.recent")}</h2>
+						<div className="recent-list">
+							{recentWorkspaces.map((path) => {
+								const name = path.split(/[\\/]/).filter(Boolean).at(-1) ?? path;
+								return (
+									<button
+										key={path}
+										type="button"
+										className={path === workspacePath ? "recent-item active" : "recent-item"}
+										onClick={() => void openWorkspace(path)}
+										disabled={busy || path === workspacePath}
+										title={path}
+									>
+										{name}
+									</button>
+								);
+							})}
+						</div>
+					</section>
+				)}
 
 				<section className="rail-section rail-session">
 					<h2>{text("app.sessions")}</h2>

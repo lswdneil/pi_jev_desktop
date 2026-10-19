@@ -153,6 +153,34 @@ body {
 	font-size: 11px;
 }
 
+.recent-list {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.recent-item {
+	width: 100%;
+	padding: 5px 8px;
+	overflow: hidden;
+	border-color: transparent;
+	background: transparent;
+	color: var(--muted);
+	font-size: 11px;
+	text-align: left;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.recent-item:hover:not(:disabled) {
+	background: var(--surface-hover);
+	color: var(--text);
+}
+
+.recent-item.active {
+	color: var(--accent);
+}
+
 .session-card {
 	display: flex;
 	flex-direction: column;

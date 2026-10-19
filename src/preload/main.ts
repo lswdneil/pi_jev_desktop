@@ -74,6 +74,7 @@ const api: MuApi = {
 	workspace: {
 		current: () => invoke<WorkspaceState>(IPC_CHANNELS.workspaceCurrent),
 		choose: () => invoke<WorkspaceChoice>(IPC_CHANNELS.workspaceChoose),
+		open: (path) => invoke<WorkspaceChoice>(IPC_CHANNELS.workspaceOpen, { path }),
 	},
 	sessions: {
 		list: () => invoke<readonly SessionSummary[]>(IPC_CHANNELS.sessionsList),

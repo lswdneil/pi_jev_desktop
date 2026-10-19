@@ -153,6 +153,8 @@ export interface MuApi {
 		current(): Promise<WorkspaceState>;
 		/** Ask for a folder, then restart the agent in it. Cancellation leaves the current session alone. */
 		choose(): Promise<WorkspaceChoice>;
+		/** Open a known folder, then restart the agent in it. */
+		open(path: string): Promise<WorkspaceChoice>;
 	};
 	readonly sessions: {
 		/** Saved sessions for the current workspace, newest first. */
@@ -204,6 +206,7 @@ export const IPC_CHANNELS = {
 	harnessUiResponse: "harness:ui-response",
 	workspaceCurrent: "workspace:current",
 	workspaceChoose: "workspace:choose",
+	workspaceOpen: "workspace:open",
 	sessionsList: "sessions:list",
 	sessionsOpen: "sessions:open",
 	judgmentsRecent: "judgments:recent",
@@ -238,6 +241,7 @@ export const INVOKE_CHANNELS = [
 	IPC_CHANNELS.harnessUiResponse,
 	IPC_CHANNELS.workspaceCurrent,
 	IPC_CHANNELS.workspaceChoose,
+	IPC_CHANNELS.workspaceOpen,
 	IPC_CHANNELS.sessionsList,
 	IPC_CHANNELS.sessionsOpen,
 	IPC_CHANNELS.judgmentsRecent,

@@ -63,6 +63,10 @@ function build(overrides: Partial<ApiDependencies> = {}): {
 				calls.push("workspace-choose");
 				return { path: "/workspace/next", cancelled: false, status: { state: "running" } };
 			},
+			open: async (path) => {
+				calls.push(`workspace-open:${path}`);
+				return { path, cancelled: false, status: { state: "running" } };
+			},
 		},
 		sessions: {
 			list: async () => {
@@ -146,6 +150,7 @@ describe("the allow-list", () => {
 			"harness:ui-response",
 			"workspace:current",
 			"workspace:choose",
+			"workspace:open",
 			"sessions:list",
 			"sessions:open",
 			"judgments:recent",
@@ -242,6 +247,7 @@ describe("failures", () => {
 			workspace: {
 				current: async () => ({ path: "/workspace" }),
 				choose: async () => ({ path: "/workspace", cancelled: true, status: { state: "stopped" } }),
+				open: async (path) => ({ path, cancelled: false, status: { state: "running" } }),
 			},
 		});
 
@@ -269,6 +275,7 @@ describe("failures", () => {
 			workspace: {
 				current: async () => ({ path: "/workspace" }),
 				choose: async () => ({ path: "/workspace", cancelled: true, status: { state: "stopped" } }),
+				open: async (path) => ({ path, cancelled: false, status: { state: "running" } }),
 			},
 		});
 
@@ -377,7 +384,15 @@ describe("settings and consent", () => {
 			ok: true,
 			value: { path: "/workspace/next", cancelled: false, status: { state: "running" } },
 		});
-		expect(calls).toEqual(["workspace-current", "workspace-choose"]);
+		await expect(api.dispatch("workspace:open", { path: "/workspace/known" })).resolves.toMatchObject({
+			ok: true,
+			value: { path: "/workspace/known", cancelled: false },
+		});
+		await expect(api.dispatch("workspace:open", {})).resolves.toMatchObject({
+			ok: false,
+			error: { code: "invalid-payload" },
+		});
+		expect(calls).toEqual(["workspace-current", "workspace-choose", "workspace-open:/workspace/known"]);
 	});
 
 	it("lists and opens saved sessions through named channels", async () => {

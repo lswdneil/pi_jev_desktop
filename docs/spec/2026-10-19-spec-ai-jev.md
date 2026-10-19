@@ -54,6 +54,7 @@ trust it?".
 This release implements:
 
 - A workspace chooser that restarts the harness in the selected folder.
+- Recent-project shortcuts backed by local window storage.
 - A session rail showing the current session, saved sessions, and model.
 - Saved-session switching through the harness's `switch_session` command.
 - A model picker backed by `get_available_models` / `set_model`.
@@ -145,7 +146,7 @@ These require their own specs and acceptance tests.
 ## Next slices
 
 1. Session search, naming, and cross-project history.
-2. Project list and recent workspaces.
+2. Project list with metadata, search, and removal.
 3. Approval history and a judgment detail drawer.
 4. File diff and preview.
 5. Installer, signing key, and update verification.

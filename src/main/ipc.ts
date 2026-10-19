@@ -34,6 +34,7 @@ export interface ApiDependencies {
 	readonly workspace: {
 		current(): Promise<unknown>;
 		choose(): Promise<unknown>;
+		open(path: string): Promise<unknown>;
 	};
 	/** Saved sessions for the current workspace. */
 	readonly sessions: {
@@ -116,6 +117,12 @@ function sessionPathOf(payload: unknown): string {
 	return path;
 }
 
+function workspacePathOf(payload: unknown): string {
+	const path = field(payload, "path");
+	if (typeof path !== "string" || path.trim() === "") throw new InvalidPayloadError("a workspace needs a path");
+	return path;
+}
+
 /** An answer: exactly one of a value, a confirmation, or a cancellation, and always an id. */
 function answerOf(payload: unknown): UiAnswer {
 	const id = field(payload, "id");
@@ -176,6 +183,7 @@ export function createApi(deps: ApiDependencies): Api {
 		},
 		"workspace:current": async () => deps.workspace.current(),
 		"workspace:choose": async () => deps.workspace.choose(),
+		"workspace:open": async (payload) => deps.workspace.open(workspacePathOf(payload)),
 		"sessions:list": async () => deps.sessions.list(),
 		"sessions:open": async (payload) => {
 			await deps.sessions.open(sessionPathOf(payload));

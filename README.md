@@ -10,6 +10,7 @@ runtime remains a mu/pi harness; this repository owns the desktop product, its w
 This is the first vertical slice. It adds:
 
 - A project workspace picker; the chosen folder becomes the agent's working directory.
+- Recent-project shortcuts for returning to a workspace without reopening the folder dialog.
 - A session rail with the current session, saved sessions, and model; selecting a saved session switches the live agent.
 - A model picker that changes the running session.
 - The conversation, tool runs, approval cards, file history, and judgment ledger.
