@@ -61,6 +61,7 @@ This release implements:
 - A model picker backed by `get_available_models` / `set_model`.
 - Conversation streaming, stop, new session, and history restoration.
 - Tool execution rows, file changes, and the judgment ledger.
+- Read-only file preview for paths inside the selected workspace.
 - Approval cards for confirm, select, input, and editor requests.
 - The spec.ai.jev logo and the Freebuff dark palette.
 
@@ -149,5 +150,5 @@ These require their own specs and acceptance tests.
 1. Cross-project session history and archived-session management.
 2. Project list with metadata, search, and removal.
 3. Approval history and a judgment detail drawer.
-4. File diff and preview.
+4. File diff, editor, and save.
 5. Installer, signing key, and update verification.

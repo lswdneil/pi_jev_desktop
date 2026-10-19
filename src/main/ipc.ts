@@ -35,6 +35,7 @@ export interface ApiDependencies {
 		current(): Promise<unknown>;
 		choose(): Promise<unknown>;
 		open(path: string): Promise<unknown>;
+		readFile(path: string): Promise<unknown>;
 	};
 	/** Saved sessions for the current workspace. */
 	readonly sessions: {
@@ -130,6 +131,12 @@ function sessionNameOf(payload: unknown): string {
 	return name;
 }
 
+function filePathOf(payload: unknown): string {
+	const path = field(payload, "path");
+	if (typeof path !== "string" || path.trim() === "") throw new InvalidPayloadError("a file preview needs a path");
+	return path;
+}
+
 /** An answer: exactly one of a value, a confirmation, or a cancellation, and always an id. */
 function answerOf(payload: unknown): UiAnswer {
 	const id = field(payload, "id");
@@ -191,6 +198,7 @@ export function createApi(deps: ApiDependencies): Api {
 		"workspace:current": async () => deps.workspace.current(),
 		"workspace:choose": async () => deps.workspace.choose(),
 		"workspace:open": async (payload) => deps.workspace.open(workspacePathOf(payload)),
+		"workspace:read-file": async (payload) => deps.workspace.readFile(filePathOf(payload)),
 		"sessions:list": async () => deps.sessions.list(),
 		"sessions:open": async (payload) => {
 			await deps.sessions.open(sessionPathOf(payload));

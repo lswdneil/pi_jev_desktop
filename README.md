@@ -14,6 +14,7 @@ This is the first vertical slice. It adds:
 - A session rail with the current session, saved sessions, search, rename, and model; selecting a saved session switches the live agent.
 - A model picker that changes the running session.
 - The conversation, tool runs, approval cards, file history, and judgment ledger.
+- A read-only file preview for files inside the current project.
 - The Freebuff dark palette, with the spec.ai.jev logo as the global brand mark.
 
 The product specification and clickable design prototype live in `docs/`.

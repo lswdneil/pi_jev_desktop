@@ -16,6 +16,7 @@ import {
 	type ConsentState,
 	EVENT_CHANNELS,
 	type EventChannel,
+	type FilePreview,
 	type HarnessStatus,
 	IPC_CHANNELS,
 	type InvokeChannel,
@@ -75,6 +76,7 @@ const api: MuApi = {
 		current: () => invoke<WorkspaceState>(IPC_CHANNELS.workspaceCurrent),
 		choose: () => invoke<WorkspaceChoice>(IPC_CHANNELS.workspaceChoose),
 		open: (path) => invoke<WorkspaceChoice>(IPC_CHANNELS.workspaceOpen, { path }),
+		readFile: (path) => invoke<FilePreview>(IPC_CHANNELS.workspaceReadFile, { path }),
 	},
 	sessions: {
 		list: () => invoke<readonly SessionSummary[]>(IPC_CHANNELS.sessionsList),

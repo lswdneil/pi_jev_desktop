@@ -86,6 +86,13 @@ export interface SessionSummary {
 	readonly updatedAt: string;
 }
 
+export interface FilePreview {
+	readonly path: string;
+	readonly text: string;
+	readonly truncated: boolean;
+	readonly binary: boolean;
+}
+
 /** The folder the agent runs in, and the result of choosing a different one. */
 export interface WorkspaceState {
 	readonly path: string;
@@ -155,6 +162,8 @@ export interface MuApi {
 		choose(): Promise<WorkspaceChoice>;
 		/** Open a known folder, then restart the agent in it. */
 		open(path: string): Promise<WorkspaceChoice>;
+		/** Read a text file inside the current project for the Files panel. */
+		readFile(path: string): Promise<FilePreview>;
 	};
 	readonly sessions: {
 		/** Saved sessions for the current workspace, newest first. */
@@ -209,6 +218,7 @@ export const IPC_CHANNELS = {
 	workspaceCurrent: "workspace:current",
 	workspaceChoose: "workspace:choose",
 	workspaceOpen: "workspace:open",
+	workspaceReadFile: "workspace:read-file",
 	sessionsList: "sessions:list",
 	sessionsOpen: "sessions:open",
 	sessionsRename: "sessions:rename",
@@ -245,6 +255,7 @@ export const INVOKE_CHANNELS = [
 	IPC_CHANNELS.workspaceCurrent,
 	IPC_CHANNELS.workspaceChoose,
 	IPC_CHANNELS.workspaceOpen,
+	IPC_CHANNELS.workspaceReadFile,
 	IPC_CHANNELS.sessionsList,
 	IPC_CHANNELS.sessionsOpen,
 	IPC_CHANNELS.sessionsRename,

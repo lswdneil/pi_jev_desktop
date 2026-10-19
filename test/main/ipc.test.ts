@@ -67,6 +67,10 @@ function build(overrides: Partial<ApiDependencies> = {}): {
 				calls.push(`workspace-open:${path}`);
 				return { path, cancelled: false, status: { state: "running" } };
 			},
+			readFile: async (path) => {
+				calls.push(`read-file:${path}`);
+				return { path, text: "hello", truncated: false, binary: false };
+			},
 		},
 		sessions: {
 			list: async () => {
@@ -154,6 +158,7 @@ describe("the allow-list", () => {
 			"workspace:current",
 			"workspace:choose",
 			"workspace:open",
+			"workspace:read-file",
 			"sessions:list",
 			"sessions:open",
 			"sessions:rename",
@@ -252,6 +257,7 @@ describe("failures", () => {
 				current: async () => ({ path: "/workspace" }),
 				choose: async () => ({ path: "/workspace", cancelled: true, status: { state: "stopped" } }),
 				open: async (path) => ({ path, cancelled: false, status: { state: "running" } }),
+				readFile: async (path) => ({ path, text: "", truncated: false, binary: false }),
 			},
 		});
 
@@ -280,6 +286,7 @@ describe("failures", () => {
 				current: async () => ({ path: "/workspace" }),
 				choose: async () => ({ path: "/workspace", cancelled: true, status: { state: "stopped" } }),
 				open: async (path) => ({ path, cancelled: false, status: { state: "running" } }),
+				readFile: async (path) => ({ path, text: "", truncated: false, binary: false }),
 			},
 		});
 
@@ -396,7 +403,20 @@ describe("settings and consent", () => {
 			ok: false,
 			error: { code: "invalid-payload" },
 		});
-		expect(calls).toEqual(["workspace-current", "workspace-choose", "workspace-open:/workspace/known"]);
+		await expect(api.dispatch("workspace:read-file", { path: "/workspace/file.ts" })).resolves.toMatchObject({
+			ok: true,
+			value: { text: "hello" },
+		});
+		await expect(api.dispatch("workspace:read-file", {})).resolves.toMatchObject({
+			ok: false,
+			error: { code: "invalid-payload" },
+		});
+		expect(calls).toEqual([
+			"workspace-current",
+			"workspace-choose",
+			"workspace-open:/workspace/known",
+			"read-file:/workspace/file.ts",
+		]);
 	});
 
 	it("lists and opens saved sessions through named channels", async () => {

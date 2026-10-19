@@ -803,6 +803,59 @@ select:focus {
 	overflow-wrap: anywhere;
 }
 
+.file-row {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	width: 100%;
+	padding: 4px 0;
+	border-color: transparent;
+	background: transparent;
+	color: var(--text);
+	text-align: left;
+}
+
+.file-row:hover {
+	color: var(--accent);
+}
+
+.file-preview {
+	margin-top: 12px;
+	padding-top: 10px;
+	border-top: 1px solid var(--line);
+}
+
+.file-preview-head {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.file-preview-head code {
+	min-width: 0;
+	flex: 1 1 auto;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.file-preview-head button {
+	padding: 2px 6px;
+}
+
+.file-preview pre {
+	max-height: 320px;
+	margin: 8px 0 0;
+	padding: 10px;
+	overflow: auto;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--code-bg);
+	color: var(--text);
+	font: 11px/1.5 "Cascadia Mono", Consolas, monospace;
+	white-space: pre;
+}
+
 .option {
 	display: grid;
 	grid-template-columns: minmax(140px, 1fr) minmax(0, 1.2fr);

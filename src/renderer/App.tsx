@@ -608,7 +608,7 @@ function Panels({
 				))}
 			</nav>
 			{tab === "board" ? <BoardPanel board={state.board} text={text} /> : null}
-			{tab === "files" ? <FilesPanel files={state.files} text={text} /> : null}
+			{tab === "files" ? <FilesPanel files={state.files} api={api} text={text} /> : null}
 			{tab === "judgments" ? <JudgmentsPanel api={api} text={text} /> : null}
 		</>
 	);
