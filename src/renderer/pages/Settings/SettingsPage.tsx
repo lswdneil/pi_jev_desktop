@@ -31,6 +31,8 @@ export function SettingsPage({
 	const [snapshot, setSnapshot] = useState<SettingsSnapshot | undefined>(undefined);
 	const [consent, setConsent] = useState<ConsentState | undefined>(undefined);
 	const [models, setModels] = useState<readonly ModelChoice[]>([]);
+	const [currentModel, setCurrentModel] = useState("");
+	const [modelBusy, setModelBusy] = useState(false);
 	const [error, setError] = useState<string>("");
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState("");
@@ -46,6 +48,12 @@ export function SettingsPage({
 			.models()
 			.then(setModels)
 			.catch(() => setModels([]));
+		void api.harness
+			.snapshot()
+			.then((value) => {
+				if (value.model !== undefined) setCurrentModel(value.model);
+			})
+			.catch(() => {});
 	}, [api]);
 
 	useEffect(() => {
@@ -80,6 +88,26 @@ export function SettingsPage({
 			}
 		},
 		[api, snapshot, text],
+	);
+
+	const chooseModel = useCallback(
+		async (value: string) => {
+			const [provider, ...rest] = value.split("/");
+			const modelId = rest.join("/");
+			if (provider === undefined || modelId === "") return;
+			setModelBusy(true);
+			setError("");
+			try {
+				await api.harness.setModel(provider, modelId);
+				setCurrentModel(value);
+				setSaved(text("settings.modelApplied"));
+			} catch (failure) {
+				setError(failure instanceof Error ? failure.message : String(failure));
+			} finally {
+				setModelBusy(false);
+			}
+		},
+		[api, text],
 	);
 
 	if (error !== "") {
@@ -217,7 +245,24 @@ export function SettingsPage({
 			{models.length === 0 ? null : (
 				<section className="panel" data-testid="settings-models">
 					<h2>{text("firstRun.model")}</h2>
-					<p className="muted">{models.map((model) => `${model.provider}/${model.id}`).join(", ")}</p>
+					<label className="settings-model">
+						<span className="muted">{text("settings.model")}</span>
+						<select
+							value={currentModel}
+							onChange={(event) => void chooseModel(event.target.value)}
+							disabled={modelBusy}
+							data-testid="settings-model-picker"
+						>
+							{models.map((model) => {
+								const value = `${model.provider}/${model.id}`;
+								return (
+									<option key={value} value={value}>
+										{value}
+									</option>
+								);
+							})}
+						</select>
+					</label>
 				</section>
 			)}
 

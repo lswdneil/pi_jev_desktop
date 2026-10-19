@@ -877,6 +877,23 @@ select:focus {
 	font: inherit;
 }
 
+.settings-model {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.settings-model select {
+	min-width: 240px;
+	padding: 6px 8px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--panel-2);
+	color: var(--text);
+	font: inherit;
+}
+
 .option-help {
 	grid-column: 1 / -1;
 	margin: 0;
