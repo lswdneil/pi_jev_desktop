@@ -28,13 +28,36 @@ const EXECUTABLES = {
 	linux: "dist/linux-unpacked/spec.ai.jev",
 };
 
-/** The first run, clicked through by its own words: a fresh profile always starts here. */
-const FIRST_RUN = [
-	{ label: "language", click: (page) => page.getByText("Settings · en").click() },
-	{ label: "continue", click: (page) => page.getByRole("button", { name: /Continue/ }).click() },
-	{ label: "consent", click: (page) => page.getByRole("button", { name: "Not now" }).click() },
-	{ label: "model", click: (page) => page.getByRole("button", { name: "Start using mu" }).click() },
-];
+/**
+ * The first run, clicked through by its test ids.
+ *
+ * The copy is localised and rebrandable, so matching on words couples this smoke test to a string that is meant to
+ * change; `data-step` and the ids are the part the wizard promises to keep.
+ */
+const FIRST_RUN = {
+	language: async (page) => {
+		await page.locator('[data-language="en"]').click();
+		await page.getByTestId("first-run-next").click();
+	},
+	consent: async (page) => page.getByTestId("first-run-decline").click(),
+	model: async (page) => page.getByTestId("first-run-finish").click(),
+};
+
+/** Walk whatever part of the wizard is on screen; a run that already answered a step simply starts later. */
+async function completeFirstRun(page) {
+	const deadline = Date.now() + 30_000;
+	while (Date.now() < deadline) {
+		const wizard = page.getByTestId("first-run");
+		if ((await wizard.count()) === 0) return;
+		const step = await wizard.getAttribute("data-step");
+		const action = FIRST_RUN[step];
+		if (action === undefined) throw new Error(`unknown first-run step: ${step}`);
+		await page.waitForTimeout(500);
+		await action(page);
+		await page.waitForTimeout(800);
+	}
+	throw new Error("the first run never finished");
+}
 
 async function main() {
 	const executablePath = process.argv[2] ?? EXECUTABLES[process.platform];
@@ -45,15 +68,7 @@ async function main() {
 	try {
 		const page = await app.firstWindow();
 		await page.waitForLoadState("domcontentloaded");
-		for (const step of FIRST_RUN) {
-			try {
-				await step.click(page);
-				await page.waitForTimeout(1500);
-			} catch {
-				// A later run skips the step it has already answered; the screen below is what decides.
-				console.log(`package smoke: first-run step "${step.label}" was not shown`);
-			}
-		}
+		await completeFirstRun(page);
 
 		const deadline = Date.now() + 45_000;
 		let text = "";
