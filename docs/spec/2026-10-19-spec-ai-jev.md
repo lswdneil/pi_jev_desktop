@@ -152,4 +152,6 @@ These require their own specs and acceptance tests.
 
 ## Next slices
 
-1. Installer, signing key, and update verification.
+1. Signing key and update verification. The NSIS installer builds and is rehearsed end to end (silent install, a turn
+   through a stub provider, uninstall); signing needs a certificate and the update key needs to be issued, neither of
+   which a checkout can invent.

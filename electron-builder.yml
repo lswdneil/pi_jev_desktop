@@ -35,6 +35,11 @@ extraResources:
 
 asar: true
 compression: normal
+# Package the Electron that `npm install` already put in node_modules, instead of asking electron-builder to fetch and
+# unpack its own copy. The two are the same version (devDependencies pins it), and the download step stalled here for
+# twenty minutes with no child process and no output; this path is also the honest one for a build that must not need
+# the network. A release job still installs the version the manifest names before it packages.
+electronDist: node_modules/electron/dist
 # Chromium ships a `.pak` per locale, and the unpacked set is ~48 MB of text nobody in this app reads: the shell's own
 # copy is localised in the renderer, and en-US is the fallback every missing one resolves to. Keep the three the
 # product speaks, drop the rest; electron-builder rejects a list without en-US.

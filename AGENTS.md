@@ -35,6 +35,8 @@ The runtime is a built package, not source:
 $env:MU_ROOT = "C:\Users\wd_al\Downloads\DSH-Beta\mu-work"   # the script reads $env:MU_ROOT\.artifacts\desktop-harness
 npm run package:dir                                          # unpacked build, fastest smoke
 npm run smoke:package                                        # starts the packaged app and waits for "running ·"
+npm run package                                              # NSIS installer in dist/
+node scripts/install-rehearsal.mjs                           # silent install, a real turn, uninstall
 ```
 
 ## Conventions

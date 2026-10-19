@@ -77,12 +77,17 @@ Changes land in small, verifiable stages: run `npm run verify`, commit with a co
 
 ```powershell
 $env:MU_ROOT = "C:\Users\wd_al\Downloads\DSH-Beta\mu-work"
-npm run package:dir      # build + stage the mu runtime + unpacked app in dist/
-npm run smoke:package    # launch it and wait for the agent to report "running ·"
+npm run package:dir         # build + stage the mu runtime + unpacked app in dist/
+npm run smoke:package       # launch it and wait for the agent to report "running ·"
+npm run package             # the installer: dist/spec.ai.jev-<version>-x64.exe
+node scripts/install-rehearsal.mjs   # silent install, a real turn, uninstall
 ```
 
 `scripts/stage-harness.mjs` copies the built `mu-agent` package into `resources/harness/mu-agent` (~34 MB, git-ignored);
 it accepts `--from <folder>` and `MU_HARNESS_ROOT` when the runtime lives elsewhere.
+
+Packaging uses the Electron already in `node_modules` (`electronDist` in `electron-builder.yml`) rather than fetching a
+second copy, so a package build needs no network.
 
 ## License
 
