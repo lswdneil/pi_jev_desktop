@@ -1,0 +1,13 @@
+# LF in the repository and in the checkout.
+#
+# Windows' default (`core.autocrlf=true`) converts on checkout and back on commit, which warns on every file an editor
+# wrote and turns one edited line into a whole-file diff for anyone whose tools disagree about the ending. The shell is
+# TypeScript, Markdown and CSS; none of it needs CRLF.
+* text=auto eol=lf
+
+# Assets git should never try to normalise.
+*.png binary
+*.ico binary
+*.icns binary
+*.jpg binary
+*.webp binary
