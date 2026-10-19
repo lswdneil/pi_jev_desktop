@@ -1,0 +1,13 @@
+# The build output: `out/main`, `out/preload`, `out/renderer`.
+out/
+node_modules/
+.vite/
+playwright-report/
+test-results/
+*.log
+
+# Where `npm run metrics` and `npm run render-probes` write the numbers they measured; they depend on the machine, so the
+# record of them lives in docs/performance-budget.md rather than in a file that would be stale the moment another machine
+# ran it.
+shell-metrics.json
+render-probes.json

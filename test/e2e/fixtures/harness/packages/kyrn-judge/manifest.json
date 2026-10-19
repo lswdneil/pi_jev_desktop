@@ -1,0 +1,47 @@
+{
+	"version": 1,
+	"groups": {
+		"input": { "en": "Input", "zh": "输入", "zh-TW": "輸入" }
+	},
+	"modes": [{ "value": "active", "label": { "en": "Active", "zh": "生效", "zh-TW": "生效" } }],
+	"features": [
+		{
+			"name": "fixtureFeature",
+			"title": { "en": "Fixture feature", "zh": "夹具功能", "zh-TW": "夾具功能" },
+			"summary": { "en": "A feature only this fixture has", "zh": "只有夹具才有的功能", "zh-TW": "只有夾具才有的功能" },
+			"defaultEnabled": true,
+			"options": [
+				{ "key": "flag", "kind": "boolean", "default": false, "label": { "en": "Fixture flag", "zh": "夹具开关", "zh-TW": "夾具開關" } },
+				{
+					"key": "limit",
+					"kind": "number",
+					"default": 7,
+					"min": 1,
+					"max": 10,
+					"unit": { "en": "items", "zh": "项", "zh-TW": "項" },
+					"label": { "en": "Fixture limit", "zh": "夹具上限", "zh-TW": "夾具上限" }
+				},
+				{
+					"key": "mode",
+					"kind": "choice",
+					"default": "alpha",
+					"label": { "en": "Fixture mode", "zh": "夹具模式", "zh-TW": "夾具模式" },
+					"choices": [
+						{ "value": "alpha", "label": { "en": "Alpha", "zh": "甲", "zh-TW": "甲" } },
+						{ "value": "beta", "label": { "en": "Beta", "zh": "乙", "zh-TW": "乙" } }
+					]
+				},
+				{ "key": "futureThing", "kind": "hologram", "default": "mauve", "label": { "en": "A kind from a newer kernel" } }
+			]
+		}
+	],
+	"decisions": [
+		{
+			"id": "fixture.decision",
+			"group": "input",
+			"feature": "fixtureFeature",
+			"title": { "en": "Fixture decision", "zh": "夹具决策", "zh-TW": "夾具決策" },
+			"summary": { "en": "Only the fixture asks this", "zh": "只有夹具会问", "zh-TW": "只有夾具會問" }
+		}
+	]
+}

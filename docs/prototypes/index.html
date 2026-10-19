@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>spec.ai.jev - workspace prototype</title>
+		<style>
+			:root {
+				color-scheme: dark;
+				--bg: #0d0f12;
+				--rail: #090b0e;
+				--surface: #202327;
+				--surface-hover: #334155;
+				--line: #536175;
+				--text: #f1f5f9;
+				--muted: #acb3bf;
+				--lime: #9efc62;
+				--lime-dim: #7ed34a;
+				--green: #22c55e;
+				--amber: #ffa500;
+				--red: #ef4444;
+				--blue: #3b82f6;
+				--code: #374151;
+				--inline: #ff8534;
+				--heading: #facc15;
+				--radius: 14px;
+			}
+			* { box-sizing: border-box; }
+			html, body { min-height: 100%; }
+			body {
+				margin: 0;
+				background:
+					radial-gradient(900px 620px at 12% -10%, #1b2430 0%, transparent 58%),
+					var(--bg);
+				color: var(--text);
+				font-family: "Bahnschrift", "Aptos", "Segoe UI Variable", "Segoe UI", sans-serif;
+				font-size: 14px;
+			}
+			button, textarea { font: inherit; }
+			button { cursor: pointer; }
+			.app { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
+			.rail {
+				display: flex; flex-direction: column; gap: 18px;
+				padding: 20px 14px;
+				background: linear-gradient(180deg, #090b0e 0%, #12161b 100%);
+				border-right: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+			}
+			.brand { display: flex; align-items: center; gap: 10px; }
+			.brand img { width: 44px; height: auto; }
+			.brand strong { display: block; font-size: 16px; letter-spacing: -.02em; }
+			.brand span { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+			.primary {
+				width: 100%; border: 0; border-radius: 9px; padding: 10px 12px;
+				background: var(--lime); color: #071006; font-weight: 700;
+			}
+			.primary:hover { background: var(--lime-dim); }
+			.section-label {
+				margin: 0 0 6px; color: var(--muted); font-size: 10px; font-weight: 700;
+				letter-spacing: .12em; text-transform: uppercase;
+			}
+			.space { display: flex; flex-direction: column; gap: 8px; }
+			.project, .session, .nav-item {
+				width: 100%; padding: 10px; border: 1px solid transparent; border-radius: 9px;
+				background: transparent; color: var(--text); text-align: left;
+			}
+			.project { border-color: color-mix(in srgb, var(--line) 60%, transparent); background: color-mix(in srgb, var(--surface) 72%, transparent); }
+			.project strong { display: block; }
+			.project span, .session span { display: block; color: var(--muted); font-size: 11px; margin-top: 3px; }
+			.session { border-left: 2px solid var(--lime); border-radius: 0 8px 8px 0; background: color-mix(in srgb, var(--surface) 55%, transparent); }
+			.nav-item { color: var(--muted); }
+			.nav-item:hover, .nav-item.active { background: var(--surface); color: var(--text); border-color: color-mix(in srgb, var(--line) 55%, transparent); }
+			.nav-item.active { color: var(--lime); }
+			.rail-footer { margin-top: auto; padding-top: 12px; border-top: 1px solid color-mix(in srgb, var(--line) 45%, transparent); display: grid; gap: 8px; }
+			.status { display: flex; align-items: center; gap: 7px; color: var(--green); font-size: 11px; }
+			.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 12px var(--green); }
+			.main { min-width: 0; padding: 18px 22px 24px; display: grid; grid-template-rows: auto 1fr; gap: 16px; }
+			.topbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent); }
+			.kicker { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+			.title { font-size: 15px; font-weight: 700; }
+			.spacer { flex: 1; }
+			.select {
+				display: flex; align-items: center; gap: 7px; padding: 6px 9px;
+				border: 1px solid color-mix(in srgb, var(--line) 60%, transparent); border-radius: 8px;
+				background: var(--surface); color: var(--text); font-size: 12px;
+			}
+			.switcher { display: flex; gap: 4px; padding: 3px; border: 1px solid color-mix(in srgb, var(--line) 55%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--surface) 45%, transparent); }
+			.switcher button { border: 0; border-radius: 999px; padding: 5px 11px; background: transparent; color: var(--muted); font-size: 11px; }
+			.switcher button.active { background: var(--lime); color: #071006; font-weight: 700; }
+			.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 330px); gap: 14px; min-height: 0; }
+			.surface { border: 1px solid color-mix(in srgb, var(--line) 52%, transparent); border-radius: var(--radius); background: color-mix(in srgb, var(--surface) 72%, transparent); }
+			.workspace-screen { display: grid; place-items: center; padding: 48px 24px; }
+			.hero { width: min(760px, 100%); }
+			.eyebrow { color: var(--lime); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+			.hero h1 { margin: 10px 0 10px; font-size: clamp(34px, 5vw, 66px); line-height: .98; letter-spacing: -.055em; }
+			.hero p { max-width: 570px; margin: 0 0 26px; color: var(--muted); line-height: 1.55; }
+			.composer { padding: 14px; border: 1px solid color-mix(in srgb, var(--line) 65%, transparent); border-radius: 16px; background: var(--surface); box-shadow: 0 22px 70px rgba(0,0,0,.28); }
+			.composer textarea { width: 100%; min-height: 112px; resize: vertical; border: 0; outline: 0; background: transparent; color: var(--text); line-height: 1.5; }
+			.composer textarea::placeholder { color: color-mix(in srgb, var(--muted) 72%, transparent); }
+			.composer-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+			.pill { border: 1px solid color-mix(in srgb, var(--line) 55%, transparent); border-radius: 7px; padding: 5px 8px; background: color-mix(in srgb, var(--surface-hover) 32%, transparent); color: var(--muted); font-size: 11px; }
+			.send { margin-left: auto; border: 0; border-radius: 8px; padding: 8px 14px; background: var(--lime); color: #071006; font-weight: 700; }
+			.side { display: grid; gap: 12px; align-content: start; }
+			.panel { padding: 14px; }
+			.panel h2 { margin: 0 0 10px; font-size: 12px; letter-spacing: .02em; }
+			.panel p { margin: 0; color: var(--muted); line-height: 1.5; }
+			.stat { display: flex; justify-content: space-between; gap: 18px; padding: 8px 0; border-bottom: 1px solid color-mix(in srgb, var(--line) 35%, transparent); font-size: 12px; }
+			.stat:last-child { border-bottom: 0; }
+			.stat span { color: var(--muted); }
+			.running-screen, .judgment-screen { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 14px; min-height: 0; }
+			.transcript { padding: 18px; display: grid; align-content: start; gap: 16px; overflow: auto; }
+			.message { padding-left: 12px; border-left: 2px solid var(--surface-hover); }
+			.message.user { border-left-color: var(--lime); }
+			.who { display: block; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+			.message p { margin: 4px 0 0; line-height: 1.55; }
+			.tool { margin-left: 12px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--line) 50%, transparent); border-radius: 9px; background: color-mix(in srgb, var(--code) 55%, transparent); font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; }
+			.tool .ok { color: var(--green); }
+			.code { margin: 0; padding: 12px; border-radius: 9px; background: var(--code); color: var(--text); overflow: auto; font: 12px/1.55 "Cascadia Mono", Consolas, monospace; }
+			.composer-bar { align-self: end; margin-top: 12px; padding: 10px; border: 1px solid color-mix(in srgb, var(--line) 55%, transparent); border-radius: 12px; background: var(--surface); color: var(--muted); }
+			.card { padding: 14px; }
+			.card h3 { margin: 0 0 8px; font-size: 15px; }
+			.card p { margin: 0 0 12px; color: var(--muted); line-height: 1.5; }
+			.why { border-left: 2px solid var(--amber); padding: 8px 10px; background: color-mix(in srgb, var(--amber) 8%, transparent); color: var(--muted); }
+			.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+			.actions button { border: 1px solid color-mix(in srgb, var(--line) 60%, transparent); border-radius: 8px; padding: 7px 11px; background: var(--surface); color: var(--text); }
+			.actions .allow { border-color: transparent; background: var(--lime); color: #071006; font-weight: 700; }
+			.ledger { display: grid; gap: 8px; }
+			.ledger-item { padding: 9px 10px; border-left: 2px solid var(--lime); background: color-mix(in srgb, var(--surface-hover) 22%, transparent); }
+			.ledger-item strong { display: block; font-size: 12px; }
+			.ledger-item span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+			[hidden] { display: none !important; }
+			@media (max-width: 980px) {
+				.app { grid-template-columns: 190px minmax(0, 1fr); }
+				.grid, .running-screen, .judgment-screen { grid-template-columns: minmax(0, 1fr); }
+				.side { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+			}
+			@media (max-width: 720px) {
+				.app { grid-template-columns: 1fr; }
+				.rail { flex-direction: row; flex-wrap: wrap; align-items: center; border-right: 0; border-bottom: 1px solid var(--line); }
+				.rail .space, .rail-footer { display: none; }
+				.rail .primary { width: auto; }
+				.main { padding: 14px; }
+				.workspace-screen { padding: 28px 0; }
+			}
+		</style>
+	</head>
+	<body>
+		<div class="app">
+			<aside class="rail">
+				<div class="brand">
+					<img src="../assets/spec-logo.png" alt="spec.ai.jev" />
+					<div><strong>spec.ai.jev</strong><span>agent workspace</span></div>
+				</div>
+				<button class="primary" type="button">+ New task</button>
+				<div class="space">
+					<p class="section-label">Workspace</p>
+					<button class="project" type="button"><strong>pi_jev_desktop</strong><span>Open project</span></button>
+				</div>
+				<div class="space">
+					<p class="section-label">Session</p>
+					<button class="session" type="button"><strong>session / a7f3c1</strong><span>claude-sonnet-4</span></button>
+				</div>
+				<nav class="space">
+					<p class="section-label">View</p>
+					<button class="nav-item active" type="button">Conversation</button>
+					<button class="nav-item" type="button">Settings</button>
+				</nav>
+				<div class="rail-footer">
+					<div class="status"><span class="dot"></span>running / repo</div>
+					<button class="nav-item" type="button">Restart agent</button>
+				</div>
+			</aside>
+
+			<main class="main">
+				<header class="topbar">
+					<span class="kicker">Workspace</span>
+					<strong class="title">pi_jev_desktop</strong>
+					<span class="spacer"></span>
+					<div class="switcher" aria-label="Prototype screens">
+						<button type="button" data-target="workspace" class="active">Workspace</button>
+						<button type="button" data-target="running">Running</button>
+						<button type="button" data-target="judgment">Judgment</button>
+					</div>
+					<div class="select">Model <strong>claude-sonnet-4</strong></div>
+				</header>
+
+				<section data-screen="workspace" class="workspace-screen">
+					<div class="hero">
+						<span class="eyebrow">A judgment-native agent workspace</span>
+						<h1>What are we building?</h1>
+						<p>Open a project, choose a model, and give the agent a task. Every tool run and every judgment stays visible.</p>
+						<div class="composer">
+							<textarea placeholder="Describe the task, paste a path, or ask for a review..."></textarea>
+							<div class="composer-row">
+								<span class="pill">+ Attach</span>
+								<span class="pill">Jev approves</span>
+								<span class="pill">claude-sonnet-4</span>
+								<button class="send" type="button" data-target="running">Send</button>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<section data-screen="running" class="running-screen" hidden>
+					<div class="surface transcript">
+						<div class="message user"><span class="who">You</span><p>Find the flaky renderer test and fix the root cause.</p></div>
+						<div class="message"><span class="who">spec.ai.jev</span><p>I will inspect the test harness, reproduce the failure, and verify the fix before touching the implementation.</p></div>
+						<div class="tool"><span class="ok">OK</span> read test/e2e/renderer-crash.spec.ts <span style="color:var(--muted)">2.1 KB</span></div>
+						<div class="tool"><span class="ok">OK</span> bash pnpm test:e2e -- renderer-crash <span style="color:var(--muted)">18.4 s</span></div>
+						<pre class="code">PASS  test/e2e/renderer-crash.spec.ts
+  crash recovery          passed
+  repeated crashes        passed</pre>
+						<div class="composer-bar">Ask a follow-up, steer the run, or press Stop...</div>
+					</div>
+					<aside class="side">
+						<section class="surface panel">
+							<h2>Board</h2>
+							<div class="stat"><span>Current</span><strong>verifying the fix</strong></div>
+							<div class="stat"><span>Turn</span><strong>3</strong></div>
+							<div class="stat"><span>Files</span><strong>2</strong></div>
+						</section>
+						<section class="surface panel">
+							<h2>Judgment trail</h2>
+							<div class="ledger">
+								<div class="ledger-item"><strong>tool.admission</strong><span>kept the failure log, archived the repeated stack</span></div>
+								<div class="ledger-item"><strong>turn.completion</strong><span>verification found before marking done</span></div>
+							</div>
+						</section>
+					</aside>
+				</section>
+
+				<section data-screen="judgment" class="judgment-screen" hidden>
+					<div class="surface card">
+						<span class="eyebrow">Approval required</span>
+						<h3>Run the command outside the project?</h3>
+						<p>The agent wants to write a temporary file outside the selected workspace. The change is reversible, but it crosses the folder boundary.</p>
+						<div class="why"><strong>Why this was flagged:</strong> the target path is outside the workspace root, and the task did not name it explicitly.</div>
+						<div class="actions">
+							<button class="allow" type="button">Allow once</button>
+							<button type="button">Deny</button>
+							<button type="button">Cancel run</button>
+						</div>
+					</div>
+					<aside class="side">
+						<section class="surface panel">
+							<h2>Judgment details</h2>
+							<div class="stat"><span>Decision point</span><strong>tool.approval</strong></div>
+							<div class="stat"><span>Judge</span><strong>jev</strong></div>
+							<div class="stat"><span>Confidence</span><strong class="status">needs you</strong></div>
+						</section>
+						<section class="surface panel">
+							<h2>What happens next</h2>
+							<p>Allow once writes the file and records the decision. Deny tells the model the action was refused. Cancel stops the run.</p>
+						</section>
+					</aside>
+				</section>
+			</main>
+		</div>
+		<script>
+			const screens = [...document.querySelectorAll("[data-screen]")];
+			const buttons = [...document.querySelectorAll("[data-target]")];
+			for (const button of buttons) {
+				button.addEventListener("click", () => {
+					const target = button.dataset.target;
+					for (const screen of screens) screen.hidden = screen.dataset.screen !== target;
+					for (const item of document.querySelectorAll(".switcher button")) {
+						item.classList.toggle("active", item.dataset.target === target);
+					}
+				});
+			}
+		</script>
+	</body>
+</html>

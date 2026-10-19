@@ -1,0 +1,13 @@
+spec.ai.jev
+Copyright (c) 2026 Neil
+
+This product includes software derived from the mu desktop-next shell:
+
+  mu
+  Copyright (c) 2025-2026 the mu authors
+  Licensed under the Apache License, Version 2.0.
+
+The original Apache-2.0 license text is in LICENSES/Apache-2.0.txt. Files copied from that work retain their
+SPDX-License-Identifier: Apache-2.0 headers.
+
+The spec.ai.jev logo is supplied by the product owner and is not part of the Apache-2.0 source grant.

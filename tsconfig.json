@@ -1,0 +1,6 @@
+{
+	// Two projects: the main/preload side runs in Node, the renderer in a browser context with no Node types.
+	// `npm run typecheck` checks both; this file exists so an editor finds something to open.
+	"files": [],
+	"include": []
+}
