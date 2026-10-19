@@ -10,7 +10,7 @@
  * to. The policy is then set on every response the scheme handler produces, so a document cannot exist without it.
  */
 
-import { existsSync, statSync } from "node:fs";
+import { existsSync, rmSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
@@ -243,6 +243,32 @@ const sessions = {
 		await supervisor.restart();
 		await supervisor.switchSession(path);
 		return { path: target };
+	},
+	/**
+	 * Delete one session file.
+	 *
+	 * A session the agent currently has open is switched away from first: on Windows an open file is not deletable,
+	 * and even where it is, a running agent appending to a file that no longer exists is worse than a new session.
+	 */
+	async remove(path: string): Promise<{ deleted: boolean }> {
+		const root = sessionsRoot(agentDirFor(homedir(), process.platform));
+		if (!isSessionPath(root, path)) throw new Error("the session path is outside this app's session folder");
+		let isFile = false;
+		try {
+			isFile = statSync(path).isFile();
+		} catch {
+			isFile = false;
+		}
+		if (!isFile) return { deleted: false };
+		let current: string | undefined;
+		try {
+			current = (await supervisor.snapshot()).sessionFile;
+		} catch {
+			current = undefined;
+		}
+		if (current === path) await supervisor.newSession();
+		rmSync(path, { force: true });
+		return { deleted: true };
 	},
 	async rename(name: string): Promise<void> {
 		await supervisor.renameSession(name);

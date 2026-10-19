@@ -71,6 +71,8 @@ This release implements:
   one place that can show what was asked and what was said.
 - Images on a prompt: chosen, dropped or pasted, held as thumbnails, and sent with the text. The bridge takes PNG,
   JPEG, WebP and GIF only, at most six per message and 5 MB each.
+- Deleting a saved session, after a second click in the row. A session the agent has open is left first, so nothing
+  keeps appending to a file that no longer exists.
 - Approval cards for confirm, select, input, and editor requests.
 - The spec.ai.jev logo and the Freebuff dark palette.
 

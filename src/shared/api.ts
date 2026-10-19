@@ -189,6 +189,8 @@ export interface MuApi {
 		open(path: string): Promise<void>;
 		/** Open a session in the project it belongs to: restart the agent there, then switch to the session. */
 		openAcross(path: string): Promise<WorkspaceState>;
+		/** Delete one saved session. A session the agent has open is left first, so nothing keeps writing to it. */
+		remove(path: string): Promise<{ readonly deleted: boolean }>;
 		/** Give the current session a stable display name. */
 		rename(name: string): Promise<void>;
 	};
@@ -243,6 +245,7 @@ export const IPC_CHANNELS = {
 	sessionsListAll: "sessions:list-all",
 	sessionsOpen: "sessions:open",
 	sessionsOpenAcross: "sessions:open-across",
+	sessionsRemove: "sessions:remove",
 	sessionsRename: "sessions:rename",
 	judgmentsRecent: "judgments:recent",
 	updateCheck: "update:check",
@@ -283,6 +286,7 @@ export const INVOKE_CHANNELS = [
 	IPC_CHANNELS.sessionsListAll,
 	IPC_CHANNELS.sessionsOpen,
 	IPC_CHANNELS.sessionsOpenAcross,
+	IPC_CHANNELS.sessionsRemove,
 	IPC_CHANNELS.sessionsRename,
 	IPC_CHANNELS.judgmentsRecent,
 	IPC_CHANNELS.updateCheck,

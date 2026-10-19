@@ -55,6 +55,7 @@ export interface ApiDependencies {
 		listAll(): Promise<unknown>;
 		open(path: string): Promise<void>;
 		openAcross(path: string): Promise<unknown>;
+		remove(path: string): Promise<unknown>;
 		rename(name: string): Promise<void>;
 	};
 	/** The update feed, read on demand; `install` downloads, proves and starts what it offers. */
@@ -264,6 +265,7 @@ export function createApi(deps: ApiDependencies): Api {
 			return undefined;
 		},
 		"sessions:open-across": async (payload) => deps.sessions.openAcross(sessionPathOf(payload)),
+		"sessions:remove": async (payload) => deps.sessions.remove(sessionPathOf(payload)),
 		"sessions:rename": async (payload) => {
 			await deps.sessions.rename(sessionNameOf(payload));
 			return undefined;

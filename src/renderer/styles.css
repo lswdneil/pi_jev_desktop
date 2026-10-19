@@ -334,6 +334,42 @@ body {
 	text-transform: uppercase;
 }
 
+.session-row {
+	display: flex;
+	align-items: stretch;
+	gap: 2px;
+}
+
+.session-row .session-item {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.session-forget {
+	padding: 0 6px;
+	border-color: transparent;
+	background: transparent;
+	color: var(--muted);
+	font-size: 12px;
+}
+
+.session-forget:hover:not(:disabled) {
+	background: var(--surface-hover);
+	color: var(--bad);
+}
+
+.session-confirm {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 2px;
+}
+
+.session-confirm button {
+	padding: 2px 6px;
+	font-size: 10px;
+}
+
 .rail-nav {
 	display: flex;
 	flex-direction: column;

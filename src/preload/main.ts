@@ -87,6 +87,7 @@ const api: MuApi = {
 		listAll: () => invoke<readonly SessionSummary[]>(IPC_CHANNELS.sessionsListAll),
 		open: (path) => invoke<void>(IPC_CHANNELS.sessionsOpen, { path }),
 		openAcross: (path) => invoke<WorkspaceState>(IPC_CHANNELS.sessionsOpenAcross, { path }),
+		remove: (path) => invoke<{ deleted: boolean }>(IPC_CHANNELS.sessionsRemove, { path }),
 		rename: (name) => invoke<void>(IPC_CHANNELS.sessionsRename, { name }),
 	},
 	judgments: {

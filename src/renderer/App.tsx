@@ -71,6 +71,7 @@ export function App(): React.JSX.Element {
 	const [sessionQuery, setSessionQuery] = useState("");
 	const [renaming, setRenaming] = useState(false);
 	const [sessionName, setSessionName] = useState("");
+	const [confirmDelete, setConfirmDelete] = useState<string | undefined>(undefined);
 	const [modelBusy, setModelBusy] = useState(false);
 
 	const report = useCallback((message: string) => setError(message), []);
@@ -367,6 +368,40 @@ export function App(): React.JSX.Element {
 		[api, report],
 	);
 
+	/**
+	 * Deleting is a two-step click in the rail, and the two steps happen here: the row asks, then this runs.
+	 *
+	 * The main process leaves the session before removing the file when the agent has it open, so what comes back is
+	 * either a deletion or a sentence about why not.
+	 */
+	const removeSession = useCallback(
+		async (path: string) => {
+			if (api === undefined || operation.current) return;
+			operation.current = true;
+			setBusy(true);
+			setError("");
+			try {
+				const result = await api.sessions.remove(path);
+				setConfirmDelete(undefined);
+				if (!result.deleted) {
+					report(text("app.sessionGone"));
+					return;
+				}
+				setSessionRevision((revision) => revision + 1);
+				if (path === snapshot?.sessionFile) {
+					store.reset();
+					setSnapshot(await api.harness.snapshot());
+				}
+			} catch (failure) {
+				report(failure instanceof Error ? failure.message : String(failure));
+			} finally {
+				operation.current = false;
+				setBusy(false);
+			}
+		},
+		[api, store, report, snapshot?.sessionFile, text],
+	);
+
 	if (api === undefined) {
 		return (
 			<main className="screen">
@@ -539,17 +574,45 @@ export function App(): React.JSX.Element {
 					{listedSessions.length === 0 ? null : (
 						<div className="session-list">
 							{listedSessions.map((session) => (
-									<button
-										key={session.path}
-										type="button"
-										className="session-item"
-										onClick={() => void openSession(session.path)}
-										disabled={busy}
-										title={session.path}
-									>
-										<span className="session-title">{session.title}</span>
-										<span className="session-meta">{session.updatedAt.slice(0, 10)}</span>
-									</button>
+									<div key={session.path} className="session-row">
+										<button
+											type="button"
+											className="session-item"
+											onClick={() => void openSession(session.path)}
+											disabled={busy}
+											title={session.path}
+										>
+											<span className="session-title">{session.title}</span>
+											<span className="session-meta">{session.updatedAt.slice(0, 10)}</span>
+										</button>
+										{confirmDelete === session.path ? (
+											<span className="session-confirm">
+												<button
+													type="button"
+													data-testid="session-delete-confirm"
+													disabled={busy}
+													onClick={() => void removeSession(session.path)}
+												>
+													{text("app.delete")}
+												</button>
+												<button type="button" disabled={busy} onClick={() => setConfirmDelete(undefined)}>
+													{text("app.cancel")}
+												</button>
+											</span>
+										) : (
+											<button
+												type="button"
+												className="session-forget"
+												data-testid="session-delete"
+												aria-label={`${text("app.deleteSession")}: ${session.title}`}
+												title={text("app.deleteSession")}
+												disabled={busy}
+												onClick={() => setConfirmDelete(session.path)}
+											>
+												×
+											</button>
+										)}
+									</div>
 								))}
 						</div>
 					)}
