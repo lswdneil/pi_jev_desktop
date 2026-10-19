@@ -7,7 +7,7 @@ import type { AgentEvent, HarnessStatus, ModelChoice, MuApi, SessionSnapshot, Se
 import type { ConversationEvent } from "../shared/conversation.ts";
 import { ConversationStore } from "./lib/conversation-store.ts";
 import { hasOnboarded, markOnboarded, useLanguage } from "./lib/i18n.ts";
-import { readRecentWorkspaces, rememberWorkspace } from "./lib/recent-workspaces.ts";
+import { forgetWorkspace, readRecentWorkspaces, rememberWorkspace } from "./lib/recent-workspaces.ts";
 import { ConversationPage } from "./pages/Conversation/ConversationPage.tsx";
 import { FirstRunPage } from "./pages/FirstRun/FirstRunPage.tsx";
 import { SettingsPage } from "./pages/Settings/SettingsPage.tsx";
@@ -451,18 +451,31 @@ export function App(): React.JSX.Element {
 						<h2>{text("app.recent")}</h2>
 						<div className="recent-list">
 							{recentWorkspaces.map((path) => {
-								const name = path.split(/[\\/]/).filter(Boolean).at(-1) ?? path;
+								const name = projectName(path);
 								return (
-									<button
-										key={path}
-										type="button"
-										className={path === workspacePath ? "recent-item active" : "recent-item"}
-										onClick={() => void openWorkspace(path)}
-										disabled={busy || path === workspacePath}
-										title={path}
-									>
-										{name}
-									</button>
+									<div key={path} className={path === workspacePath ? "recent-row active" : "recent-row"}>
+										<button
+											type="button"
+											className="recent-item"
+											onClick={() => void openWorkspace(path)}
+											disabled={busy || path === workspacePath}
+											title={path}
+										>
+											<span className="recent-name">{name}</span>
+											<span className="recent-path">{path}</span>
+										</button>
+										<button
+											type="button"
+											className="recent-forget"
+											data-testid="recent-forget"
+											aria-label={`${text("app.forgetProject")}: ${name}`}
+											title={text("app.forgetProject")}
+											onClick={() => setRecentWorkspaces(forgetWorkspace(path))}
+											disabled={busy}
+										>
+											×
+										</button>
+									</div>
 								);
 							})}
 						</div>

@@ -159,7 +159,18 @@ body {
 	gap: 2px;
 }
 
+.recent-row {
+	display: flex;
+	align-items: stretch;
+	gap: 2px;
+}
+
 .recent-item {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	gap: 1px;
+	min-width: 0;
 	width: 100%;
 	padding: 5px 8px;
 	overflow: hidden;
@@ -168,8 +179,6 @@ body {
 	color: var(--muted);
 	font-size: 11px;
 	text-align: left;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .recent-item:hover:not(:disabled) {
@@ -177,8 +186,34 @@ body {
 	color: var(--text);
 }
 
-.recent-item.active {
+.recent-name,
+.recent-path {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.recent-path {
+	color: var(--muted);
+	font-size: 9px;
+	opacity: 0.75;
+}
+
+.recent-row.active .recent-name {
 	color: var(--accent);
+}
+
+.recent-forget {
+	padding: 0 6px;
+	border-color: transparent;
+	background: transparent;
+	color: var(--muted);
+	font-size: 12px;
+}
+
+.recent-forget:hover:not(:disabled) {
+	background: var(--surface-hover);
+	color: var(--bad);
 }
 
 .session-card {

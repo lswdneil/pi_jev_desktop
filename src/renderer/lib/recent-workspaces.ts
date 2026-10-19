@@ -23,3 +23,14 @@ export function rememberWorkspace(path: string): string[] {
 	}
 	return next;
 }
+
+/** Take one folder off the list. This forgets the shortcut, never the folder or anything in it. */
+export function forgetWorkspace(path: string): string[] {
+	const next = readRecentWorkspaces().filter((item) => item !== path);
+	try {
+		window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+	} catch {
+		// Same as above: the returned list is still right for this window.
+	}
+	return next;
+}

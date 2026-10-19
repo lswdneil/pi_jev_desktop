@@ -2,7 +2,7 @@
 // Copyright (c) 2026 the spec.ai.jev authors
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { readRecentWorkspaces, rememberWorkspace } from "../../src/renderer/lib/recent-workspaces.ts";
+import { forgetWorkspace, readRecentWorkspaces, rememberWorkspace } from "../../src/renderer/lib/recent-workspaces.ts";
 
 let stored = "";
 
@@ -29,5 +29,12 @@ describe("recent workspaces", () => {
 	it("survives malformed storage", () => {
 		stored = "{not json";
 		expect(readRecentWorkspaces()).toEqual([]);
+	});
+
+	it("forgets one shortcut without touching the rest", () => {
+		for (const path of ["a", "b", "c"]) rememberWorkspace(path);
+		expect(forgetWorkspace("b")).toEqual(["c", "a"]);
+		expect(readRecentWorkspaces()).toEqual(["c", "a"]);
+		expect(forgetWorkspace("nothing-here")).toEqual(["c", "a"]);
 	});
 });
