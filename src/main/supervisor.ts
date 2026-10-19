@@ -171,6 +171,17 @@ export class AgentSupervisor {
 		}
 	}
 
+	/** Name the current session; the file keeps the name as a session_info entry. */
+	async renameSession(name: string): Promise<void> {
+		const trimmed = name.trim();
+		if (trimmed === "") throw new Error("a session name cannot be empty");
+		const response = await this.requireConnection().request({ type: "set_session_name", name: trimmed });
+		if (!response.success) throw new Error(response.error);
+		if (response.command !== "set_session_name") {
+			throw new Error(`the agent answered set_session_name with ${response.command}`);
+		}
+	}
+
 	/** The models the harness can use, for the first-run screen. Listing them needs no key; running one does. */
 	async models(): Promise<ModelChoice[]> {
 		const response = await this.requireConnection().request({ type: "get_available_models" });

@@ -211,6 +211,9 @@ const sessions = {
 		if (!isSessionPath(root, path)) throw new Error("the session path is outside this app's session folder");
 		await supervisor.switchSession(path);
 	},
+	async rename(name: string): Promise<void> {
+		await supervisor.renameSession(name);
+	},
 };
 
 /**

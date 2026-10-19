@@ -336,4 +336,16 @@ describe("talking to it", () => {
 		agent.emit({ type: "response", id: "2", command: "switch_session", success: true, data: { cancelled: true } });
 		await expect(cancelled).rejects.toThrow(/cancel/i);
 	});
+
+	it("renames the current session and refuses an empty name", async () => {
+		const agent = new FakeProcess();
+		const test = rig([agent]);
+		await test.supervisor.start();
+
+		const renamed = test.supervisor.renameSession("  Release work  ");
+		expect(agent.lastCommand()).toEqual({ type: "set_session_name", name: "Release work", id: "1" });
+		agent.emit({ type: "response", id: "1", command: "set_session_name", success: true });
+		await expect(renamed).resolves.toBeUndefined();
+		await expect(test.supervisor.renameSession("   ")).rejects.toThrow(/empty/i);
+	});
 });

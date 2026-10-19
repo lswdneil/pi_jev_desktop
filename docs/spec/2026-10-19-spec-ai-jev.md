@@ -57,6 +57,7 @@ This release implements:
 - Recent-project shortcuts backed by local window storage.
 - A session rail showing the current session, saved sessions, and model.
 - Saved-session switching through the harness's `switch_session` command.
+- Session search and renaming through `set_session_name`.
 - A model picker backed by `get_available_models` / `set_model`.
 - Conversation streaming, stop, new session, and history restoration.
 - Tool execution rows, file changes, and the judgment ledger.
@@ -145,7 +146,7 @@ These require their own specs and acceptance tests.
 
 ## Next slices
 
-1. Session search, naming, and cross-project history.
+1. Cross-project session history and archived-session management.
 2. Project list with metadata, search, and removal.
 3. Approval history and a judgment detail drawer.
 4. File diff and preview.

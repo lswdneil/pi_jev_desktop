@@ -61,6 +61,7 @@ export type RpcResponse =
 	| { readonly id?: string; readonly type: "response"; readonly command: "new_session"; readonly success: true; readonly data: { readonly cancelled: boolean } }
 	| { readonly id?: string; readonly type: "response"; readonly command: "get_available_models"; readonly success: true; readonly data: { readonly models: readonly RpcModel[] } }
 	| { readonly id?: string; readonly type: "response"; readonly command: "switch_session"; readonly success: true; readonly data: { readonly cancelled: boolean } }
+	| { readonly id?: string; readonly type: "response"; readonly command: "set_session_name"; readonly success: true }
 	| { readonly id?: string; readonly type: "response"; readonly command: string; readonly success: true; readonly data?: unknown }
 	| { readonly id?: string; readonly type: "response"; readonly command: string; readonly success: false; readonly error: string };
 

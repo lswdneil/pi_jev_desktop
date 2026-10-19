@@ -62,6 +62,9 @@ export function App(): React.JSX.Element {
 	const [recentWorkspaces, setRecentWorkspaces] = useState<string[]>(readRecentWorkspaces);
 	const [models, setModels] = useState<readonly ModelChoice[]>([]);
 	const [sessions, setSessions] = useState<readonly SessionSummary[]>([]);
+	const [sessionQuery, setSessionQuery] = useState("");
+	const [renaming, setRenaming] = useState(false);
+	const [sessionName, setSessionName] = useState("");
 	const [modelBusy, setModelBusy] = useState(false);
 
 	const report = useCallback((message: string) => setError(message), []);
@@ -291,6 +294,28 @@ export function App(): React.JSX.Element {
 		[api, store, report],
 	);
 
+	const renameSession = useCallback(
+		async (name: string) => {
+			if (api === undefined || operation.current) return;
+			operation.current = true;
+			setBusy(true);
+			setError("");
+			try {
+				await api.sessions.rename(name);
+				setSnapshot(await api.harness.snapshot());
+				setSessionRevision((revision) => revision + 1);
+				setRenaming(false);
+				setSessionName("");
+			} catch (failure) {
+				report(failure instanceof Error ? failure.message : String(failure));
+			} finally {
+				operation.current = false;
+				setBusy(false);
+			}
+		},
+		[api, report],
+	);
+
 	if (api === undefined) {
 		return (
 			<main className="screen">
@@ -317,6 +342,13 @@ export function App(): React.JSX.Element {
 
 	const running = status.state === "running";
 	const workspaceName = workspacePath.split(/[\\/]/).filter(Boolean).at(-1) ?? workspacePath;
+	const sessionFilter = sessionQuery.trim().toLowerCase();
+	const listedSessions = sessions.filter(
+		(session) =>
+			session.path !== snapshot?.sessionFile &&
+			(sessionFilter === "" ||
+				`${session.title} ${session.id} ${session.cwd}`.toLowerCase().includes(sessionFilter)),
+	);
 
 	return (
 		<div className="shell">
@@ -378,16 +410,61 @@ export function App(): React.JSX.Element {
 
 				<section className="rail-section rail-session">
 					<h2>{text("app.sessions")}</h2>
+					<input
+						type="search"
+						className="session-search"
+						value={sessionQuery}
+						onChange={(event) => setSessionQuery(event.target.value)}
+						placeholder={text("app.searchSessions")}
+						aria-label={text("app.searchSessions")}
+					/>
 					<div className="session-card">
 						<span>{snapshot?.sessionName ?? (snapshot?.sessionId === undefined ? text("app.noSession") : `session · ${snapshot.sessionId.slice(0, 12)}`)}</span>
 						{snapshot?.model === undefined ? null : <small>{snapshot.model}</small>}
 					</div>
+					{renaming ? (
+						<form
+							className="session-rename"
+							onSubmit={(event) => {
+								event.preventDefault();
+								void renameSession(sessionName);
+							}}
+						>
+							<input
+								type="text"
+								value={sessionName}
+								onChange={(event) => setSessionName(event.target.value)}
+								placeholder={text("app.rename")}
+								aria-label={text("app.rename")}
+								autoFocus
+							/>
+							<button type="submit" disabled={busy || sessionName.trim() === ""}>
+								{text("app.save")}
+							</button>
+							<button type="button" onClick={() => setRenaming(false)} disabled={busy}>
+								{text("app.cancel")}
+							</button>
+						</form>
+					) : (
+						<button
+							type="button"
+							className="session-rename-trigger"
+							onClick={() => {
+								setSessionName(snapshot?.sessionName ?? "");
+								setRenaming(true);
+							}}
+							disabled={!running || busy}
+						>
+							{text("app.rename")}
+						</button>
+					)}
 					{sessions.length === 0 ? <p className="muted session-empty">{text("app.noSessions")}</p> : null}
-					{sessions.filter((session) => session.path !== snapshot?.sessionFile).length === 0 ? null : (
+					{sessions.length > 0 && listedSessions.length === 0 ? (
+						<p className="muted session-empty">{text("app.noSessionMatches")}</p>
+					) : null}
+					{listedSessions.length === 0 ? null : (
 						<div className="session-list">
-							{sessions
-								.filter((session) => session.path !== snapshot?.sessionFile)
-								.map((session) => (
+							{listedSessions.map((session) => (
 									<button
 										key={session.path}
 										type="button"

@@ -76,6 +76,9 @@ function build(overrides: Partial<ApiDependencies> = {}): {
 			open: async (path) => {
 				calls.push(`sessions-open:${path}`);
 			},
+			rename: async (name) => {
+				calls.push(`sessions-rename:${name}`);
+			},
 		},
 		settings: {
 			snapshot: async () => {
@@ -153,6 +156,7 @@ describe("the allow-list", () => {
 			"workspace:open",
 			"sessions:list",
 			"sessions:open",
+			"sessions:rename",
 			"judgments:recent",
 			"update:check",
 			"update:install",
@@ -409,7 +413,15 @@ describe("settings and consent", () => {
 			ok: false,
 			error: { code: "invalid-payload" },
 		});
-		expect(calls).toEqual(["sessions-list", "sessions-open:/workspace/session.jsonl"]);
+		await expect(api.dispatch("sessions:rename", { name: "Release work" })).resolves.toEqual({
+			ok: true,
+			value: undefined,
+		});
+		await expect(api.dispatch("sessions:rename", { name: "  " })).resolves.toMatchObject({
+			ok: false,
+			error: { code: "invalid-payload" },
+		});
+		expect(calls).toEqual(["sessions-list", "sessions-open:/workspace/session.jsonl", "sessions-rename:Release work"]);
 	});
 });
 

@@ -79,6 +79,7 @@ const api: MuApi = {
 	sessions: {
 		list: () => invoke<readonly SessionSummary[]>(IPC_CHANNELS.sessionsList),
 		open: (path) => invoke<void>(IPC_CHANNELS.sessionsOpen, { path }),
+		rename: (name) => invoke<void>(IPC_CHANNELS.sessionsRename, { name }),
 	},
 	judgments: {
 		recent: () => invoke<readonly JudgmentRecord[]>(IPC_CHANNELS.judgmentsRecent),

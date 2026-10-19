@@ -40,6 +40,7 @@ export interface ApiDependencies {
 	readonly sessions: {
 		list(): Promise<unknown>;
 		open(path: string): Promise<void>;
+		rename(name: string): Promise<void>;
 	};
 	/** The update feed, read on demand; `install` downloads, proves and starts what it offers. */
 	readonly update: {
@@ -123,6 +124,12 @@ function workspacePathOf(payload: unknown): string {
 	return path;
 }
 
+function sessionNameOf(payload: unknown): string {
+	const name = field(payload, "name");
+	if (typeof name !== "string" || name.trim() === "") throw new InvalidPayloadError("a session name is required");
+	return name;
+}
+
 /** An answer: exactly one of a value, a confirmation, or a cancellation, and always an id. */
 function answerOf(payload: unknown): UiAnswer {
 	const id = field(payload, "id");
@@ -187,6 +194,10 @@ export function createApi(deps: ApiDependencies): Api {
 		"sessions:list": async () => deps.sessions.list(),
 		"sessions:open": async (payload) => {
 			await deps.sessions.open(sessionPathOf(payload));
+			return undefined;
+		},
+		"sessions:rename": async (payload) => {
+			await deps.sessions.rename(sessionNameOf(payload));
 			return undefined;
 		},
 		"judgments:recent": async () => deps.judgments.recent(),

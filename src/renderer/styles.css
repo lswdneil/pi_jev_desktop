@@ -201,6 +201,55 @@ body {
 	font-size: 11px;
 }
 
+.session-search {
+	width: 100%;
+	padding: 6px 8px;
+	border: 1px solid var(--line);
+	border-radius: 7px;
+	background: var(--panel-2);
+	color: var(--text);
+	font: inherit;
+	font-size: 11px;
+}
+
+.session-rename {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.session-rename input {
+	min-width: 0;
+	flex: 1 1 auto;
+	padding: 5px 6px;
+	border: 1px solid var(--line);
+	border-radius: 6px;
+	background: var(--panel-2);
+	color: var(--text);
+	font: inherit;
+	font-size: 11px;
+}
+
+.session-rename button {
+	padding: 4px 6px;
+	font-size: 10px;
+}
+
+.session-rename-trigger {
+	width: 100%;
+	padding: 5px 8px;
+	border-color: transparent;
+	background: transparent;
+	color: var(--muted);
+	font-size: 11px;
+	text-align: left;
+}
+
+.session-rename-trigger:hover:not(:disabled) {
+	background: var(--surface-hover);
+	color: var(--text);
+}
+
 .session-list {
 	display: flex;
 	flex-direction: column;

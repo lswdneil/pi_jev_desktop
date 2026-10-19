@@ -161,6 +161,8 @@ export interface MuApi {
 		list(): Promise<readonly SessionSummary[]>;
 		/** Switch the running agent to a saved session by its absolute JSONL path. */
 		open(path: string): Promise<void>;
+		/** Give the current session a stable display name. */
+		rename(name: string): Promise<void>;
 	};
 	readonly judgments: {
 		/** The last decisions from mu's ledger, newest last. Its own data source: `mu ledger --json`. */
@@ -209,6 +211,7 @@ export const IPC_CHANNELS = {
 	workspaceOpen: "workspace:open",
 	sessionsList: "sessions:list",
 	sessionsOpen: "sessions:open",
+	sessionsRename: "sessions:rename",
 	judgmentsRecent: "judgments:recent",
 	updateCheck: "update:check",
 	updateInstall: "update:install",
@@ -244,6 +247,7 @@ export const INVOKE_CHANNELS = [
 	IPC_CHANNELS.workspaceOpen,
 	IPC_CHANNELS.sessionsList,
 	IPC_CHANNELS.sessionsOpen,
+	IPC_CHANNELS.sessionsRename,
 	IPC_CHANNELS.judgmentsRecent,
 	IPC_CHANNELS.updateCheck,
 	IPC_CHANNELS.updateInstall,
