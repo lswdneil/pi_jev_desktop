@@ -121,6 +121,8 @@ export class AgentSupervisor {
 		const model = state.model === undefined ? undefined : `${state.model.provider}/${state.model.id}`;
 		return {
 			sessionId: state.sessionId,
+			...(state.sessionFile === undefined ? {} : { sessionFile: state.sessionFile }),
+			...(state.sessionName === undefined ? {} : { sessionName: state.sessionName }),
 			model,
 			thinkingLevel: state.thinkingLevel,
 			isStreaming: state.isStreaming,
@@ -155,6 +157,18 @@ export class AgentSupervisor {
 		if (response.command !== "new_session") throw new Error(`the agent answered new_session with ${response.command}`);
 		if ((response.data as { cancelled: boolean }).cancelled)
 			throw new Error("the new conversation was cancelled; the current session is unchanged");
+	}
+
+	/** Switch the live agent to a saved session file; the caller reloads history afterwards. */
+	async switchSession(sessionPath: string): Promise<void> {
+		const response = await this.requireConnection().request({ type: "switch_session", sessionPath });
+		if (!response.success) throw new Error(response.error);
+		if (response.command !== "switch_session") {
+			throw new Error(`the agent answered switch_session with ${response.command}`);
+		}
+		if ((response.data as { cancelled: boolean }).cancelled) {
+			throw new Error("the session switch was cancelled; the current session is unchanged");
+		}
 	}
 
 	/** The models the harness can use, for the first-run screen. Listing them needs no key; running one does. */

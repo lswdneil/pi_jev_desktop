@@ -161,7 +161,17 @@ test.describe("the security baseline", () => {
 		try {
 			await completeFirstRun(page);
 			const surface = await page.evaluate(() => Object.keys(window.mu).sort());
-			expect(surface).toEqual(["app", "consent", "harness", "judgments", "preview", "settings", "update", "workspace"]);
+			expect(surface).toEqual([
+				"app",
+				"consent",
+				"harness",
+				"judgments",
+				"preview",
+				"sessions",
+				"settings",
+				"update",
+				"workspace",
+			]);
 
 			const harnessMethods = await page.evaluate(() => Object.keys(window.mu.harness).sort());
 			expect(harnessMethods).toEqual([
@@ -181,6 +191,8 @@ test.describe("the security baseline", () => {
 			]);
 			const workspaceMethods = await page.evaluate(() => Object.keys(window.mu.workspace).sort());
 			expect(workspaceMethods).toEqual(["choose", "current"]);
+			const sessionMethods = await page.evaluate(() => Object.keys(window.mu.sessions).sort());
+			expect(sessionMethods).toEqual(["list", "open"]);
 
 			// There is no generic sender: a page cannot name a channel of its own.
 			const generic = await page.evaluate(() =>

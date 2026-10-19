@@ -321,4 +321,19 @@ describe("talking to it", () => {
 		agent.emit({ type: "response", id: "1", command: "new_session", success: true, data: { cancelled: true } });
 		await expect(answer).rejects.toThrow(/cancel/i);
 	});
+
+	it("switches to a saved session and rejects a cancelled switch", async () => {
+		const agent = new FakeProcess();
+		const test = rig([agent]);
+		await test.supervisor.start();
+
+		const switched = test.supervisor.switchSession("/sessions/one.jsonl");
+		expect(agent.lastCommand()).toEqual({ type: "switch_session", sessionPath: "/sessions/one.jsonl", id: "1" });
+		agent.emit({ type: "response", id: "1", command: "switch_session", success: true, data: { cancelled: false } });
+		await expect(switched).resolves.toBeUndefined();
+
+		const cancelled = test.supervisor.switchSession("/sessions/two.jsonl");
+		agent.emit({ type: "response", id: "2", command: "switch_session", success: true, data: { cancelled: true } });
+		await expect(cancelled).rejects.toThrow(/cancel/i);
+	});
 });

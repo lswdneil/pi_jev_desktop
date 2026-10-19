@@ -24,6 +24,7 @@ import { expectedHarness, type Harness, findHarness, launchCommand } from "./har
 import { createApi } from "./ipc.ts";
 import { isPreviewContents, PreviewPanel } from "./preview.ts";
 import { APP_ORIGIN, appPermission, contentSecurityPolicy, developmentCsp, isAllowedNavigation, windowPreferences } from "./security.ts";
+import { isSessionPath, listSessions, sessionsRoot } from "./sessions.ts";
 import {
 	appendShellLog,
 	formatShellLogLine,
@@ -184,6 +185,21 @@ const workspace = {
 	},
 };
 
+const sessions = {
+	async list(): Promise<unknown> {
+		const harness = currentHarness();
+		return listSessions({
+			root: sessionsRoot(agentDirFor(homedir(), process.platform)),
+			cwd: currentWorkspace(harness),
+		});
+	},
+	async open(path: string): Promise<void> {
+		const root = sessionsRoot(agentDirFor(homedir(), process.platform));
+		if (!isSessionPath(root, path)) throw new Error("the session path is outside this app's session folder");
+		await supervisor.switchSession(path);
+	},
+};
+
 /**
  * The judgments panel's own source: `mu ledger --json`, which the kernel already provides and keeps in step with the
  * ledger format. Reading the file directly would be a second parser for the same lines.
@@ -252,6 +268,7 @@ const api = createApi({
 	platform: process.platform,
 	supervisor,
 	workspace,
+	sessions,
 	settings,
 	consent,
 	judgments,

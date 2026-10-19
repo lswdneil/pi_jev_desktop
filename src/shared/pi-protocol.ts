@@ -28,6 +28,7 @@ export type RpcCommand =
 	| { readonly id?: string; readonly type: "cycle_model" }
 	| { readonly id?: string; readonly type: "get_available_models" }
 	| { readonly id?: string; readonly type: "get_messages" }
+	| { readonly id?: string; readonly type: "switch_session"; readonly sessionPath: string }
 	| { readonly id?: string; readonly type: "set_session_name"; readonly name: string }
 	| { readonly id?: string; readonly type: "set_thinking_level"; readonly level: string }
 	| { readonly id?: string; readonly type: "compact"; readonly customInstructions?: string }
@@ -47,6 +48,7 @@ export interface RpcSessionState {
 	readonly isStreaming: boolean;
 	readonly isCompacting?: boolean;
 	readonly sessionId: string;
+	readonly sessionFile?: string;
 	readonly sessionName?: string;
 	readonly messageCount: number;
 	readonly pendingMessageCount?: number;
@@ -58,6 +60,7 @@ export type RpcResponse =
 	| { readonly id?: string; readonly type: "response"; readonly command: "get_messages"; readonly success: true; readonly data: { readonly messages: readonly unknown[] } }
 	| { readonly id?: string; readonly type: "response"; readonly command: "new_session"; readonly success: true; readonly data: { readonly cancelled: boolean } }
 	| { readonly id?: string; readonly type: "response"; readonly command: "get_available_models"; readonly success: true; readonly data: { readonly models: readonly RpcModel[] } }
+	| { readonly id?: string; readonly type: "response"; readonly command: "switch_session"; readonly success: true; readonly data: { readonly cancelled: boolean } }
 	| { readonly id?: string; readonly type: "response"; readonly command: string; readonly success: true; readonly data?: unknown }
 	| { readonly id?: string; readonly type: "response"; readonly command: string; readonly success: false; readonly error: string };
 

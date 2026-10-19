@@ -24,6 +24,7 @@ import {
 	type JudgmentRecord,
 	type PromptResult,
 	type SessionSnapshot,
+	type SessionSummary,
 	type UiAnswer,
 	type Unsubscribe,
 	type WorkspaceChoice,
@@ -73,6 +74,10 @@ const api: MuApi = {
 	workspace: {
 		current: () => invoke<WorkspaceState>(IPC_CHANNELS.workspaceCurrent),
 		choose: () => invoke<WorkspaceChoice>(IPC_CHANNELS.workspaceChoose),
+	},
+	sessions: {
+		list: () => invoke<readonly SessionSummary[]>(IPC_CHANNELS.sessionsList),
+		open: (path) => invoke<void>(IPC_CHANNELS.sessionsOpen, { path }),
 	},
 	judgments: {
 		recent: () => invoke<readonly JudgmentRecord[]>(IPC_CHANNELS.judgmentsRecent),

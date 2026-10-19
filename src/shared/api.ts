@@ -61,6 +61,8 @@ export interface PromptResult {
 /** A loaded agent session, as the renderer needs it. */
 export interface SessionSnapshot {
 	readonly sessionId: string;
+	readonly sessionFile?: string;
+	readonly sessionName?: string;
 	readonly model: string | undefined;
 	readonly thinkingLevel: string;
 	readonly isStreaming: boolean;
@@ -73,6 +75,15 @@ export type Unsubscribe = () => void;
 export interface ModelChoice {
 	readonly provider: string;
 	readonly id: string;
+}
+
+/** One saved session in this app's agent folder. */
+export interface SessionSummary {
+	readonly path: string;
+	readonly id: string;
+	readonly title: string;
+	readonly cwd: string;
+	readonly updatedAt: string;
 }
 
 /** The folder the agent runs in, and the result of choosing a different one. */
@@ -143,6 +154,12 @@ export interface MuApi {
 		/** Ask for a folder, then restart the agent in it. Cancellation leaves the current session alone. */
 		choose(): Promise<WorkspaceChoice>;
 	};
+	readonly sessions: {
+		/** Saved sessions for the current workspace, newest first. */
+		list(): Promise<readonly SessionSummary[]>;
+		/** Switch the running agent to a saved session by its absolute JSONL path. */
+		open(path: string): Promise<void>;
+	};
 	readonly judgments: {
 		/** The last decisions from mu's ledger, newest last. Its own data source: `mu ledger --json`. */
 		recent(): Promise<readonly JudgmentRecord[]>;
@@ -187,6 +204,8 @@ export const IPC_CHANNELS = {
 	harnessUiResponse: "harness:ui-response",
 	workspaceCurrent: "workspace:current",
 	workspaceChoose: "workspace:choose",
+	sessionsList: "sessions:list",
+	sessionsOpen: "sessions:open",
 	judgmentsRecent: "judgments:recent",
 	updateCheck: "update:check",
 	updateInstall: "update:install",
@@ -219,6 +238,8 @@ export const INVOKE_CHANNELS = [
 	IPC_CHANNELS.harnessUiResponse,
 	IPC_CHANNELS.workspaceCurrent,
 	IPC_CHANNELS.workspaceChoose,
+	IPC_CHANNELS.sessionsList,
+	IPC_CHANNELS.sessionsOpen,
 	IPC_CHANNELS.judgmentsRecent,
 	IPC_CHANNELS.updateCheck,
 	IPC_CHANNELS.updateInstall,

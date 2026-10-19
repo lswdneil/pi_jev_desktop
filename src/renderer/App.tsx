@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import logo from "./assets/logo.png";
-import type { AgentEvent, HarnessStatus, ModelChoice, MuApi, SessionSnapshot, Unsubscribe } from "../shared/api.ts";
+import type { AgentEvent, HarnessStatus, ModelChoice, MuApi, SessionSnapshot, SessionSummary, Unsubscribe } from "../shared/api.ts";
 import type { ConversationEvent } from "../shared/conversation.ts";
 import { ConversationStore } from "./lib/conversation-store.ts";
 import { hasOnboarded, markOnboarded, useLanguage } from "./lib/i18n.ts";
@@ -59,6 +59,7 @@ export function App(): React.JSX.Element {
 	const [sessionRevision, setSessionRevision] = useState(0);
 	const [workspacePath, setWorkspacePath] = useState("");
 	const [models, setModels] = useState<readonly ModelChoice[]>([]);
+	const [sessions, setSessions] = useState<readonly SessionSummary[]>([]);
 	const [modelBusy, setModelBusy] = useState(false);
 
 	const report = useCallback((message: string) => setError(message), []);
@@ -148,6 +149,25 @@ export function App(): React.JSX.Element {
 		};
 	}, [api, status.state]);
 
+	useEffect(() => {
+		if (api === undefined || status.state !== "running") {
+			setSessions([]);
+			return;
+		}
+		let alive = true;
+		void api.sessions
+			.list()
+			.then((value) => {
+				if (alive) setSessions(value);
+			})
+			.catch(() => {
+				if (alive) setSessions([]);
+			});
+		return () => {
+			alive = false;
+		};
+	}, [api, status.state, workspacePath, sessionRevision]);
+
 	const restart = useCallback(async () => {
 		if (api === undefined || operation.current) return;
 		operation.current = true;
@@ -222,6 +242,28 @@ export function App(): React.JSX.Element {
 		[api, report],
 	);
 
+	const openSession = useCallback(
+		async (path: string) => {
+			if (api === undefined || operation.current) return;
+			operation.current = true;
+			setBusy(true);
+			setError("");
+			try {
+				await api.sessions.open(path);
+				store.reset();
+				setSessionRevision((revision) => revision + 1);
+				setSnapshot(await api.harness.snapshot());
+				setStatus(await api.harness.status());
+			} catch (failure) {
+				report(failure instanceof Error ? failure.message : String(failure));
+			} finally {
+				operation.current = false;
+				setBusy(false);
+			}
+		},
+		[api, store, report],
+	);
+
 	if (api === undefined) {
 		return (
 			<main className="screen">
@@ -285,11 +327,31 @@ export function App(): React.JSX.Element {
 				</section>
 
 				<section className="rail-section rail-session">
-					<h2>{text("app.session")}</h2>
+					<h2>{text("app.sessions")}</h2>
 					<div className="session-card">
-						<span>{snapshot?.sessionId === undefined ? text("app.noSession") : `session · ${snapshot.sessionId.slice(0, 12)}`}</span>
+						<span>{snapshot?.sessionName ?? (snapshot?.sessionId === undefined ? text("app.noSession") : `session · ${snapshot.sessionId.slice(0, 12)}`)}</span>
 						{snapshot?.model === undefined ? null : <small>{snapshot.model}</small>}
 					</div>
+					{sessions.length === 0 ? <p className="muted session-empty">{text("app.noSessions")}</p> : null}
+					{sessions.filter((session) => session.path !== snapshot?.sessionFile).length === 0 ? null : (
+						<div className="session-list">
+							{sessions
+								.filter((session) => session.path !== snapshot?.sessionFile)
+								.map((session) => (
+									<button
+										key={session.path}
+										type="button"
+										className="session-item"
+										onClick={() => void openSession(session.path)}
+										disabled={busy}
+										title={session.path}
+									>
+										<span className="session-title">{session.title}</span>
+										<span className="session-meta">{session.updatedAt.slice(0, 10)}</span>
+									</button>
+								))}
+						</div>
+					)}
 				</section>
 
 				<nav className="rail-nav">

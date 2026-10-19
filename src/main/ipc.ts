@@ -35,6 +35,11 @@ export interface ApiDependencies {
 		current(): Promise<unknown>;
 		choose(): Promise<unknown>;
 	};
+	/** Saved sessions for the current workspace. */
+	readonly sessions: {
+		list(): Promise<unknown>;
+		open(path: string): Promise<void>;
+	};
 	/** The update feed, read on demand; `install` downloads, proves and starts what it offers. */
 	readonly update: {
 		check(): Promise<unknown>;
@@ -105,6 +110,12 @@ function modelOf(payload: unknown): { provider: string; modelId: string } {
 	return { provider, modelId };
 }
 
+function sessionPathOf(payload: unknown): string {
+	const path = field(payload, "path");
+	if (typeof path !== "string" || path.trim() === "") throw new InvalidPayloadError("a session needs a path");
+	return path;
+}
+
 /** An answer: exactly one of a value, a confirmation, or a cancellation, and always an id. */
 function answerOf(payload: unknown): UiAnswer {
 	const id = field(payload, "id");
@@ -165,6 +176,11 @@ export function createApi(deps: ApiDependencies): Api {
 		},
 		"workspace:current": async () => deps.workspace.current(),
 		"workspace:choose": async () => deps.workspace.choose(),
+		"sessions:list": async () => deps.sessions.list(),
+		"sessions:open": async (payload) => {
+			await deps.sessions.open(sessionPathOf(payload));
+			return undefined;
+		},
 		"judgments:recent": async () => deps.judgments.recent(),
 		"update:check": async () => deps.update.check(),
 		"update:install": async () => deps.update.install(),

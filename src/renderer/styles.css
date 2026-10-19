@@ -168,6 +168,45 @@ body {
 	font-size: 11px;
 }
 
+.session-empty {
+	margin: 4px 0 0;
+	font-size: 11px;
+}
+
+.session-list {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.session-item {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	width: 100%;
+	padding: 7px 8px;
+	border-color: transparent;
+	background: transparent;
+	text-align: left;
+}
+
+.session-item:hover:not(:disabled) {
+	background: var(--surface-hover);
+}
+
+.session-title {
+	max-width: 100%;
+	overflow: hidden;
+	font-size: 12px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.session-meta {
+	color: var(--muted);
+	font-size: 10px;
+}
+
 .rail-nav {
 	display: flex;
 	flex-direction: column;

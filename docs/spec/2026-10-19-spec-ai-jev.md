@@ -54,7 +54,8 @@ trust it?".
 This release implements:
 
 - A workspace chooser that restarts the harness in the selected folder.
-- A session rail showing the current session and model.
+- A session rail showing the current session, saved sessions, and model.
+- Saved-session switching through the harness's `switch_session` command.
 - A model picker backed by `get_available_models` / `set_model`.
 - Conversation streaming, stop, new session, and history restoration.
 - Tool execution rows, file changes, and the judgment ledger.
@@ -83,8 +84,8 @@ Acceptance path:
 | `Judgment` | A decision-point verdict, mode, provider, and reason. |
 | `FileChange` | A path touched by a tool, with time and tool name. |
 
-The first slice keeps the runtime session as the source of truth and restores it through `get_messages`. A later
-slice adds a local session index for cross-session switching.
+The first slice keeps the runtime session as the source of truth, indexes the session files in the app's agent folder,
+and restores history through `get_messages`.
 
 ## Runtime boundary
 
@@ -133,7 +134,7 @@ The logo is the supplied spec.ai.jev infinity mark. It is used in the rail and a
 
 ## Non-goals for this slice
 
-- Multi-session sidebar with cross-session switching.
+- Cross-project session history and search.
 - File editor and diff viewer.
 - Remote sessions and team collaboration.
 - Signed installer and update installation.
@@ -143,7 +144,7 @@ These require their own specs and acceptance tests.
 
 ## Next slices
 
-1. Session index and switch/restore.
+1. Session search, naming, and cross-project history.
 2. Project list and recent workspaces.
 3. Approval history and a judgment detail drawer.
 4. File diff and preview.

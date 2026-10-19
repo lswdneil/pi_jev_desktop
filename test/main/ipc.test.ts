@@ -64,6 +64,15 @@ function build(overrides: Partial<ApiDependencies> = {}): {
 				return { path: "/workspace/next", cancelled: false, status: { state: "running" } };
 			},
 		},
+		sessions: {
+			list: async () => {
+				calls.push("sessions-list");
+				return [{ path: "/workspace/session.jsonl", id: "s-1", title: "First task", cwd: "/workspace", updatedAt: "2026-10-19T10:00:00.000Z" }];
+			},
+			open: async (path) => {
+				calls.push(`sessions-open:${path}`);
+			},
+		},
 		settings: {
 			snapshot: async () => {
 				calls.push("settings-snapshot");
@@ -137,6 +146,8 @@ describe("the allow-list", () => {
 			"harness:ui-response",
 			"workspace:current",
 			"workspace:choose",
+			"sessions:list",
+			"sessions:open",
 			"judgments:recent",
 			"update:check",
 			"update:install",
@@ -367,6 +378,23 @@ describe("settings and consent", () => {
 			value: { path: "/workspace/next", cancelled: false, status: { state: "running" } },
 		});
 		expect(calls).toEqual(["workspace-current", "workspace-choose"]);
+	});
+
+	it("lists and opens saved sessions through named channels", async () => {
+		const { api, calls } = build();
+		await expect(api.dispatch("sessions:list", undefined)).resolves.toMatchObject({
+			ok: true,
+			value: [{ id: "s-1", title: "First task" }],
+		});
+		await expect(api.dispatch("sessions:open", { path: "/workspace/session.jsonl" })).resolves.toEqual({
+			ok: true,
+			value: undefined,
+		});
+		await expect(api.dispatch("sessions:open", {})).resolves.toMatchObject({
+			ok: false,
+			error: { code: "invalid-payload" },
+		});
+		expect(calls).toEqual(["sessions-list", "sessions-open:/workspace/session.jsonl"]);
 	});
 });
 
