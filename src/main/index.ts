@@ -23,6 +23,7 @@ import { consentState, runConsentCommand, runHarnessCommand } from "./consent.ts
 import { expectedHarness, type Harness, findHarness, launchCommand } from "./harness.ts";
 import { readFilePreview, saveFile } from "./files.ts";
 import { searchProjectFiles } from "./search.ts";
+import { applicationMenu } from "./menu.ts";
 import { createApi } from "./ipc.ts";
 import { isPreviewContents, PreviewPanel } from "./preview.ts";
 import { APP_ORIGIN, appPermission, contentSecurityPolicy, developmentCsp, isAllowedNavigation, windowPreferences } from "./security.ts";
@@ -531,7 +532,8 @@ async function main(): Promise<void> {
 		app.quit();
 		return;
 	}
-	Menu.setApplicationMenu(null);
+	const menu = applicationMenu(process.platform);
+	Menu.setApplicationMenu(menu === null ? null : Menu.buildFromTemplate([...menu]));
 	await app.whenReady();
 
 	registerAppScheme();
