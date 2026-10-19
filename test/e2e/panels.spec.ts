@@ -50,6 +50,10 @@ test.describe("panels", () => {
 			await page.locator('[data-testid="send"]').click();
 			await expect(page.locator('[data-testid="files-panel"] li[data-file="src/app.ts"]')).toBeVisible({ timeout: 30_000 });
 			await expect(page.locator('[data-testid="files-panel"]')).toContainText("write");
+
+			// What the tool said back is on the row, one click away rather than in the agent's own words.
+			await page.locator('[data-testid="tool-output"] summary').click();
+			await expect(page.locator('[data-testid="tool-output"]')).toContainText("wrote 12 bytes to src/app.ts");
 		} finally {
 			await profile.close();
 		}

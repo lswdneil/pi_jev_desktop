@@ -193,6 +193,12 @@ export function ConversationPage({
 							<p className="text">
 								<code>{message.tool.summary}</code> <span className="muted">({message.tool.status})</span>
 							</p>
+							{message.tool.output === undefined ? null : (
+								<details className="tool-output" data-testid="tool-output">
+									<summary>{text("conversation.output")}</summary>
+									<pre>{message.tool.output}</pre>
+								</details>
+							)}
 						</article>
 					),
 				)}

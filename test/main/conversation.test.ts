@@ -4,6 +4,8 @@
 import { describe, expect, it } from "vitest";
 import {
 	type PendingApproval,
+	MAX_TOOL_OUTPUT,
+	toolResultText,
 	waitingTitle,
 	type ConversationEvent,
 	type ConversationState,
@@ -412,5 +414,21 @@ describe("the protocol growing", () => {
 		expect(waitingTitle("waiting: Run rm -rf build?")).toBe("Run rm -rf build?");
 		expect(waitingTitle("thinking")).toBeUndefined();
 		expect(waitingTitle(undefined)).toBeUndefined();
+	});
+
+	it("reads a tool's answer in the shapes a harness sends it", () => {
+		expect(toolResultText("plain")).toBe("plain");
+		expect(toolResultText({ content: [{ type: "text", text: "ok" }] })).toBe("ok");
+		expect(toolResultText({ output: "ls: no such file" })).toBe("ls: no such file");
+		expect(toolResultText({ stdout: "built", stderr: "warning" })).toBe("built\nwarning");
+		expect(toolResultText({})).toBeUndefined();
+		expect(toolResultText(undefined)).toBeUndefined();
+		expect(toolResultText({ content: [] })).toBeUndefined();
+	});
+
+	it("clips a tool's answer to something a panel can show", () => {
+		const clipped = toolResultText("x".repeat(MAX_TOOL_OUTPUT + 100));
+		expect(clipped).toHaveLength(MAX_TOOL_OUTPUT + 2);
+		expect(clipped?.endsWith("…")).toBe(true);
 	});
 });

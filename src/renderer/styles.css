@@ -849,6 +849,32 @@ button.attach:hover:not(:disabled) {
 	border-left-color: var(--bad);
 }
 
+.tool-output {
+	margin-top: 4px;
+	font-size: 11px;
+}
+
+.tool-output summary {
+	cursor: pointer;
+	color: var(--muted);
+}
+
+.tool-output summary:hover {
+	color: var(--text);
+}
+
+.tool-output pre {
+	max-height: 180px;
+	margin: 4px 0 0;
+	padding: 8px;
+	overflow: auto;
+	border-radius: 8px;
+	background: var(--code-bg);
+	color: var(--text);
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
 .cursor {
 	color: var(--accent);
 	animation: blink 1s steps(2, start) infinite;

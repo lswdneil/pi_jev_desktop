@@ -24,6 +24,8 @@ export interface ChatTool {
 	/** A one-line summary of the arguments: a path, a command, the first line of a patch. */
 	readonly summary: string;
 	readonly status: "running" | "ok" | "error";
+	/** What the tool said back, clipped; absent when it said nothing a person can read. */
+	readonly output?: string;
 }
 
 export interface ChatMessage {
@@ -133,6 +135,41 @@ export const WAITING_PREFIX = "waiting: ";
 
 export function waitingTitle(current: string | undefined): string | undefined {
 	return current !== undefined && current.startsWith(WAITING_PREFIX) ? current.slice(WAITING_PREFIX.length) : undefined;
+}
+
+/**
+ * What a tool said back, in the shapes a harness actually sends: a string, a text part, an `output` field, or a
+ * program's stdout and stderr. Anything else is not text a person can read, and JSON of it would be noise rather than
+ * information. Long output is clipped: the row exists so a step can be understood, not so a build log can be read in a
+ * 240-pixel panel.
+ */
+export const MAX_TOOL_OUTPUT = 4_000;
+
+function clipOutput(text: string): string | undefined {
+	if (text.trim() === "") return undefined;
+	return text.length > MAX_TOOL_OUTPUT ? `${text.slice(0, MAX_TOOL_OUTPUT)}\n…` : text;
+}
+
+export function toolResultText(result: unknown): string | undefined {
+	if (typeof result === "string") return clipOutput(result);
+	if (typeof result !== "object" || result === null) return undefined;
+	const record = result as Record<string, unknown>;
+	if (typeof record.text === "string") return clipOutput(record.text);
+	if (typeof record.output === "string") return clipOutput(record.output);
+	if (Array.isArray(record.content)) {
+		const text = record.content
+			.map((part) => {
+				if (typeof part !== "object" || part === null) return "";
+				const block = part as { type?: unknown; text?: unknown };
+				return block.type === "text" && typeof block.text === "string" ? block.text : "";
+			})
+			.filter(Boolean)
+			.join("\n");
+		return clipOutput(text);
+	}
+	const stdout = typeof record.stdout === "string" ? record.stdout : "";
+	const stderr = typeof record.stderr === "string" ? record.stderr : "";
+	return clipOutput([stdout, stderr].filter((part) => part.trim() !== "").join("\n"));
 }
 
 export function initialConversation(): ConversationState {
@@ -333,11 +370,17 @@ export function reduceConversation(state: ConversationState, event: Conversation
 		}
 
 		case "tool_execution_end": {
-			const ended = event as { toolCallId?: unknown; isError?: unknown };
+			const ended = event as { toolCallId?: unknown; isError?: unknown; result?: unknown };
 			const id = typeof ended.toolCallId === "string" ? ended.toolCallId : "";
 			const status: ChatTool["status"] = ended.isError === true ? "error" : "ok";
+			const output = toolResultText(ended.result);
 			const messages = state.messages.map((message) =>
-				message.id === id && message.tool !== undefined ? { ...message, tool: { ...message.tool, status } } : message,
+				message.id === id && message.tool !== undefined
+					? {
+							...message,
+							tool: { ...message.tool, status, ...(output === undefined ? {} : { output }) },
+						}
+					: message,
 			);
 			return bump(state, { ...state, messages, board: { ...state.board, current: "thinking" } });
 		}

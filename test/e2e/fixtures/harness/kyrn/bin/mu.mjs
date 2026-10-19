@@ -163,7 +163,12 @@ function runPrompt(text) {
 		emit(delta("Writing the file."));
 		emit({ type: "message_end", message: assistant("Writing the file.") });
 		emit({ type: "tool_execution_start", toolCallId: "call-write", toolName: "write", args: { path: "src/app.ts" } });
-		emit({ type: "tool_execution_end", toolCallId: "call-write", result: {}, isError: false });
+		emit({
+			type: "tool_execution_end",
+			toolCallId: "call-write",
+			result: { content: [{ type: "text", text: "wrote 12 bytes to src/app.ts" }] },
+			isError: false,
+		});
 		finish("Done: src/app.ts");
 		return;
 	}

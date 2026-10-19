@@ -16,6 +16,7 @@ This is the first vertical slice. It adds:
 - Deleting a saved session (two clicks; the agent leaves it first if it is the open one).
 - Quick open with `Ctrl+P`: type part of a name, press Enter, and the file opens in the Files panel.
 - The window reopens at the size and place it was closed at, as long as a display still reaches it.
+- Tool rows keep the tool's own answer, one click away, clipped to 4 000 characters.
 - Recent-project rows with their folder, and a way to forget a shortcut.
 - A model picker that changes the running session.
 - The conversation, tool runs, approval cards, file history, and judgment ledger.

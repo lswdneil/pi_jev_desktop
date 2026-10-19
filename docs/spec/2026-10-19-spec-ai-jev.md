@@ -77,6 +77,8 @@ This release implements:
   runtime skipped. The file it opens lands in the Files panel, through the same read and edit path.
 - The window reopens at the size and place it was closed at, unless that rectangle no longer touches a display, in
   which case it keeps the size and lets the platform place it.
+- A tool row keeps what the tool answered (string, text part, `output`, or stdout/stderr), clipped to 4 000 characters
+  and one click away, so a failing command's own words are reachable without asking the model to repeat them.
 - Approval cards for confirm, select, input, and editor requests.
 - The spec.ai.jev logo and the Freebuff dark palette.
 
