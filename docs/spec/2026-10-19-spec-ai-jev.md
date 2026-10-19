@@ -166,6 +166,7 @@ These require their own specs and acceptance tests.
 
 ## Next slices
 
-1. Signing key and update verification. The NSIS installer builds and is rehearsed end to end (silent install, a turn
-   through a stub provider, uninstall); signing needs a certificate and the update key needs to be issued, neither of
-   which a checkout can invent.
+1. Signing key and update key. The installer builds and is rehearsed end to end; the update path verifies a detached
+   Ed25519 signature against a key compiled in from `SPEC_UPDATE_PUBLIC_KEY`, refuses to install when the build carries
+   none, and the settings screen only offers the button when the build could follow through. What remains is issuing the
+   certificate and the key pair and signing artifacts in the release job — inputs a checkout cannot invent.

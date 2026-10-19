@@ -14,11 +14,16 @@
 
 import { createHash, verify } from "node:crypto";
 
+declare const __SPEC_UPDATE_PUBLIC_KEY__: string;
+
 /**
- * The release signing key (Ed25519, PEM). Empty in this build: the release pipeline's key is the owner's to add
- * (U10), and until it is here the app reports updates without installing them.
+ * The release signing key (Ed25519, PEM), compiled in by the build from `SPEC_UPDATE_PUBLIC_KEY`.
+ *
+ * Empty when the release job has not set one: the app then reports updates and refuses to install them, which is the
+ * only safe reading of "no trust anchor". The value is a build input rather than a setting or a run-time variable on
+ * purpose — neither the settings screen nor the environment of the user's session can move it.
  */
-export const UPDATE_PUBLIC_KEY = "";
+export const UPDATE_PUBLIC_KEY = (typeof __SPEC_UPDATE_PUBLIC_KEY__ === "string" ? __SPEC_UPDATE_PUBLIC_KEY__ : "").trim();
 
 /** The digest the feed lists: base64 of the file's SHA-512, as electron-builder writes it. */
 export function sha512Base64(bytes: Uint8Array): string {

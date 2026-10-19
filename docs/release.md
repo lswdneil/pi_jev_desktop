@@ -48,14 +48,22 @@ The app reads `https://github.com/lswdneil/pi_jev_desktop/releases/latest/downlo
 `latest.yml` and the installer is what makes "an update is available" true for an installed copy.
 
 Installing one is refused today, on purpose: `src/main/update-verify.ts` holds the public key an update artifact must be
-signed with, and it is empty. To turn the feature on:
+signed with, and it is empty. The key is compiled into the main process at build time from the
+`SPEC_UPDATE_PUBLIC_KEY` build variable (`electron.vite.config.mts`) — not a setting and not a run-time environment
+variable, so neither the settings screen nor the environment of the person running the app can move the trust anchor.
+
+To turn the feature on:
 
 1. Generate an Ed25519 key pair offline.
-2. Put the public key in `src/main/update-verify.ts`; the private key belongs in the release job's secret store, never in
-   this repository.
-3. Sign each installer with that key in the release job before attaching it to the release.
+2. Put the public key (PEM) in the repository secret `SPEC_UPDATE_PUBLIC_KEY`; the private key belongs in the release
+   job's secret store, never in this repository.
+3. Sign each installer with that private key in the release job, and upload the base64 signature beside the artifact as
+   `<installer>.sig` — that is where `installUpdate` looks for it.
 
 Until then the app says so instead of installing something it cannot prove.
+
+The settings screen reads a check's `canInstall`, so a build with the key says nothing about being unable to install,
+and a build without it says exactly that instead of offering a button that will refuse.
 
 ## Publishing
 

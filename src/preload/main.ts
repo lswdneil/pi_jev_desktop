@@ -35,7 +35,7 @@ import {
 } from "../shared/api.ts";
 import type { HistoryMessage } from "../shared/conversation.ts";
 import type { SettingsChange, SettingsSnapshot } from "../shared/settings.ts";
-import type { UpdateCheck, UpdateInstallOutcome } from "../shared/update.ts";
+import type { UpdateCheckResult, UpdateInstallOutcome } from "../shared/update.ts";
 
 /** Call one allow-listed channel; a refusal from the main process becomes a rejected promise the page can catch. */
 async function invoke<T>(channel: InvokeChannel, payload?: unknown): Promise<T> {
@@ -98,7 +98,7 @@ const api: MuApi = {
 		recent: () => invoke<readonly JudgmentRecord[]>(IPC_CHANNELS.judgmentsRecent),
 	},
 	update: {
-		check: () => invoke<UpdateCheck>(IPC_CHANNELS.updateCheck),
+		check: () => invoke<UpdateCheckResult>(IPC_CHANNELS.updateCheck),
 		install: () => invoke<UpdateInstallOutcome>(IPC_CHANNELS.updateInstall),
 	},
 	settings: {

@@ -50,6 +50,10 @@ jobs:
 
       - name: package
         run: npm run package
+        env:
+          # Compiled into the main process (electron.vite.config.mts). Empty means this build can report updates and
+          # cannot install them, which is the safe default; set the secret to turn installation on.
+          SPEC_UPDATE_PUBLIC_KEY: ${{ secrets.SPEC_UPDATE_PUBLIC_KEY }}
 
       - uses: actions/upload-artifact@v4
         with:

@@ -15,6 +15,11 @@ import { defineConfig, externalizeDepsPlugin } from "electron-vite";
 export default defineConfig({
 	main: {
 		plugins: [externalizeDepsPlugin()],
+		// Baked in at build time, never read from the environment at run time: an update mechanism whose trust anchor the
+		// person running the app can set is one a stray environment variable can point at itself.
+		define: {
+			__SPEC_UPDATE_PUBLIC_KEY__: JSON.stringify(process.env.SPEC_UPDATE_PUBLIC_KEY ?? ""),
+		},
 		build: {
 			outDir: "out/main",
 			minify: "oxc",

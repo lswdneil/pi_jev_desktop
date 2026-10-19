@@ -48,6 +48,7 @@ import {
 import { AgentSupervisor } from "./supervisor.ts";
 import { checkForUpdate } from "./update.ts";
 import { installUpdate } from "./update-install.ts";
+import { UPDATE_PUBLIC_KEY } from "./update-verify.ts";
 import { launchInstaller } from "./update-launcher.ts";
 import { appVersion } from "./version.ts";
 
@@ -331,7 +332,9 @@ const version = appVersion({ buildRoot: __dirname, electronVersion: app.getVersi
  */
 const update = {
 	async check(): Promise<unknown> {
-		return checkForUpdate({ currentVersion: version, requireSignature: app.isPackaged });
+		const found = await checkForUpdate({ currentVersion: version, requireSignature: app.isPackaged });
+		// The screen says whether this build could install what it found; an empty key is the only reason it cannot.
+		return { ...found, canInstall: UPDATE_PUBLIC_KEY !== "" };
 	},
 	async install(): Promise<unknown> {
 		const check = await checkForUpdate({ currentVersion: version, requireSignature: app.isPackaged });
@@ -341,6 +344,7 @@ const update = {
 		return installUpdate({
 			url: artifactUrl(check.feedUrl, check.status.file.url),
 			file: check.status.file,
+			publicKey: UPDATE_PUBLIC_KEY,
 			launch: launchInstaller,
 		});
 	},

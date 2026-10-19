@@ -14,7 +14,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { ConsentState, ModelChoice, MuApi } from "../../../shared/api.ts";
 import { localized, MANIFEST_LANGUAGES, applyChange, type SettingsSnapshot } from "../../../shared/settings.ts";
 import { fill } from "../../../shared/presentation.ts";
-import type { UpdateCheck, UpdateInstallOutcome } from "../../../shared/update.ts";
+import type { UpdateCheckResult, UpdateInstallOutcome } from "../../../shared/update.ts";
 import { OptionControl } from "../../lib/manifest-renderer.tsx";
 
 export function SettingsPage({
@@ -273,7 +273,7 @@ export function SettingsPage({
 
 /** The update check: on demand, and it says what it found — including why it will not install it. */
 function UpdateSection({ api, text }: { readonly api: MuApi; readonly text: (key: string) => string }): React.JSX.Element {
-	const [status, setStatus] = useState<UpdateCheck | undefined>(undefined);
+	const [status, setStatus] = useState<UpdateCheckResult | undefined>(undefined);
 	const [install, setInstall] = useState<UpdateInstallOutcome | undefined>(undefined);
 	const [busy, setBusy] = useState(false);
 
@@ -284,7 +284,11 @@ function UpdateSection({ api, text }: { readonly api: MuApi; readonly text: (key
 			.check()
 			.then(setStatus)
 			.catch((failure: unknown) =>
-				setStatus({ status: { state: "refused", reason: failure instanceof Error ? failure.message : String(failure) }, feedUrl: "" }),
+				setStatus({
+					status: { state: "refused", reason: failure instanceof Error ? failure.message : String(failure) },
+					feedUrl: "",
+					canInstall: false,
+				}),
 			)
 			.finally(() => setBusy(false));
 	};
@@ -336,7 +340,7 @@ function UpdateSection({ api, text }: { readonly api: MuApi; readonly text: (key
 					)}
 				</p>
 			) : null}
-			{status?.status.state === "available" ? (
+			{status?.status.state === "available" && !status.canInstall ? (
 				<p className="muted" data-testid="update-not-installed">
 					{text("update.notInstalled")}
 				</p>

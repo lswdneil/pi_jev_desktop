@@ -4,7 +4,13 @@
 import { generateKeyPairSync, sign } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { installUpdate, signatureUrlFor } from "../../src/main/update-install.ts";
-import { sha512Base64, verifyArtifact, verifyDigest, verifySignature } from "../../src/main/update-verify.ts";
+import {
+	sha512Base64,
+	UPDATE_PUBLIC_KEY,
+	verifyArtifact,
+	verifyDigest,
+	verifySignature,
+} from "../../src/main/update-verify.ts";
 import type { FeedFile } from "../../src/shared/update.ts";
 
 /**
@@ -33,6 +39,11 @@ function fetchServing(files: Readonly<Record<string, { body: Uint8Array | string
 }
 
 describe("the digest", () => {
+	it("carries no trust anchor unless the build was given one", () => {
+		// This build sets no `SPEC_UPDATE_PUBLIC_KEY`; the safe default is an anchor that verifies nothing.
+		expect(UPDATE_PUBLIC_KEY).toBe("");
+	});
+
 	it("matches what the feed promised, and refuses anything else", () => {
 		const { bytes, file } = artifact();
 		expect(verifyDigest(bytes, file.sha512)).toEqual({ ok: true });

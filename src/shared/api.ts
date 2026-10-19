@@ -15,7 +15,7 @@
 import type { HistoryMessage } from "./conversation.ts";
 import type { FilePreview, SavedFile } from "./files.ts";
 import type { SettingsChange, SettingsSnapshot } from "./settings.ts";
-import type { UpdateCheck, UpdateInstallOutcome } from "./update.ts";
+import type { UpdateCheckResult, UpdateInstallOutcome } from "./update.ts";
 
 /** What the app knows about the agent process. `failed` is the one that shows an error screen. */
 export type HarnessStatus =
@@ -213,7 +213,7 @@ export interface MuApi {
 	};
 	readonly update: {
 		/** Ask the configured feed whether a newer build exists, and say what stopped it if not. */
-		check(): Promise<UpdateCheck>;
+		check(): Promise<UpdateCheckResult>;
 		/** Download, prove and start the installer. Refuses with a sentence when it cannot prove the artifact. */
 		install(): Promise<UpdateInstallOutcome>;
 	};

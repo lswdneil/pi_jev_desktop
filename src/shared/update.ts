@@ -34,6 +34,11 @@ export interface UpdateCheck {
 	readonly feedUrl: string;
 }
 
+/** What a check found, plus whether this build carries a key that could install what it found. */
+export interface UpdateCheckResult extends UpdateCheck {
+	readonly canInstall: boolean;
+}
+
 /** What downloading, proving and starting an installer ended as. */
 export type UpdateInstallOutcome =
 	| { readonly state: "installed"; readonly file: string }
