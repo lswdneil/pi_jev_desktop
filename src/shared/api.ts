@@ -166,8 +166,12 @@ export interface MuApi {
 	readonly sessions: {
 		/** Saved sessions for the current workspace, newest first. */
 		list(): Promise<readonly SessionSummary[]>;
+		/** Every saved session, newest first, whatever project folder it belongs to. */
+		listAll(): Promise<readonly SessionSummary[]>;
 		/** Switch the running agent to a saved session by its absolute JSONL path. */
 		open(path: string): Promise<void>;
+		/** Open a session in the project it belongs to: restart the agent there, then switch to the session. */
+		openAcross(path: string): Promise<WorkspaceState>;
 		/** Give the current session a stable display name. */
 		rename(name: string): Promise<void>;
 	};
@@ -219,7 +223,9 @@ export const IPC_CHANNELS = {
 	workspaceReadFile: "workspace:read-file",
 	workspaceSaveFile: "workspace:write-file",
 	sessionsList: "sessions:list",
+	sessionsListAll: "sessions:list-all",
 	sessionsOpen: "sessions:open",
+	sessionsOpenAcross: "sessions:open-across",
 	sessionsRename: "sessions:rename",
 	judgmentsRecent: "judgments:recent",
 	updateCheck: "update:check",
@@ -257,7 +263,9 @@ export const INVOKE_CHANNELS = [
 	IPC_CHANNELS.workspaceReadFile,
 	IPC_CHANNELS.workspaceSaveFile,
 	IPC_CHANNELS.sessionsList,
+	IPC_CHANNELS.sessionsListAll,
 	IPC_CHANNELS.sessionsOpen,
+	IPC_CHANNELS.sessionsOpenAcross,
 	IPC_CHANNELS.sessionsRename,
 	IPC_CHANNELS.judgmentsRecent,
 	IPC_CHANNELS.updateCheck,

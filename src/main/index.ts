@@ -25,7 +25,7 @@ import { readFilePreview, saveFile } from "./files.ts";
 import { createApi } from "./ipc.ts";
 import { isPreviewContents, PreviewPanel } from "./preview.ts";
 import { APP_ORIGIN, appPermission, contentSecurityPolicy, developmentCsp, isAllowedNavigation, windowPreferences } from "./security.ts";
-import { isSessionPath, listSessions, sessionsRoot } from "./sessions.ts";
+import { isSessionPath, listSessions, readSession, sessionsRoot } from "./sessions.ts";
 import {
 	appendShellLog,
 	formatShellLogLine,
@@ -213,10 +213,36 @@ const sessions = {
 			cwd: currentWorkspace(harness),
 		});
 	},
+	async listAll(): Promise<unknown> {
+		return listSessions({ root: sessionsRoot(agentDirFor(homedir(), process.platform)), limit: 60 });
+	},
 	async open(path: string): Promise<void> {
 		const root = sessionsRoot(agentDirFor(homedir(), process.platform));
 		if (!isSessionPath(root, path)) throw new Error("the session path is outside this app's session folder");
 		await supervisor.switchSession(path);
+	},
+	/**
+	 * A session someone opened from another project: the agent has to be in that project before the session is loaded,
+	 * so the folder move and the switch happen here, in that order, rather than as two round trips from the page.
+	 */
+	async openAcross(path: string): Promise<{ path: string }> {
+		const root = sessionsRoot(agentDirFor(homedir(), process.platform));
+		if (!isSessionPath(root, path)) throw new Error("the session path is outside this app's session folder");
+		const summary = readSession(path);
+		if (summary === undefined) throw new Error(`not a session file: ${path}`);
+		if (summary.cwd === "") throw new Error("this session does not name a project folder");
+		const target = resolve(summary.cwd);
+		let isDirectory = false;
+		try {
+			isDirectory = statSync(target).isDirectory();
+		} catch {
+			isDirectory = false;
+		}
+		if (!isDirectory) throw new Error(`the project folder is gone: ${target}`);
+		workspaceRoot = target;
+		await supervisor.restart();
+		await supervisor.switchSession(path);
+		return { path: target };
 	},
 	async rename(name: string): Promise<void> {
 		await supervisor.renameSession(name);

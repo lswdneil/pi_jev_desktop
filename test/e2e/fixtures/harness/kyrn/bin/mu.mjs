@@ -250,6 +250,14 @@ reader.on("line", (line) => {
 				pendingMessageCount: 0,
 			});
 			break;
+		case "switch_session":
+			// The fixture has one scripted conversation; switching means it now has a session to answer from.
+			hasSession = true;
+			answer(command.id, "switch_session", { cancelled: false });
+			break;
+		case "set_session_name":
+			answer(command.id, "set_session_name", {});
+			break;
 		case "get_available_models":
 			answer(command.id, "get_available_models", {
 				models: [{ provider: "fixture", id: "model-a", contextWindow: 1000 }],

@@ -12,6 +12,7 @@ This is the first vertical slice. It adds:
 - A project workspace picker; the chosen folder becomes the agent's working directory.
 - Recent-project shortcuts for returning to a workspace without reopening the folder dialog.
 - A session rail with the current session, saved sessions, search, rename, and model; selecting a saved session switches the live agent.
+- Sessions from other projects in the same rail; opening one moves the agent to that project first.
 - A model picker that changes the running session.
 - The conversation, tool runs, approval cards, file history, and judgment ledger.
 - A file preview with an editor and a line diff; saves are hash-checked, so an edit is never written over what the

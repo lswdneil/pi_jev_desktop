@@ -128,14 +128,24 @@ export function listSessions(options: {
 			}
 		})
 		.filter((entry): entry is { path: string; modified: number } => entry !== undefined)
-		.sort((left, right) => right.modified - left.modified)
-		.slice(0, options.limit ?? DEFAULT_LIMIT);
-	const summaries = files
-		.map((entry) => parseSummary(entry.path))
-		.filter((entry): entry is SessionSummary => entry !== undefined);
-	return options.cwd === undefined
-		? summaries
-		: summaries.filter((entry) => entry.cwd !== "" && sameCwd(entry.cwd, options.cwd as string));
+		.sort((left, right) => right.modified - left.modified);
+	// The limit is what someone can see, so it applies to sessions that match, not to the files looked at: taking the
+	// forty newest files and then filtering by project hides an older session of the project in front of you.
+	const wanted = options.limit ?? DEFAULT_LIMIT;
+	const summaries: SessionSummary[] = [];
+	for (const entry of files) {
+		const summary = parseSummary(entry.path);
+		if (summary === undefined) continue;
+		if (options.cwd !== undefined && (summary.cwd === "" || !sameCwd(summary.cwd, options.cwd))) continue;
+		summaries.push(summary);
+		if (summaries.length >= wanted) break;
+	}
+	return summaries;
+}
+
+/** One session's summary, for a caller that already knows the file (opening it from another project, for example). */
+export function readSession(file: string): SessionSummary | undefined {
+	return parseSummary(file);
 }
 
 /** A session path must stay inside the app's own sessions folder. */

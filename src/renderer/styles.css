@@ -284,6 +284,21 @@ body {
 	font-size: 10px;
 }
 
+.session-other {
+	margin-top: 10px;
+	padding-top: 8px;
+	border-top: 1px dashed var(--line);
+}
+
+.session-other h3 {
+	margin: 0 0 4px;
+	color: var(--muted);
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
 .rail-nav {
 	display: flex;
 	flex-direction: column;

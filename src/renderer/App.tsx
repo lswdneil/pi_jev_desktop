@@ -45,6 +45,11 @@ function bridge(): MuApi | undefined {
 	return (window as { mu?: MuApi }).mu;
 }
 
+/** The last segment of a folder path: what a rail item is called. */
+function projectName(path: string): string {
+	return path.split(/[\\/]/).filter(Boolean).at(-1) ?? path;
+}
+
 export function App(): React.JSX.Element {
 	const [api] = useState<MuApi | undefined>(bridge);
 	const { language, setLanguage, text } = useLanguage();
@@ -62,6 +67,7 @@ export function App(): React.JSX.Element {
 	const [recentWorkspaces, setRecentWorkspaces] = useState<string[]>(readRecentWorkspaces);
 	const [models, setModels] = useState<readonly ModelChoice[]>([]);
 	const [sessions, setSessions] = useState<readonly SessionSummary[]>([]);
+	const [allSessions, setAllSessions] = useState<readonly SessionSummary[]>([]);
 	const [sessionQuery, setSessionQuery] = useState("");
 	const [renaming, setRenaming] = useState(false);
 	const [sessionName, setSessionName] = useState("");
@@ -167,6 +173,26 @@ export function App(): React.JSX.Element {
 			})
 			.catch(() => {
 				if (alive) setSessions([]);
+			});
+		return () => {
+			alive = false;
+		};
+	}, [api, status.state, workspacePath, sessionRevision]);
+
+	// Sessions from other projects: the rail's way back into yesterday's work without opening the folder first.
+	useEffect(() => {
+		if (api === undefined || status.state !== "running") {
+			setAllSessions([]);
+			return;
+		}
+		let alive = true;
+		void api.sessions
+			.listAll()
+			.then((value) => {
+				if (alive) setAllSessions(value);
+			})
+			.catch(() => {
+				if (alive) setAllSessions([]);
 			});
 		return () => {
 			alive = false;
@@ -294,6 +320,31 @@ export function App(): React.JSX.Element {
 		[api, store, report],
 	);
 
+	/** A session from another project: the main process moves the agent there and switches in one step. */
+	const openSessionAcross = useCallback(
+		async (path: string) => {
+			if (api === undefined || operation.current) return;
+			operation.current = true;
+			setBusy(true);
+			setError("");
+			try {
+				const opened = await api.sessions.openAcross(path);
+				setWorkspacePath(opened.path);
+				setRecentWorkspaces(rememberWorkspace(opened.path));
+				store.reset();
+				setSessionRevision((revision) => revision + 1);
+				setSnapshot(await api.harness.snapshot());
+				setStatus(await api.harness.status());
+			} catch (failure) {
+				report(failure instanceof Error ? failure.message : String(failure));
+			} finally {
+				operation.current = false;
+				setBusy(false);
+			}
+		},
+		[api, store, report],
+	);
+
 	const renameSession = useCallback(
 		async (name: string) => {
 			if (api === undefined || operation.current) return;
@@ -341,14 +392,24 @@ export function App(): React.JSX.Element {
 	}
 
 	const running = status.state === "running";
-	const workspaceName = workspacePath.split(/[\\/]/).filter(Boolean).at(-1) ?? workspacePath;
+	const workspaceName = workspacePath === "" ? "" : projectName(workspacePath);
 	const sessionFilter = sessionQuery.trim().toLowerCase();
+	const here = workspacePath.replace(/[\\/]+$/, "").toLowerCase();
 	const listedSessions = sessions.filter(
 		(session) =>
 			session.path !== snapshot?.sessionFile &&
 			(sessionFilter === "" ||
 				`${session.title} ${session.id} ${session.cwd}`.toLowerCase().includes(sessionFilter)),
 	);
+	const otherSessions = allSessions
+		.filter((session) => session.cwd !== "" && session.cwd.replace(/[\\/]+$/, "").toLowerCase() !== here)
+		.filter((session) => session.path !== snapshot?.sessionFile)
+		.filter(
+			(session) =>
+				sessionFilter === "" ||
+				`${session.title} ${session.id} ${session.cwd}`.toLowerCase().includes(sessionFilter),
+		)
+		.slice(0, 20);
 
 	return (
 		<div className="shell">
@@ -477,6 +538,29 @@ export function App(): React.JSX.Element {
 										<span className="session-meta">{session.updatedAt.slice(0, 10)}</span>
 									</button>
 								))}
+						</div>
+					)}
+					{otherSessions.length === 0 ? null : (
+						<div className="session-other">
+							<h3>{text("app.otherProjects")}</h3>
+							<div className="session-list">
+								{otherSessions.map((session) => (
+									<button
+										key={session.path}
+										type="button"
+										className="session-item"
+										data-testid="session-other"
+										onClick={() => void openSessionAcross(session.path)}
+										disabled={busy}
+										title={session.path}
+									>
+										<span className="session-title">{session.title}</span>
+										<span className="session-meta">
+											{projectName(session.cwd)} · {session.updatedAt.slice(0, 10)}
+										</span>
+									</button>
+								))}
+							</div>
 						</div>
 					)}
 				</section>

@@ -42,7 +42,9 @@ export interface ApiDependencies {
 	/** Saved sessions for the current workspace. */
 	readonly sessions: {
 		list(): Promise<unknown>;
+		listAll(): Promise<unknown>;
 		open(path: string): Promise<void>;
+		openAcross(path: string): Promise<unknown>;
 		rename(name: string): Promise<void>;
 	};
 	/** The update feed, read on demand; `install` downloads, proves and starts what it offers. */
@@ -221,10 +223,12 @@ export function createApi(deps: ApiDependencies): Api {
 			return deps.workspace.saveFile(edit.path, edit.text, edit.expectedHash);
 		},
 		"sessions:list": async () => deps.sessions.list(),
+		"sessions:list-all": async () => deps.sessions.listAll(),
 		"sessions:open": async (payload) => {
 			await deps.sessions.open(sessionPathOf(payload));
 			return undefined;
 		},
+		"sessions:open-across": async (payload) => deps.sessions.openAcross(sessionPathOf(payload)),
 		"sessions:rename": async (payload) => {
 			await deps.sessions.rename(sessionNameOf(payload));
 			return undefined;

@@ -82,8 +82,19 @@ function build(overrides: Partial<ApiDependencies> = {}): {
 				calls.push("sessions-list");
 				return [{ path: "/workspace/session.jsonl", id: "s-1", title: "First task", cwd: "/workspace", updatedAt: "2026-10-19T10:00:00.000Z" }];
 			},
+			listAll: async () => {
+				calls.push("sessions-list-all");
+				return [
+					{ path: "/workspace/session.jsonl", id: "s-1", title: "First task", cwd: "/workspace", updatedAt: "2026-10-19T10:00:00.000Z" },
+					{ path: "/other/session.jsonl", id: "s-2", title: "Other task", cwd: "/other", updatedAt: "2026-10-18T10:00:00.000Z" },
+				];
+			},
 			open: async (path) => {
 				calls.push(`sessions-open:${path}`);
+			},
+			openAcross: async (path) => {
+				calls.push(`sessions-open-across:${path}`);
+				return { path: "/other" };
 			},
 			rename: async (name) => {
 				calls.push(`sessions-rename:${name}`);
@@ -166,7 +177,9 @@ describe("the allow-list", () => {
 			"workspace:read-file",
 			"workspace:write-file",
 			"sessions:list",
+			"sessions:list-all",
 			"sessions:open",
+			"sessions:open-across",
 			"sessions:rename",
 			"judgments:recent",
 			"update:check",
@@ -471,6 +484,19 @@ describe("settings and consent", () => {
 			ok: false,
 			error: { code: "invalid-payload" },
 		});
+		await expect(api.dispatch("sessions:list-all", undefined)).resolves.toMatchObject({
+			ok: true,
+			value: [{ id: "s-1" }, { id: "s-2", cwd: "/other" }],
+		});
+		// Opening a session from another project answers with the folder the agent moved to.
+		await expect(api.dispatch("sessions:open-across", { path: "/other/session.jsonl" })).resolves.toEqual({
+			ok: true,
+			value: { path: "/other" },
+		});
+		await expect(api.dispatch("sessions:open-across", {})).resolves.toMatchObject({
+			ok: false,
+			error: { code: "invalid-payload" },
+		});
 		await expect(api.dispatch("sessions:rename", { name: "Release work" })).resolves.toEqual({
 			ok: true,
 			value: undefined,
@@ -479,7 +505,13 @@ describe("settings and consent", () => {
 			ok: false,
 			error: { code: "invalid-payload" },
 		});
-		expect(calls).toEqual(["sessions-list", "sessions-open:/workspace/session.jsonl", "sessions-rename:Release work"]);
+		expect(calls).toEqual([
+			"sessions-list",
+			"sessions-open:/workspace/session.jsonl",
+			"sessions-list-all",
+			"sessions-open-across:/other/session.jsonl",
+			"sessions-rename:Release work",
+		]);
 	});
 });
 
