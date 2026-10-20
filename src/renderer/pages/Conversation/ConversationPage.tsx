@@ -99,6 +99,7 @@ export function ConversationPage({
 					state={state}
 					text={text}
 					onOpenLink={onOpenLink}
+					onCopy={(value) => api.app.copy(value)}
 					onSend={send}
 					onStop={stop}
 					onError={onError}

@@ -60,6 +60,7 @@ const api: SpecApi = {
 		platform: () => invoke<string>(IPC_CHANNELS.appPlatform),
 		zoom: () => invoke<number>(IPC_CHANNELS.appZoom),
 		setZoom: (level) => invoke<number>(IPC_CHANNELS.appSetZoom, { level }),
+		copy: (text) => invoke<void>(IPC_CHANNELS.appCopy, { text }),
 	},
 	harness: {
 		status: () => invoke<HarnessStatus>(IPC_CHANNELS.harnessStatus),

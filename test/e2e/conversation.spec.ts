@@ -169,6 +169,10 @@ test.describe("conversation", () => {
 			await expect(answer.locator("p code")).toHaveText("npm test");
 			await expect(answer.locator("pre.code code")).toHaveText("npm test -- --run");
 			await expect(answer.locator("pre.code code")).toHaveAttribute("data-language", "sh");
+			await expect(answer.locator(".code-lang")).toHaveText("sh");
+			await expect(answer.getByTestId("copy-code")).toBeVisible();
+			await answer.getByTestId("copy-code").click();
+			await expect(answer.getByTestId("copy-code")).toContainText("Copied");
 			// And the source backticks are gone from the rendered text.
 			await expect(answer).not.toContainText("```");
 		} finally {

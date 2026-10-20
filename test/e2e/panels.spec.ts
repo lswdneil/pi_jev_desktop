@@ -119,6 +119,8 @@ test.describe("panels", () => {
 			await expect(detail).toContainText("active");
 			await expect(detail).toContainText("ledger-1");
 			await expect(page.locator('[data-testid="judgment-copy"]')).toBeVisible();
+			await page.locator('[data-testid="judgment-copy"]').click();
+			await expect(page.locator('[data-testid="judgment-copy"]')).toContainText("Copied");
 		} finally {
 			await profile.close();
 		}

@@ -159,6 +159,8 @@ export interface SpecApi {
 		zoom(): Promise<number>;
 		/** Zoom the window; the main process clamps it and answers with what it applied. */
 		setZoom(level: number): Promise<number>;
+		/** Put text on the system clipboard; the page itself has no clipboard permission. */
+		copy(text: string): Promise<void>;
 	};
 	readonly harness: {
 		status(): Promise<HarnessStatus>;
@@ -240,6 +242,7 @@ export const IPC_CHANNELS = {
 	appPlatform: "app:platform",
 	appZoom: "app:zoom",
 	appSetZoom: "app:set-zoom",
+	appCopy: "app:copy",
 	harnessStatus: "harness:status",
 	harnessRestart: "harness:restart",
 	harnessStop: "harness:stop",
@@ -284,6 +287,7 @@ export const INVOKE_CHANNELS = [
 	IPC_CHANNELS.appPlatform,
 	IPC_CHANNELS.appZoom,
 	IPC_CHANNELS.appSetZoom,
+	IPC_CHANNELS.appCopy,
 	IPC_CHANNELS.harnessStatus,
 	IPC_CHANNELS.harnessRestart,
 	IPC_CHANNELS.harnessStop,

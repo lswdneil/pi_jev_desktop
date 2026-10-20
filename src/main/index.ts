@@ -14,7 +14,7 @@ import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "node:
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
-import { BrowserWindow, Menu, app, dialog, ipcMain, protocol, screen, session } from "electron";
+import { BrowserWindow, Menu, app, clipboard, dialog, ipcMain, protocol, screen, session } from "electron";
 import { IPC_CHANNELS, type JudgmentRecord } from "../shared/api.ts";
 import { artifactUrl } from "../shared/update.ts";
 import { APP_SCHEME, resolveAppRequest } from "./app-protocol.ts";
@@ -359,6 +359,9 @@ const api = createApi({
 			const next = clampZoom(level);
 			mainWindows.current?.webContents.setZoomLevel(next);
 			return next;
+		},
+		copy: async (text: string) => {
+			clipboard.writeText(text);
 		},
 	},
 	supervisor,

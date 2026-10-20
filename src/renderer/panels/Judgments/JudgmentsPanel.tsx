@@ -121,7 +121,7 @@ export function JudgmentsPanel({
 												size="sm"
 												data-testid="judgment-copy"
 												onClick={() => {
-													void navigator.clipboard.writeText(detail.id).then(() => setCopied(true));
+													void api.app.copy(detail.id).then(() => setCopied(true));
 												}}
 											>
 												<Copy />

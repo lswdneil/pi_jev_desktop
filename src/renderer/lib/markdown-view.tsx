@@ -9,23 +9,30 @@
  * says `<script>`. Links are data too: the parser emits http(s) addresses, and a click asks the app to preview one.
  */
 
-import { useEffect, useState } from "react";
+import { Check, Copy } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { type Block, type InlineSpan, parseMarkdown } from "../../shared/markdown.ts";
 import { highlight, type HighlightToken } from "./highlight.ts";
 
 export function Markdown({
 	text,
 	onOpenLink,
+	labels,
+	onCopy,
 }: {
 	readonly text: string;
 	/** A link a model wrote: http(s) only, since that is all the parser emits. */
 	readonly onOpenLink?: (url: string) => void;
+	/** The shell's words for the code block's copy button. */
+	readonly labels?: (key: string) => string;
+	/** The preload's clipboard bridge; the page itself is denied the browser clipboard permission. */
+	readonly onCopy?: (text: string) => Promise<void>;
 }): React.JSX.Element {
 	const blocks = parseMarkdown(text);
 	return (
 		<div className="markdown" data-markdown-blocks={blocks.length}>
 			{blocks.map((block, index) => (
-				<BlockView key={index} block={block} onOpenLink={onOpenLink} />
+				<BlockView key={index} block={block} onOpenLink={onOpenLink} labels={labels} onCopy={onCopy} />
 			))}
 		</div>
 	);
@@ -34,13 +41,17 @@ export function Markdown({
 function BlockView({
 	block,
 	onOpenLink,
+	labels,
+	onCopy,
 }: {
 	readonly block: Block;
 	readonly onOpenLink: ((url: string) => void) | undefined;
+	readonly labels: ((key: string) => string) | undefined;
+	readonly onCopy: ((text: string) => Promise<void>) | undefined;
 }): React.JSX.Element {
 	switch (block.kind) {
 		case "code":
-			return <CodeBlock text={block.text} language={block.language} />;
+			return <CodeBlock text={block.text} language={block.language} labels={labels} onCopy={onCopy} />;
 		case "heading": {
 			const content = <Spans spans={block.spans} onOpenLink={onOpenLink} />;
 			if (block.level === 1) return <h1>{content}</h1>;
@@ -80,8 +91,20 @@ function BlockView({
 	}
 }
 
-function CodeBlock({ text, language }: { readonly text: string; readonly language: string | undefined }): React.JSX.Element {
+function CodeBlock({
+	text,
+	language,
+	labels,
+	onCopy,
+}: {
+	readonly text: string;
+	readonly language: string | undefined;
+	readonly labels: ((key: string) => string) | undefined;
+	readonly onCopy: ((text: string) => Promise<void>) | undefined;
+}): React.JSX.Element {
 	const [tokens, setTokens] = useState<readonly (readonly HighlightToken[])[] | undefined>(undefined);
+	const [copied, setCopied] = useState(false);
+	const timer = useRef<number | undefined>(undefined);
 
 	useEffect(() => {
 		let alive = true;
@@ -94,23 +117,49 @@ function CodeBlock({ text, language }: { readonly text: string; readonly languag
 		};
 	}, [text, language]);
 
+	useEffect(
+		() => () => {
+			if (timer.current !== undefined) window.clearTimeout(timer.current);
+		},
+		[],
+	);
+
+	const copy = (): void => {
+		void (onCopy === undefined ? navigator.clipboard.writeText(text) : onCopy(text))
+			.then(() => {
+				setCopied(true);
+				window.clearTimeout(timer.current);
+				timer.current = window.setTimeout(() => setCopied(false), 1500);
+			})
+			.catch(() => {});
+	};
+
 	return (
-		<pre className="code" data-block="code">
-			<code data-language={language}>
-				{tokens === undefined
-					? text
-					: tokens.map((line, index) => (
-							<span key={index} className="code-line">
-								{line.map((token, tokenIndex) => (
-									<span key={tokenIndex} style={token.color === undefined ? undefined : { color: token.color }}>
-										{token.content}
-									</span>
-								))}
-								{index === tokens.length - 1 ? null : "\n"}
-							</span>
-						))}
-			</code>
-		</pre>
+		<div className="code-block" data-block="code">
+			<div className="code-block-head">
+				<span className="code-lang">{language ?? "text"}</span>
+				<button type="button" className="code-copy" data-testid="copy-code" onClick={copy}>
+					{copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+					{copied ? (labels?.("conversation.copied") ?? "Copied") : (labels?.("conversation.copyCode") ?? "Copy")}
+				</button>
+			</div>
+			<pre className="code">
+				<code data-language={language}>
+					{tokens === undefined
+						? text
+						: tokens.map((line, index) => (
+								<span key={index} className="code-line">
+									{line.map((token, tokenIndex) => (
+										<span key={tokenIndex} style={token.color === undefined ? undefined : { color: token.color }}>
+											{token.content}
+										</span>
+									))}
+									{index === tokens.length - 1 ? null : "\n"}
+								</span>
+							))}
+				</code>
+			</pre>
+		</div>
 	);
 }
 

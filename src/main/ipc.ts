@@ -32,6 +32,7 @@ export interface ApiDependencies {
 	readonly app: {
 		zoom(): Promise<unknown>;
 		setZoom(level: number): Promise<unknown>;
+		copy(text: string): Promise<void>;
 	};
 	readonly supervisor: {
 		getStatus(): unknown;
@@ -168,6 +169,13 @@ function zoomLevelOf(payload: unknown): number {
 	return level;
 }
 
+function clipboardTextOf(payload: unknown): string {
+	const text = field(payload, "text");
+	if (typeof text !== "string") throw new InvalidPayloadError("a clipboard write needs text");
+	if (text.length > 1_000_000) throw new InvalidPayloadError("the clipboard text is too large");
+	return text;
+}
+
 function workspacePathOf(payload: unknown): string {
 	const path = field(payload, "path");
 	if (typeof path !== "string" || path.trim() === "") throw new InvalidPayloadError("a workspace needs a path");
@@ -242,6 +250,7 @@ export function createApi(deps: ApiDependencies): Api {
 		"app:platform": async () => deps.platform,
 		"app:zoom": async () => deps.app.zoom(),
 		"app:set-zoom": async (payload) => deps.app.setZoom(zoomLevelOf(payload)),
+		"app:copy": async (payload) => deps.app.copy(clipboardTextOf(payload)),
 		"harness:status": async () => deps.supervisor.getStatus(),
 		"harness:restart": async () => deps.supervisor.restart(),
 		"harness:stop": async () => {

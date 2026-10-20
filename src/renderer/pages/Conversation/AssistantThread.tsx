@@ -167,15 +167,19 @@ function TranscriptMessage({
 	message,
 	text,
 	onOpenLink,
+	onCopy,
 }: {
 	readonly message: MessageState;
 	readonly text: (key: string) => string;
 	readonly onOpenLink: (url: string) => void;
+	readonly onCopy: (value: string) => Promise<void>;
 }): React.JSX.Element {
 	const hasTool = message.content.some((part) => part.type === "tool-call");
 	const role = message.role === "user" ? "user" : "assistant";
 	const components = {
-		Text: ({ text: value }: TextMessagePartProps) => <Markdown text={value} onOpenLink={onOpenLink} />,
+		Text: ({ text: value }: TextMessagePartProps) => (
+			<Markdown text={value} onOpenLink={onOpenLink} labels={text} onCopy={onCopy} />
+		),
 		tools: { Override: (props: ToolCallMessagePartProps) => <ToolFallback {...props} text={text} /> },
 	};
 	return (
@@ -201,6 +205,7 @@ export function AssistantThread({
 	state,
 	text,
 	onOpenLink,
+	onCopy,
 	onSend,
 	onStop,
 	onError,
@@ -213,6 +218,7 @@ export function AssistantThread({
 	readonly state: ConversationState;
 	readonly text: (key: string) => string;
 	readonly onOpenLink: (url: string) => void;
+	readonly onCopy: (value: string) => Promise<void>;
 	readonly onSend: (text: string, images: readonly PromptImage[]) => void;
 	readonly onStop: () => void;
 	readonly onError: (message: string) => void;
@@ -274,6 +280,7 @@ export function AssistantThread({
 					<Transcript
 						text={text}
 						onOpenLink={onOpenLink}
+						onCopy={onCopy}
 						streaming={state.streaming !== undefined}
 						active={active}
 					/>
@@ -298,11 +305,13 @@ export function AssistantThread({
 function Transcript({
 	text,
 	onOpenLink,
+	onCopy,
 	streaming,
 	active,
 }: {
 	readonly text: (key: string) => string;
 	readonly onOpenLink: (url: string) => void;
+	readonly onCopy: (value: string) => Promise<void>;
 	readonly streaming: boolean;
 	readonly active: boolean;
 }): React.JSX.Element {
@@ -311,7 +320,13 @@ function Transcript({
 			<ThreadPrimitive.Viewport className="panel messages" data-testid="messages" autoScroll={active}>
 				<ThreadPrimitive.Messages>
 					{({ message }) => (
-						<TranscriptMessage key={message.id} message={message} text={text} onOpenLink={onOpenLink} />
+						<TranscriptMessage
+							key={message.id}
+							message={message}
+							text={text}
+							onOpenLink={onOpenLink}
+							onCopy={onCopy}
+						/>
 					)}
 				</ThreadPrimitive.Messages>
 				{streaming ? (

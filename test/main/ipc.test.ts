@@ -26,6 +26,9 @@ function build(overrides: Partial<ApiDependencies> = {}): {
 				calls.push(`set-zoom:${level}`);
 				return level;
 			},
+			copy: async (text) => {
+				calls.push(`copy:${text}`);
+			},
 		},
 		supervisor: {
 			getStatus: () => ({ state: "stopped" }),
@@ -177,6 +180,7 @@ describe("the allow-list", () => {
 			"app:platform",
 			"app:zoom",
 			"app:set-zoom",
+			"app:copy",
 			"harness:status",
 			"harness:restart",
 			"harness:stop",
@@ -591,6 +595,11 @@ describe("the simple ones", () => {
 		await expect(api.dispatch("app:zoom", undefined)).resolves.toEqual({ ok: true, value: 0.5 });
 		await expect(api.dispatch("app:set-zoom", { level: 1 })).resolves.toEqual({ ok: true, value: 1 });
 		await expect(api.dispatch("app:set-zoom", { level: "big" })).resolves.toMatchObject({
+			ok: false,
+			error: { code: "invalid-payload" },
+		});
+		await expect(api.dispatch("app:copy", { text: "hello" })).resolves.toEqual({ ok: true, value: undefined });
+		await expect(api.dispatch("app:copy", { text: 42 })).resolves.toMatchObject({
 			ok: false,
 			error: { code: "invalid-payload" },
 		});

@@ -951,13 +951,73 @@ button:disabled {
 	color: var(--heading);
 }
 
-.markdown pre.code {
-	background: var(--code-bg);
+.code-block {
+	margin: 8px 0;
 	border: 1px solid var(--line);
-	border-radius: 8px;
-	padding: 8px 10px;
+	border-radius: 10px;
+	background: #171b21;
+	overflow: hidden;
+}
+
+.code-block-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 3px 6px 3px 12px;
+	border-bottom: 1px solid var(--line);
+	background: color-mix(in srgb, var(--panel) 55%, transparent);
+}
+
+.code-lang {
+	color: var(--muted);
+	font-size: 10px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.code-copy {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 7px;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	background: transparent;
+	color: var(--muted);
+	font-size: 10px;
+	cursor: pointer;
+}
+
+.code-copy:hover {
+	border-color: var(--line);
+	background: var(--panel-2);
+	color: var(--text);
+}
+
+.code-copy svg {
+	width: 12px;
+	height: 12px;
+}
+
+.markdown pre.code {
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+	padding: 10px 12px;
 	overflow-x: auto;
-	margin: 6px 0;
+	margin: 0;
+	scrollbar-width: thin;
+	scrollbar-color: var(--edge) transparent;
+}
+
+.markdown pre.code::-webkit-scrollbar {
+	height: 8px;
+}
+
+.markdown pre.code::-webkit-scrollbar-thumb {
+	border-radius: 999px;
+	background: var(--edge);
 }
 
 .markdown pre.code code {
