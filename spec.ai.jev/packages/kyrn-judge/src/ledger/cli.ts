@@ -136,13 +136,12 @@ export function runLedgerCli(options: RunLedgerCliOptions): number {
 	return 0;
 }
 /**
- * Where the session files are, resolved the way the review script resolves it: `MU_AGENT_DIR`, then pi's
- * own agent dir variable, then `~/.mu/agent` (or the older `~/.kyrn/agent`).
+ * Where the session files are: `SPEC_AI_JEV_AGENT_DIR`, then pi's own agent dir variable, then
+ * `~/.spec.ai.jev/agent`.
  */
 export function sessionsDir(env: Readonly<Record<string, string | undefined>> = process.env): string {
-	const read = (name: string): string | undefined => env[`MU_${name}`] || env[`KYRN_${name}`];
-	const home = existsSync(join(homedir(), ".mu")) || !existsSync(join(homedir(), ".kyrn")) ? ".mu" : ".kyrn";
-	const agentDir = read("AGENT_DIR") ?? env.PI_CODING_AGENT_DIR ?? join(homedir(), home, "agent");
+	const read = (name: string): string | undefined => env[`SPEC_AI_JEV_${name}`];
+	const agentDir = read("AGENT_DIR") ?? env.PI_CODING_AGENT_DIR ?? join(homedir(), ".spec.ai.jev", "agent");
 	return read("SESSIONS_DIR") ?? join(agentDir, "sessions");
 }
 

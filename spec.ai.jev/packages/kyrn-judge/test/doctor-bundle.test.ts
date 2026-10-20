@@ -30,7 +30,7 @@ function agentDir(options: { decisions?: number; crashLog?: string } = {}): stri
 	writeFileSync(join(root, "auth.json"), JSON.stringify({ token: SECRET }));
 	writeFileSync(join(root, "models-store.json"), JSON.stringify({ key: SECRET }));
 	writeFileSync(
-		join(root, "mu.json"),
+		join(root, "agent.json"),
 		JSON.stringify({ features: { admission: { enabled: true } }, writer: SETTING_SECRET }),
 	);
 

@@ -1,8 +1,8 @@
-import { muEnv } from "./naming.ts";
+import { specEnv } from "./naming.ts";
 
 /**
  * The language the person reads mu in. The desktop app passes its interface
- * language as MU_LANG ("zh-CN", "en-US", "ja-JP", ...); a terminal user can set
+ * language as SPEC_AI_JEV_LANG ("zh-CN", "en-US", "ja-JP", ...); a terminal user can set
  * it too. Unset means nobody said, and every caller keeps its own default.
  */
 export interface AppLanguage {
@@ -31,7 +31,7 @@ function nameOf(code: string): string {
 }
 
 export function appLanguage(env: Record<string, string | undefined> = process.env): AppLanguage | undefined {
-	const raw = muEnv("LANG", env)?.trim();
+	const raw = specEnv("LANG", env)?.trim();
 	if (!raw || !TAG.test(raw)) return undefined;
 	const code = raw.replaceAll("_", "-");
 	const base = code.split("-")[0].toLowerCase();

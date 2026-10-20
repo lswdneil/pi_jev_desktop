@@ -12,10 +12,10 @@ import { appVersion } from "../../src/main/version.ts";
 describe("the version", () => {
 	it("reads the package the build came from", () => {
 		const version = appVersion({
-			buildRoot: "/work/desktop-next/out/main",
+			buildRoot: "/work/pi_jev_desktop/out/main",
 			electronVersion: "44.9.0",
 			read: (path) => {
-				expect(path.replaceAll("\\", "/")).toBe("/work/desktop-next/package.json");
+				expect(path.replaceAll("\\", "/")).toBe("/work/pi_jev_desktop/package.json");
 				return JSON.stringify({ name: "mu-desktop", version: "0.1.8" });
 			},
 		});

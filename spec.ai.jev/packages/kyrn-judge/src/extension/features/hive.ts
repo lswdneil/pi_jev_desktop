@@ -96,9 +96,9 @@ function registerMember(runtime: KyrnRuntime, dir: string): void {
 		/** Notes that arrive while a bee writes its report get one hearing: a corrected report, or "NO CHANGE". */
 		lastCall: true,
 	});
-	const me = process.env.KYRN_HIVE_BEE ?? "bee";
-	const goal = process.env.KYRN_HIVE_GOAL ?? "";
-	const focus = process.env.KYRN_HIVE_FOCUS ?? "";
+	const me = process.env.SPEC_AI_JEV_HIVE_BEE ?? "bee";
+	const goal = process.env.SPEC_AI_JEV_HIVE_GOAL ?? "";
+	const focus = process.env.SPEC_AI_JEV_HIVE_FOCUS ?? "";
 	const board = new Board(dir);
 	const seen = new Set<string>();
 	/** Notes this bee stands on: its own, and the others' it was handed or is about to be. A correction to one of them reaches it by rule. */
@@ -379,13 +379,13 @@ export function registerHive(runtime: KyrnRuntime, runner: SwarmRunner = spawnRu
 		...SWARM_LIMIT_DEFAULTS,
 	});
 	if (!options.enabled) return;
-	const memberDir = process.env.KYRN_HIVE_DIR;
+	const memberDir = process.env.SPEC_AI_JEV_HIVE_DIR;
 	if (memberDir) {
 		registerMember(runtime, memberDir);
 		return;
 	}
 	// Only the top-level session may start a hive.
-	if (process.env.KYRN_SWARM_DEPTH) return;
+	if (process.env.SPEC_AI_JEV_SWARM_DEPTH) return;
 	const { pi } = runtime;
 
 	pi.registerTool({
@@ -476,10 +476,10 @@ export function registerHive(runtime: KyrnRuntime, runner: SwarmRunner = spawnRu
 								userWords(runtime.turn.userMessage),
 							),
 						),
-						KYRN_HIVE_DIR: dir,
-						KYRN_HIVE_BEE: member.name,
-						KYRN_HIVE_GOAL: clip(params.goal, 600),
-						KYRN_HIVE_FOCUS: clip(member.focus, 400),
+						SPEC_AI_JEV_HIVE_DIR: dir,
+						SPEC_AI_JEV_HIVE_BEE: member.name,
+						SPEC_AI_JEV_HIVE_GOAL: clip(params.goal, 600),
+						SPEC_AI_JEV_HIVE_FOCUS: clip(member.focus, 400),
 					},
 				};
 			};

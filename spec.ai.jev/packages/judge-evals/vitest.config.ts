@@ -7,7 +7,7 @@ export default mergeConfig(
 		test: {
 			include: ["test/**/*.test.ts"],
 			// The corpus and the archive are files on disk; no provider is contacted by the tests.
-			env: { PI_OFFLINE: "1", KYRN_JUDGE: "" },
+			env: { PI_OFFLINE: "1", SPEC_AI_JEV_JUDGE: "" },
 		},
 	}),
 );

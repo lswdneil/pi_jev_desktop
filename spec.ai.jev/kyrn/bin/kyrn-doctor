@@ -20,7 +20,7 @@ import {
 	parseEnvFile,
 	platformName,
 	resolveEnvValue,
-} from "./mu.mjs";
+} from "./agent.mjs";
 
 // `mu doctor --bundle [--dry-run] [--out DIR]` hands over to the kernel's bundle entry: it needs the ledger
 // types, and this script stays a plain file reader. A checkout runs the TypeScript with Node's type stripping;
@@ -45,14 +45,13 @@ const argv = process.argv.slice(2);
 /** `--offline`: the local checks only. For a machine that cannot reach anything, or must not try. */
 const offline = argv.includes("--offline");
 const [root, link] = argv.filter((argument) => !argument.startsWith("--"));
-/** `MU_<name>`, or the `KYRN_<name>` spelling from before the rename. */
-const env = (name) => process.env[`MU_${name}`] || process.env[`KYRN_${name}`];
-// Until ~/.kyrn is moved to ~/.mu by hand, the old home stays in use.
-const home = existsSync(join(homedir(), ".mu")) || !existsSync(join(homedir(), ".kyrn")) ? ".mu" : ".kyrn";
-const agentDir = env("AGENT_DIR") ?? env("CODING_AGENT_DIR") ?? join(homedir(), home, "agent");
-// A checkout of the repository, or the npm package mu-agent.
+/** `SPEC_AI_JEV_<name>`; no earlier spelling is read. */
+const env = (name) => process.env[`SPEC_AI_JEV_${name}`];
+const home = ".spec.ai.jev";
+const agentDir = env("AGENT_DIR") ?? process.env.SPEC_CODING_AGENT_DIR ?? join(homedir(), home, "agent");
+// A checkout of the repository, or the npm package spec-ai-agent.
 const layout = layoutOf({ root, platform: process.platform, exists: existsSync });
-const envFile = envFilePath({ layout, root, muDir: join(homedir(), home), platform: process.platform });
+const envFile = envFilePath({ layout, root, specDir: join(homedir(), home), platform: process.platform });
 const rows = [];
 const row = (state, name, text) => rows.push([state, name, text]);
 const tilde = (path) => (path.startsWith(homedir()) ? `~${path.slice(homedir().length)}` : path);
@@ -105,7 +104,7 @@ if (secretEntry) {
 		const residual = status.plaintextResidual ? ", some in plaintext" : "";
 		row(status.plaintextResidual ? "fix" : "ok", "credentials", `${status.backend} (${count}${residual})  ${tilde(status.path)}`);
 	} else {
-		row("--", "credentials", "the store could not be read; check the backend by hand (MU_CREDENTIAL_STORE)");
+		row("--", "credentials", "the store could not be read; check the backend by hand (SPEC_AI_JEV_CREDENTIAL_STORE)");
 	}
 } else {
 	row("--", "credentials", "unknown: this mu does not carry the kernel build that knows the store");
@@ -136,7 +135,7 @@ if (layout === "package") {
 	row(
 		complete ? "ok" : "fix",
 		"package",
-		complete ? `${pkg.name} ${pkg.version} (pi ${pkg.muBuild?.pi ?? "?"}) · ${tilde(root)}` : `incomplete: reinstall with npm i -g mu-agent`,
+		complete ? `${pkg.name} ${pkg.version} (pi ${pkg.specBuild?.pi ?? "?"}) · ${tilde(root)}` : `incomplete: reinstall with npm i -g spec-ai-agent`,
 	);
 	// npm puts the command in its global bin folder, which has to be on PATH.
 	const onPath = findOnPath({
@@ -156,7 +155,7 @@ if (layout === "package") {
 			: `missing: cd ${root} && npm ci --ignore-scripts && npm run hydrate:model-data`,
 	);
 
-	// A link on POSIX, a small mu.cmd on Windows, where a link to a script cannot be run.
+	// A link on POSIX, a small spec.cmd on Windows, where a link to a script cannot be run.
 	const linked = linkState({
 		platform: process.platform,
 		link,
@@ -166,14 +165,11 @@ if (layout === "package") {
 	row(
 		linked ? "ok" : "--",
 		"command",
-		linked ? linked.replaceAll(homedir(), "~") : `not on PATH yet: ${join(root, "kyrn", "bin", process.platform === "win32" ? "mu.cmd" : "mu")} link`,
+		linked ? linked.replaceAll(homedir(), "~") : `not on PATH yet: ${join(root, "kyrn", "bin", process.platform === "win32" ? "spec.cmd" : "spec")} link`,
 	);
 }
 
 row("--", "home", tilde(agentDir));
-if (home === ".kyrn" && agentDir.startsWith(join(homedir(), ".kyrn"))) {
-	row("--", "", "this home is from before the rename: `mu migrate` moves it to ~/.mu (`--dry-run` to look first)");
-}
 // Only the size is looked at: pi writes an empty `{}` at its first start, and any stored login is far longer.
 let authBytes = 0;
 try {
@@ -182,7 +178,7 @@ try {
 row(
 	authBytes > 8 ? "ok" : "fix",
 	"login",
-	authBytes > 8 ? "credentials stored (not read here)" : "none yet: run mu setup (or /login inside mu)",
+	authBytes > 8 ? "credentials stored (not read here)" : "none yet: run spec setup (or /login inside spec)",
 );
 
 const settings = readJson(join(agentDir, "settings.json")) ?? {};
@@ -194,10 +190,10 @@ row(
 		: "no default: the first provider with credentials is used. Pick one with /model, save with ctrl+s",
 );
 
-const config = readJson(join(agentDir, "mu.json")) ?? readJson(join(agentDir, "kyrn.json"));
+const config = readJson(join(agentDir, "agent.json"));
 const tiers = (env("JUDGE") ? env("JUDGE").split(",") : (config?.tiers ?? ["jev"])).map((tier) => tier.trim());
 const mode = env("JUDGE_MODE") ?? config?.modes?.default ?? "active";
-row("--", "judges", `${tiers.join(" > ")} · decisions ${mode}${env("JUDGE") ? " (from MU_JUDGE)" : ""}`);
+row("--", "judges", `${tiers.join(" > ")} · decisions ${mode}${env("JUDGE") ? " (from SPEC_AI_JEV_JUDGE)" : ""}`);
 const overrides = Object.entries(config?.modes ?? {}).filter(([id]) => id !== "default");
 if (overrides.length > 0) row("--", "modes", overrides.map(([id, value]) => `${id}=${value}`).join(" "));
 const ladder = config?.features?.swarm?.models ?? [];
@@ -207,7 +203,7 @@ const judgeSupport = localJudgeSupport({ platform: process.platform, env: proces
 if (tiers.some((tier) => tier.startsWith("laya")) && !judgeSupport.runs && !judgeSupport.url) {
 	// Not a failure of this installation: the sidecar is Core ML, and there is none for this platform.
 	row("--", "local judge", `not available on ${platformName({ platform: process.platform, wsl })}: the Laya sidecar is Core ML (macOS, Apple Silicon).`);
-	row("--", "", "laya's decisions fall back to the next judge or to pi's behaviour. Use jev, an llm judge, or MU_LOCAL_JUDGE_URL=<a server with the same contract>");
+	row("--", "", "laya's decisions fall back to the next judge or to pi's behaviour. Use jev, an llm judge, or SPEC_AI_JEV_LOCAL_JUDGE_URL=<a server with the same contract>");
 } else if (tiers.some((tier) => tier.startsWith("laya"))) {
 	const base = env("LOCAL_JUDGE_URL") ?? `http://127.0.0.1:${env("LOCAL_JUDGE_PORT") ?? 47823}`;
 	const startedAt = performance.now();
@@ -223,15 +219,15 @@ if (tiers.some((tier) => tier.startsWith("laya")) && !judgeSupport.runs && !judg
 			"local judge",
 			judgeSupport.runs
 				? `${base} does not answer: mu judge start   (first time: mu judge setup)`
-				: `${base} (MU_LOCAL_JUDGE_URL) does not answer`,
+				: `${base} (SPEC_AI_JEV_LOCAL_JUDGE_URL) does not answer`,
 		);
 	}
 }
-// The built-in ways to Jev, as packages/kyrn-judge/src/config.ts has them; mu.json may name others.
+// The built-in ways to Jev, as packages/kyrn-judge/src/config.ts has them; agent.json may name others.
 const JEV_ROUTES = {
 	jev: { type: "jev" },
 	"jev-direct": { type: "typesafe" },
-	"jev-openrouter": { type: "typesafe", baseUrl: "https://openrouter.ai/api/v1/systemone", apiKeyEnv: "MU_JUDGE_OPENROUTER_API_KEY" },
+	"jev-openrouter": { type: "typesafe", baseUrl: "https://openrouter.ai/api/v1/systemone", apiKeyEnv: "SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY" },
 	"jev-gateway": { type: "gateway" },
 	gateway: { type: "gateway" },
 	"jev-opencode": { type: "classifier", model: "opencode/jev-1.13" },
@@ -265,7 +261,7 @@ if (jevTier) {
 		// Cloudflare Workers AI (key and account). With none of them, a gateway key kept with /login, else the free Jev.
 		const route = [
 			["TYPESAFE_API_KEY", "Jev is called directly at api.typesafe.ai"],
-			["MU_JUDGE_OPENROUTER_API_KEY", "Jev is called through OpenRouter"],
+			["SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY", "Jev is called through OpenRouter"],
 			["AI_GATEWAY_API_KEY", "Jev is called through the Vercel AI Gateway"],
 			["OPENCODE_API_KEY", "Jev is called on OpenCode Zen (jev-1.13)"],
 			["CLOUDFLARE_API_KEY", "Jev is called on Cloudflare Workers AI", "CLOUDFLARE_ACCOUNT_ID"],
@@ -275,7 +271,7 @@ if (jevTier) {
 			"jev key",
 			route
 				? `${route[0]} is set: ${route[1]} (value not shown)`
-				: `none set: Jev 1.13 on OpenCode Zen answers, free for a limited time (what it judges goes to OpenCode). For your own key, add TYPESAFE_API_KEY (or MU_JUDGE_OPENROUTER_API_KEY, AI_GATEWAY_API_KEY, OPENCODE_API_KEY) ${where}`,
+				: `none set: Jev 1.13 on OpenCode Zen answers, free for a limited time (what it judges goes to OpenCode). For your own key, add TYPESAFE_API_KEY (or SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY, AI_GATEWAY_API_KEY, OPENCODE_API_KEY) ${where}`,
 		);
 	} else {
 		const name = judge.apiKeyEnv ?? (judge.type === "gateway" ? "AI_GATEWAY_API_KEY" : "TYPESAFE_API_KEY");
@@ -284,7 +280,7 @@ if (jevTier) {
 		// Keys for another service than TypeSafe are refused without an address of their own (kyrn-judge/src/registry.ts).
 		const unsent =
 			judge.type === "typesafe" &&
-		["MU_JUDGE_OPENROUTER_API_KEY", "MU_JUDGE_CUSTOM_API_KEY", "MU_JUDGE_CLM_API_KEY"].includes(name) &&
+		["SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY", "SPEC_AI_JEV_JUDGE_CUSTOM_API_KEY", "SPEC_AI_JEV_JUDGE_CLM_API_KEY"].includes(name) &&
 		!judge.baseUrl;
 		row(
 			has(name) && !unsent ? "ok" : "fix",
@@ -351,7 +347,7 @@ for (const endpoint of new Set(clmJudges.map((judge) => clmEndpoint(judge.baseUr
 	} catch {}
 	const ms = Math.round(performance.now() - startedAt);
 	if (health?.ok !== true) {
-		row("fix", "clm", `${base} does not answer: start clm-serve there, or point the judge's baseUrl in mu.json at one`);
+		row("fix", "clm", `${base} does not answer: start clm-serve there, or point the judge's baseUrl in agent.json at one`);
 		continue;
 	}
 	const served = Array.isArray(health.models) ? health.models : [];
@@ -369,7 +365,7 @@ for (const endpoint of new Set(clmJudges.map((judge) => clmEndpoint(judge.baseUr
 	try {
 		status = offline ? 0 : (await fetch(`${base}/v1/models`, { signal: AbortSignal.timeout(3000) })).status;
 	} catch {}
-	const keyNames = [...new Set(judges.map((judge) => judge.apiKeyEnv ?? "MU_JUDGE_CLM_API_KEY"))];
+	const keyNames = [...new Set(judges.map((judge) => judge.apiKeyEnv ?? "SPEC_AI_JEV_JUDGE_CLM_API_KEY"))];
 	const unset = keyNames.filter((name) => !has(name));
 	if (status === 401) {
 		row(
@@ -413,7 +409,7 @@ row(
 	"browse",
 	[browseTiers].flat().some(canRelate)
 		? `driven by ${[browseTiers].flat().join(" > ")}`
-		: 'needs a judge that can relate a goal to a page. In mu.json: "routes": { "browser.step": ["luna"] }',
+		: 'needs a judge that can relate a goal to a page. In agent.json: "routes": { "browser.step": ["luna"] }',
 );
 
 const marks = { ok: "\x1b[32m ok\x1b[0m", fix: "\x1b[33mfix\x1b[0m", "--": "\x1b[2m  ·\x1b[0m" };

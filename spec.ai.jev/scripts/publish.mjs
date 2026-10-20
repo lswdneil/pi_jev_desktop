@@ -10,7 +10,7 @@ import { getWorkspacePackages, publishRefusal, PUBLISHABLE_PACKAGES } from "./re
  * package, which is how a harness package carrying pi's scope could have been published by accident: the
  * name would have gone to a scope this project does not own.
  *
- * Now it publishes nothing from `packages/`: `mu-agent` is built by `kyrn/npm/build.mjs` and published from
+ * Now it publishes nothing from `packages/`: `spec-ai-agent` is built by `kyrn/npm/build.mjs` and published from
  * the tarball CI tested (see docs/releasing.md). The guard below is what enforces that, and its refusals are
  * printed rather than thrown one at a time so a reviewer sees the whole story in one run.
  */
@@ -21,7 +21,7 @@ for (const { pkg, reason } of refusals) console.log(`refusing ${pkg.name}: ${rea
 const packages = workspace.filter((pkg) => publishRefusal(pkg) === undefined);
 if (packages.length === 0) {
 	console.error(
-		`\nNothing here may be published. The published package is ${PUBLISHABLE_PACKAGES.join(", ")}, built by kyrn/npm/build.mjs:\n  node kyrn/npm/build.mjs --pack\n  npm publish .artifacts/npm/mu-agent-<version>.tgz --provenance --access public`,
+		`\nNothing here may be published. The published package is ${PUBLISHABLE_PACKAGES.join(", ")}, built by kyrn/npm/build.mjs:\n  node kyrn/npm/build.mjs --pack\n  npm publish .artifacts/npm/spec-ai-agent-<version>.tgz --provenance --access public`,
 	);
 	process.exit(1);
 }

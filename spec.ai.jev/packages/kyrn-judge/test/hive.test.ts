@@ -241,7 +241,7 @@ describe("hive in a session", () => {
 		while (harnesses.length > 0) harnesses.pop()?.cleanup();
 		duringRead = () => {};
 		for (const key of Object.keys(process.env)) {
-			if (key.startsWith("KYRN_HIVE_") || key.startsWith("KYRN_SWARM_")) delete process.env[key];
+			if (key.startsWith("SPEC_AI_JEV_HIVE_") || key.startsWith("SPEC_AI_JEV_SWARM_")) delete process.env[key];
 		}
 		Object.assign(process.env, saved);
 	});
@@ -262,10 +262,10 @@ describe("hive in a session", () => {
 	/** A bee in a hive whose judge shares nothing of its own and accepts every note about TZ=UTC. */
 	async function bee(dir: string, extraEnv: Record<string, string> = {}) {
 		Object.assign(process.env, {
-			KYRN_HIVE_DIR: dir,
-			KYRN_HIVE_BEE: "auth-code",
-			KYRN_HIVE_GOAL: "fix the flaky login",
-			KYRN_HIVE_FOCUS: "read the session code",
+			SPEC_AI_JEV_HIVE_DIR: dir,
+			SPEC_AI_JEV_HIVE_BEE: "auth-code",
+			SPEC_AI_JEV_HIVE_GOAL: "fix the flaky login",
+			SPEC_AI_JEV_HIVE_FOCUS: "read the session code",
 			...extraEnv,
 		});
 		const harness = await createHarness({
@@ -389,7 +389,7 @@ describe("hive in a session", () => {
 	it("inside any sub-agent: a wrap-up request asks for the report and closes the tools", async () => {
 		const dir = mkdtempSync(join(tmpdir(), "kyrn-hive-test-"));
 		const control = join(dir, "bee-0.json");
-		const harness = await bee(dir, { KYRN_SWARM_CONTROL: control });
+		const harness = await bee(dir, { SPEC_AI_JEV_SWARM_CONTROL: control });
 		// The request comes in while a tool runs: the bee hears of it at the end of that step.
 		duringRead = () => {
 			duringRead = () => {};
@@ -421,7 +421,7 @@ describe("hive in a session", () => {
 	it("inside any sub-agent: a request that lands mid-step is answered by the very next tool call", async () => {
 		const dir = mkdtempSync(join(tmpdir(), "kyrn-hive-test-"));
 		const control = join(dir, "bee-0.json");
-		const harness = await bee(dir, { KYRN_SWARM_CONTROL: control });
+		const harness = await bee(dir, { SPEC_AI_JEV_SWARM_CONTROL: control });
 		let ran = 0;
 		duringRead = () => {
 			ran++;
@@ -524,10 +524,10 @@ describe("hive in a session", () => {
 		const dir = mkdtempSync(join(tmpdir(), "kyrn-hive-test-"));
 		new Board(dir).post(note({ id: "e1" }));
 		Object.assign(process.env, {
-			KYRN_HIVE_DIR: dir,
-			KYRN_HIVE_BEE: "auth-code",
-			KYRN_HIVE_GOAL: "fix the flaky login",
-			KYRN_HIVE_FOCUS: "read the session code",
+			SPEC_AI_JEV_HIVE_DIR: dir,
+			SPEC_AI_JEV_HIVE_BEE: "auth-code",
+			SPEC_AI_JEV_HIVE_GOAL: "fix the flaky login",
+			SPEC_AI_JEV_HIVE_FOCUS: "read the session code",
 		});
 		const harness = await createHarness({
 			tools: [readTool],
@@ -590,10 +590,10 @@ describe("hive in a session", () => {
 		new Board(dir).post(note({ id: "from-repro" }));
 		new Board(dir).post(note({ id: "noise", bee: "web", text: "the project uses vitest for its unit tests" }));
 		Object.assign(process.env, {
-			KYRN_HIVE_DIR: dir,
-			KYRN_HIVE_BEE: "auth-code",
-			KYRN_HIVE_GOAL: "fix the flaky login",
-			KYRN_HIVE_FOCUS: "read the session code",
+			SPEC_AI_JEV_HIVE_DIR: dir,
+			SPEC_AI_JEV_HIVE_BEE: "auth-code",
+			SPEC_AI_JEV_HIVE_GOAL: "fix the flaky login",
+			SPEC_AI_JEV_HIVE_FOCUS: "read the session code",
 		});
 
 		const tool: AgentTool = {
@@ -662,12 +662,12 @@ describe("hive in a session", () => {
 		const calls: { instructions: string; env: Readonly<Record<string, string>>; role?: string }[] = [];
 		const runner: SwarmRunner = async (task, assignment, _signal, env) => {
 			calls.push({ instructions: task.instructions, env: env ?? {}, role: assignment.agent?.name });
-			const board = new Board(env?.KYRN_HIVE_DIR ?? "");
-			if (env?.KYRN_HIVE_BEE === "repro") {
+			const board = new Board(env?.SPEC_AI_JEV_HIVE_DIR ?? "");
+			if (env?.SPEC_AI_JEV_HIVE_BEE === "repro") {
 				board.post(note({ id: "r1", bee: "repro" }));
 				board.delivered({ note: "r1", to: "history", score: 0.9 });
 			}
-			if (env?.KYRN_HIVE_BEE === "history") {
+			if (env?.SPEC_AI_JEV_HIVE_BEE === "history") {
 				board.post(
 					note({
 						id: "h1",
@@ -708,11 +708,11 @@ describe("hive in a session", () => {
 
 		await harness.session.prompt("Why is login flaky?");
 
-		expect(calls.map((call) => [call.env.KYRN_HIVE_BEE, call.role])).toEqual([
+		expect(calls.map((call) => [call.env.SPEC_AI_JEV_HIVE_BEE, call.role])).toEqual([
 			["repro", "investigator"],
 			["history", "scout"],
 		]);
-		expect(calls[0].env.KYRN_HIVE_DIR).toBe(calls[1].env.KYRN_HIVE_DIR);
+		expect(calls[0].env.SPEC_AI_JEV_HIVE_DIR).toBe(calls[1].env.SPEC_AI_JEV_HIVE_DIR);
 		expect(calls[0].instructions).toContain("Your angle: Reproduce the failure locally");
 		expect(calls[0].instructions).toContain("- history: Find the commit that introduced it");
 		const result = JSON.stringify(harness.session.messages.find((message) => message.role === "toolResult"));
@@ -779,7 +779,7 @@ describe("hive in a session", () => {
 			release = resolve;
 		});
 		const runner: SwarmRunner = async (task, _assignment, _signal, env, observer) => {
-			if (env?.KYRN_HIVE_BEE === "repro") new Board(env.KYRN_HIVE_DIR ?? "").post(note({ id: "r1", text: long }));
+			if (env?.SPEC_AI_JEV_HIVE_BEE === "repro") new Board(env.SPEC_AI_JEV_HIVE_DIR ?? "").post(note({ id: "r1", text: long }));
 			observer?.event({ type: "agent_start" });
 			observer?.event({ type: "message_update", assistantMessageEvent: { type: "text_delta", delta: long } });
 			await Promise.race([shown, new Promise((resolve) => setTimeout(resolve, 5000))]);
@@ -835,10 +835,10 @@ describe("hive in a session", () => {
 
 	it("the queen: the report names who confirmed a note, and a bee never confirms itself", async () => {
 		const runner: SwarmRunner = async (task, _assignment, _signal, env) => {
-			const board = new Board(env?.KYRN_HIVE_DIR ?? "");
+			const board = new Board(env?.SPEC_AI_JEV_HIVE_DIR ?? "");
 			const supports = (later: string, by: string) =>
 				board.relate({ later, earlier: "r1", relation: "supports", score: 0.9, by, at: "" });
-			if (env?.KYRN_HIVE_BEE === "repro") {
+			if (env?.SPEC_AI_JEV_HIVE_BEE === "repro") {
 				board.post(note({ id: "r1" }));
 				board.post(note({ id: "r2", text: "npm test -- login fails again with TZ=UTC after a clean install" }));
 				supports("r2", "repro");
@@ -892,9 +892,9 @@ describe("hive in a session", () => {
 			release = resolve;
 		});
 		const runner: SwarmRunner = async (task, _assignment, _signal, env) => {
-			const name = env?.KYRN_HIVE_BEE ?? "";
+			const name = env?.SPEC_AI_JEV_HIVE_BEE ?? "";
 			calls.push({ name, instructions: task.instructions });
-			const board = new Board(env?.KYRN_HIVE_DIR ?? "");
+			const board = new Board(env?.SPEC_AI_JEV_HIVE_DIR ?? "");
 			if (name === "repro") {
 				board.post(
 					note({ id: "a", bee: "repro", text: "login fails in CI because TZ=UTC changes the date parser output" }),

@@ -395,8 +395,8 @@ describe("the experience library in a session", () => {
 			"GEMINI_API_KEY",
 			"OPENAI_API_KEY",
 			// The messages below are the English ones.
-			"MU_LANG",
-			"KYRN_LANG",
+			"SPEC_AI_JEV_LANG",
+			"SPEC_AI_JEV_LANG",
 		]) {
 			vi.stubEnv(name, undefined);
 		}
@@ -1011,7 +1011,7 @@ describe("the experience library in a session", () => {
 	it("sub-agents: each investigator of a hive gets the lessons for its angle, and its Lesson: lines come back", async () => {
 		// The role files of this machine are not part of the test.
 		const agentDir = temp();
-		for (const name of ["PI_CODING_AGENT_DIR", "MU_CODING_AGENT_DIR", "KYRN_CODING_AGENT_DIR"])
+		for (const name of ["PI_CODING_AGENT_DIR", "SPEC_CODING_AGENT_DIR"])
 			vi.stubEnv(name, agentDir);
 		const instructions = new Map<string, string>();
 		const session = await start(
@@ -1024,7 +1024,7 @@ describe("the experience library in a session", () => {
 			{
 				only: ["hive"],
 				runner: async (task, _assignment, _signal, env) => {
-					const bee = env?.KYRN_HIVE_BEE ?? "";
+					const bee = env?.SPEC_AI_JEV_HIVE_BEE ?? "";
 					instructions.set(bee, task.instructions);
 					return bee === "repro"
 						? "Reproduced it.\nLesson: when login fails only in CI -> install tzdata in the image first"
@@ -1073,7 +1073,7 @@ describe("the experience library in a session", () => {
 	});
 
 	it("inside a sub-agent it keeps nothing and offers no remember tool", async () => {
-		vi.stubEnv("KYRN_SWARM_DEPTH", "1");
+		vi.stubEnv("SPEC_AI_JEV_SWARM_DEPTH", "1");
 		const session = await start(() => ({}));
 		expect(session.harness.session.getAllTools().map((each) => each.name)).not.toContain("remember");
 		// Without the command, the words go to the model as a message.

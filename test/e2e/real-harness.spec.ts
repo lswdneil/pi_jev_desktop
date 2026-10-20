@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { launchApp } from "./helpers/app.ts";
 
 test.skip(
-	(process.env.SPEC_AI_JEV_HARNESS ?? process.env.PI_JEV_HARNESS) === undefined,
+	process.env.SPEC_AI_JEV_HARNESS === undefined,
 	"set SPEC_AI_JEV_HARNESS to a runtime checkout to run the real-harness tests",
 );
 
@@ -17,7 +17,7 @@ test.skip(
  * The real harness, a stub provider, real turns.
  *
  * Every other conversation test scripts the harness, so they show the renderer's behaviour but never the wire from the
- * window to mu to a provider and back. These start the checkout's own harness with a `models.json` that points at a
+ * window to spec.ai.jev to a provider and back. These start the checkout's own harness with a `models.json` that points at a
  * local OpenAI-compatible server, and require the answer (and the tool call) to reach the window and the session file.
  *
  * They also pin bugs the fixture could not show: the real harness sends `message_start` *and* `message_end` for the
@@ -221,9 +221,9 @@ test.describe("a real harness with a stub provider", () => {
 	});
 
 	test("asks before a write outside the project, and the denial reaches the model", async () => {
-		// No judge is available in this temporary home, so mu asks about a write outside the project. The card is the
+		// No judge is available in this temporary home, so spec.ai.jev asks about a write outside the project. The card is the
 		// kernel's, not the fixture's: this is the approval path a person actually sees.
-		const outside = join(tmpdir(), "mu-rehearsal-write-probe.txt");
+		const outside = join(tmpdir(), "spec-rehearsal-write-probe.txt");
 		const provider = await startProvider((index) =>
 			index === 1 ? { tool: "write", args: { path: outside, content: "hello from the stub" } } : { text: "Understood, I did not write it." },
 		);
@@ -255,7 +255,7 @@ test.describe("a real harness with a stub provider", () => {
 	});
 
 	test("allows a write outside the project when told to, and the file appears", async () => {
-		const outside = join(tmpdir(), "mu-rehearsal-write-allowed.txt");
+		const outside = join(tmpdir(), "spec-rehearsal-write-allowed.txt");
 		const provider = await startProvider((index) =>
 			index === 1 ? { tool: "write", args: { path: outside, content: "written after approval" } } : { text: "Written." },
 		);
@@ -316,7 +316,7 @@ test.describe("a real harness with a stub provider", () => {
 		}
 	});
 
-	test("saves a real manifest option to mu.json and keeps it across an agent restart", async () => {
+	test("saves a real manifest option to agent.json and keeps it across an agent restart", async () => {
 		// The settings screen's own e2e uses the fixture manifest; this one writes the kernel's real document and reads
 		// it back after the agent restarts, which is the path a person actually takes.
 		const provider = await startProvider(() => ({ text: "ok" }));
@@ -337,7 +337,7 @@ test.describe("a real harness with a stub provider", () => {
 			await box.click();
 			await expect(page.locator('[data-testid="settings-saved"]')).toContainText("Restart", { timeout: 30_000 });
 
-			const settingsFile = join(profile.home, ".spec.ai.jev", "agent", "mu.json");
+			const settingsFile = join(profile.home, ".spec.ai.jev", "agent", "agent.json");
 			const stored = (): unknown => {
 				try {
 					const document = JSON.parse(readFileSync(settingsFile, "utf8")) as { features?: Record<string, Record<string, unknown>> };
@@ -387,7 +387,7 @@ test.describe("a real harness with a stub provider", () => {
 	});
 
 	test("grants judge consent against the real harness and records it", async () => {
-		// The grant goes through the harness's own command (`mu judge consent accept`), not through a fixture: what is
+		// The grant goes through the harness's own command (`spec judge consent accept`), not through a fixture: what is
 		// asserted is the file the kernel and the shell both read afterwards.
 		const provider = await startProvider(() => ({ text: "ok" }));
 		const profile = await launchedWith(provider.port);

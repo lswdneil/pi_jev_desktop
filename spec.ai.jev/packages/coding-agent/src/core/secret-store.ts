@@ -43,7 +43,7 @@ export class SecretUnavailableError extends Error {
 	}
 }
 
-/** What `MU_CREDENTIAL_STORE` may say. Nothing else is accepted: a typo must not silently pick a weaker store. */
+/** What `SPEC_AI_JEV_CREDENTIAL_STORE` may say. Nothing else is accepted: a typo must not silently pick a weaker store. */
 const BACKENDS: readonly SecretBackend[] = ["keychain", "file", "plaintext"];
 
 /** The key names the rest of the tree uses. Keys are stored as-is: the store is a key/value map, not a schema. */
@@ -114,8 +114,8 @@ export function runTool(command: string, args: readonly string[], input?: string
 
 function defaultDir(env: Readonly<Record<string, string | undefined>>): string {
 	// The same directory the kernel uses for consent, quota and the ledger, so one backup covers all of it.
-	const configured = env.MU_AGENT_DIR;
-	return configured !== undefined && configured !== "" ? configured : join(homedir(), ".mu", "agent");
+	const configured = env.SPEC_AI_JEV_AGENT_DIR;
+	return configured !== undefined && configured !== "" ? configured : join(homedir(), ".spec.ai.jev", "agent");
 }
 
 /** Writes a file only its owner can read, tightening a file that already existed with looser permissions. */
@@ -373,13 +373,13 @@ export function createSecretStore(backend: SecretBackend, options: SecretStoreOp
 
 /**
  * Picks the strongest backend this machine can use: keychain, then the encrypted file, then — with one warning
- * — plaintext. `MU_CREDENTIAL_STORE` forces one, and a forced backend that cannot work raises
+ * — plaintext. `SPEC_AI_JEV_CREDENTIAL_STORE` forces one, and a forced backend that cannot work raises
  * `SecretUnavailableError` instead of quietly using a weaker one, because "your key is somewhere else" is
  * exactly the surprise this file is meant to prevent.
  */
 export async function selectSecretStore(options: SecretStoreOptions = {}): Promise<SecretStore> {
 	const env = options.env ?? {};
-	const forced = env.MU_CREDENTIAL_STORE?.trim();
+	const forced = env.SPEC_AI_JEV_CREDENTIAL_STORE?.trim();
 	const platform = options.platform ?? process.platform;
 	const run = options.run ?? runTool;
 	const dir = options.dir ?? defaultDir(env);
@@ -387,15 +387,15 @@ export async function selectSecretStore(options: SecretStoreOptions = {}): Promi
 	if (forced !== undefined && forced !== "") {
 		if (!(BACKENDS as readonly string[]).includes(forced)) {
 			throw new SecretUnavailableError(
-				`MU_CREDENTIAL_STORE is "${forced}", which is not one of ${BACKENDS.join(", ")}`,
+				`SPEC_AI_JEV_CREDENTIAL_STORE is "${forced}", which is not one of ${BACKENDS.join(", ")}`,
 			);
 		}
 		const backend = forced as SecretBackend;
 		if (backend === "keychain" && !(await keychainAvailable(platform, run))) {
 			throw new SecretUnavailableError(
 				platform === "win32"
-					? "MU_CREDENTIAL_STORE=keychain is not available on Windows yet; use file or plaintext"
-					: "MU_CREDENTIAL_STORE=keychain, but no keychain tool is installed (security on macOS, secret-tool on Linux)",
+					? "SPEC_AI_JEV_CREDENTIAL_STORE=keychain is not available on Windows yet; use file or plaintext"
+					: "SPEC_AI_JEV_CREDENTIAL_STORE=keychain, but no keychain tool is installed (security on macOS, secret-tool on Linux)",
 			);
 		}
 		return createSecretStore(backend, { ...options, dir, platform, run });
@@ -420,7 +420,7 @@ export function keychainAvailableSync(platform: NodeJS.Platform, runSync: RunToo
  */
 export function selectSecretStoreSync(options: SecretStoreOptions = {}): SyncSecretStore {
 	const env = options.env ?? {};
-	const forced = env.MU_CREDENTIAL_STORE?.trim();
+	const forced = env.SPEC_AI_JEV_CREDENTIAL_STORE?.trim();
 	const platform = options.platform ?? process.platform;
 	const runSync = options.runSync ?? runToolSync;
 	const dir = options.dir ?? defaultDir(env);
@@ -429,15 +429,15 @@ export function selectSecretStoreSync(options: SecretStoreOptions = {}): SyncSec
 	if (forced !== undefined && forced !== "") {
 		if (!(BACKENDS as readonly string[]).includes(forced)) {
 			throw new SecretUnavailableError(
-				`MU_CREDENTIAL_STORE is "${forced}", which is not one of ${BACKENDS.join(", ")}`,
+				`SPEC_AI_JEV_CREDENTIAL_STORE is "${forced}", which is not one of ${BACKENDS.join(", ")}`,
 			);
 		}
 		const backend = forced as SecretBackend;
 		if (backend === "keychain" && !keychainAvailableSync(platform, runSync)) {
 			throw new SecretUnavailableError(
 				platform === "win32"
-					? "MU_CREDENTIAL_STORE=keychain is not available on Windows yet; use file or plaintext"
-					: "MU_CREDENTIAL_STORE=keychain, but no keychain tool is installed (security on macOS, secret-tool on Linux)",
+					? "SPEC_AI_JEV_CREDENTIAL_STORE=keychain is not available on Windows yet; use file or plaintext"
+					: "SPEC_AI_JEV_CREDENTIAL_STORE=keychain, but no keychain tool is installed (security on macOS, secret-tool on Linux)",
 			);
 		}
 		return createSecretStore(backend, withDefaults);

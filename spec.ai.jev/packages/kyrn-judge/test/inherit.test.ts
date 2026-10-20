@@ -351,7 +351,7 @@ describe("MCP server definitions", () => {
 			transport: { type: "stdio", command: "npx", args: ["-y", "gh-server"], env: { GITHUB_TOKEN: SECRET } },
 		});
 		expect(byName.scratch).toMatchObject({ tool: "claude", scope: "user", transport: { command: "node" } });
-		// An entry in mu.json without a command only adjusts the inherited server.
+		// An entry in agent.json without a command only adjusts the inherited server.
 		expect(byName.figma).toMatchObject({ tool: "cursor", exposure: "always", transport: { type: "http" } });
 		expect(byName.remote.transport).toEqual({
 			type: "http",
@@ -371,7 +371,7 @@ describe("MCP server definitions", () => {
 		expect(reasons["linear@/.claude.json"]).toContain("switched off for this project in Claude Code");
 		expect(reasons["old@/.claude.json"]).toContain("HTTP+SSE");
 		expect(reasons["off@/.codex/config.toml"]).toContain("switched off in its own file");
-		expect(reasons["docs@/.codex/config.toml"]).toContain("switched off in mu.json");
+		expect(reasons["docs@/.codex/config.toml"]).toContain("switched off in agent.json");
 		expect(reasons["github@/.cursor/mcp.json"]).toContain("is used instead");
 		// The repository's "github" does not replace the user's.
 		expect(reasons["github@/code/app/.mcp.json"]).toContain("is used instead");
@@ -469,7 +469,7 @@ describe("MCP server definitions", () => {
 describe("first-run state", () => {
 	it("remembers that the notice was shown, and survives a damaged file", () => {
 		const { home } = fixture({});
-		const agentDir = join(home, ".mu", "agent");
+		const agentDir = join(home, ".spec.ai.jev", "agent");
 		expect(readInheritState(agentDir)).toEqual({});
 		writeInheritState(agentDir, { noticeShownAt: "2026-09-22T00:00:00.000Z" });
 		expect(readInheritState(agentDir)).toEqual({ noticeShownAt: "2026-09-22T00:00:00.000Z" });

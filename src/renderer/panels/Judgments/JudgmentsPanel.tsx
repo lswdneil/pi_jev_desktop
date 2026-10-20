@@ -2,9 +2,9 @@
 // Copyright (c) 2025-2026 the mu authors
 
 /**
- * The judgments, from mu's ledger.
+ * The judgments, from spec.ai.jev's ledger.
  *
- * Its data source is `mu ledger --json`, the command the kernel already ships for exactly this: the ledger's format
+ * Its data source is `spec ledger --json`, the command the kernel already ships for exactly this: the ledger's format
  * stays the kernel's business, and this panel is a reader. The list refreshes on demand and every few seconds while it
  * is open, which is enough for a person watching decisions land.
  */

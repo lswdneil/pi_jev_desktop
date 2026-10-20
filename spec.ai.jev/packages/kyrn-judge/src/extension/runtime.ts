@@ -175,7 +175,7 @@ export class KyrnRuntime {
 		diagnosticsWithheldChars: 0,
 	};
 	readonly sessionId = randomUUID();
-	/** False when the judge is switched off (MU_JUDGE=off): the CLI stays, the judgment layer asks nothing. */
+	/** False when the judge is switched off (SPEC_AI_JEV_JUDGE=off): the CLI stays, the judgment layer asks nothing. */
 	enabled = true;
 	turn: TurnState = emptyTurn("");
 	userTurns = 0;

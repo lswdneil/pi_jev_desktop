@@ -91,7 +91,7 @@ test.describe("conversation", () => {
 	test("keeps a long conversation to a bounded number of rows", async () => {
 		// 250 messages in the session; the window is allowed to mount 200 of them. A conversation of two thousand is
 		// then the same amount of DOM as one of two hundred.
-		const profile = await launchApp({ env: { MU_FIXTURE_HISTORY: "250" } });
+		const profile = await launchApp({ env: { SPEC_AI_JEV_FIXTURE_HISTORY: "250" } });
 		const { page } = profile;
 		try {
 			await completeFirstRun(page);

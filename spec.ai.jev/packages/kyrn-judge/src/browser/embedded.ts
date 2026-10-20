@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { muEnv, muHome } from "../naming.ts";
+import { specEnv, specHome } from "../naming.ts";
 import type { CdpConnection } from "./cdp.ts";
 
 /**
@@ -21,7 +21,7 @@ import type { CdpConnection } from "./cdp.ts";
  *   Mu.confirm  { label, url } -> { allowed }    the app's own dialog for irreversible actions
  *   Mu.step     { ...record }                    one line for the live overlay; no answer needed
  *
- * `session` is the app's name for the conversation this harness process serves (`MU_DESKTOP_SESSION`, set by
+ * `session` is the app's name for the conversation this harness process serves (`SPEC_AI_JEV_DESKTOP_SESSION`, set by
  * the app's adapter), so the tab opens beside the right conversation. Everything about one run is sent with
  * that tab's DevTools session id, because several runs can share one connection.
  */
@@ -62,17 +62,17 @@ export function loopbackSocket(url: string): boolean {
 }
 
 /**
- * Where the app's browser listens, if an app is running: `MU_BROWSER_ENDPOINT`,
+ * Where the app's browser listens, if an app is running: `SPEC_AI_JEV_BROWSER_ENDPOINT`,
  * or the advert the app writes into the mu home (readable by the user only).
  * An advert left behind by an app that has quit is ignored.
  */
 export function findEmbeddedEndpoint(host: Host = {}): EmbeddedEndpoint | undefined {
 	const env = host.env ?? process.env;
-	const fromEnv = muEnv("BROWSER_ENDPOINT", env);
+	const fromEnv = specEnv("BROWSER_ENDPOINT", env);
 	if (fromEnv) return loopbackSocket(fromEnv) ? { url: fromEnv } : undefined;
 	try {
 		const read = host.readFile ?? ((path: string) => readFileSync(path, "utf8"));
-		const advert = JSON.parse(read(join(host.home ?? muHome(), ADVERT_FILE))) as { url?: unknown; pid?: unknown };
+		const advert = JSON.parse(read(join(host.home ?? specHome(), ADVERT_FILE))) as { url?: unknown; pid?: unknown };
 		if (typeof advert.url !== "string" || !loopbackSocket(advert.url)) return undefined;
 		const pid = typeof advert.pid === "number" ? advert.pid : undefined;
 		if (pid !== undefined && !(host.isRunning ?? processRuns)(pid)) return undefined;
@@ -103,7 +103,7 @@ export class EmbeddedBrowser {
 		env: Readonly<Record<string, string | undefined>> = process.env,
 	): Promise<EmbeddedBrowser | undefined> {
 		try {
-			const session = muEnv("DESKTOP_SESSION", env);
+			const session = specEnv("DESKTOP_SESSION", env);
 			const hello = await cdp.send(
 				"Mu.hello",
 				session ? { version: PROTOCOL_VERSION, session } : { version: PROTOCOL_VERSION },

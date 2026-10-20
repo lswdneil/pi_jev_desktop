@@ -69,7 +69,7 @@ export interface ApiDependencies {
 		check(): Promise<unknown>;
 		install(): Promise<unknown>;
 	};
-	/** The last decisions from mu's ledger, read through the harness's own `ledger --json`. */
+	/** The last decisions from spec.ai.jev's ledger, read through the harness's own `ledger --json`. */
 	readonly judgments: {
 		recent(): Promise<unknown>;
 	};

@@ -13,9 +13,9 @@
 - `mu-project.json`：项目路径和最近一次使用时间（清扫用）；
 - `config` 追加一段：`autocrlf=false`、`safecrlf=false`、`longpaths=true`、`quotepath=false`、`fsmonitor=false`、`gc.auto=0`、`commit.gpgsign=false`、`hooksPath` 指向影子目录里一个不存在的子目录；
 - `info/attributes`：`* -text -filter -ident -working-tree-encoding`，压过项目的 `.gitattributes`，于是不做行尾转换、不跑 clean/smudge 过滤器（LFS）、不改编码，还原就是逐字节还原；
-- `info/exclude`：内置的忽略清单（`node_modules/`、`dist/`、`build/`、`target/`、`.venv/`、`coverage/`、`.next/` 等 28 条重目录，外加**存密钥的文件**：`*.env`、`.env.*`（`.env.example`、`.env.sample`、`.env.template` 除外）、`.envrc`、`.netrc`、`*.pem`、`*.key`、`*.p12`、`*.pfx`、`id_rsa`、`id_dsa`、`id_ecdsa`、`id_ed25519`）加上用户在 `features.checkpoint.ignore` 里补的，再加上 **mu 自己的目录**：影子仓库所在的目录、mu 主目录（`~/.mu`）、pi 的 agent 目录，只要它们在项目里面，就各写一条锚定在项目根的规则（`/.agent/` 这样，名字里的 `[`、`*` 等按字面转义）。快照因此永远不会拍进快照自己、会话记录或凭据。密钥文件不进快照，是因为快照是项目的第二份拷贝，要留好几天；代价是 `/rewind` 不还原它们，还原也从不碰它们。
+- `info/exclude`：内置的忽略清单（`node_modules/`、`dist/`、`build/`、`target/`、`.venv/`、`coverage/`、`.next/` 等 28 条重目录，外加**存密钥的文件**：`*.env`、`.env.*`（`.env.example`、`.env.sample`、`.env.template` 除外）、`.envrc`、`.netrc`、`*.pem`、`*.key`、`*.p12`、`*.pfx`、`id_rsa`、`id_dsa`、`id_ecdsa`、`id_ed25519`）加上用户在 `features.checkpoint.ignore` 里补的，再加上 **mu 自己的目录**：影子仓库所在的目录、mu 主目录（`~/.spec.ai.jev`）、pi 的 agent 目录，只要它们在项目里面，就各写一条锚定在项目根的规则（`/.agent/` 这样，名字里的 `[`、`*` 等按字面转义）。快照因此永远不会拍进快照自己、会话记录或凭据。密钥文件不进快照，是因为快照是项目的第二份拷贝，要留好几天；代价是 `/rewind` 不还原它们，还原也从不碰它们。
 
-影子目录的权限是 0700，每次打开都设一次：上层目录（`~/.mu/agent` 由启动器按默认权限创建）在多用户的 Linux 上可能别人也能进。打开时还会把索引里**已经被忽略的路径**移出去（旧版 mu 拍进去的 `.env`、项目后来才忽略的目录）：索引会一直留着它拿到过的东西，不移出的话之后每个快照都带着它。移出之后，还原把它当作“现在被忽略的文件”，不覆盖也不删除。
+影子目录的权限是 0700，每次打开都设一次：上层目录（`~/.spec.ai.jev/agent` 由启动器按默认权限创建）在多用户的 Linux 上可能别人也能进。打开时还会把索引里**已经被忽略的路径**移出去（旧版 mu 拍进去的 `.env`、项目后来才忽略的目录）：索引会一直留着它拿到过的东西，不移出的话之后每个快照都带着它。移出之后，还原把它当作“现在被忽略的文件”，不覆盖也不删除。
 
 每条 git 命令都在同一套环境里跑：继承的环境先**去掉所有 `GIT_*` 变量**（在 git 钩子里启动的代理会带着指向真实 index 的 `GIT_INDEX_FILE`，一个漏网的变量就够把快照写进用户的 index），再设 `GIT_DIR=<影子>`、`GIT_WORK_TREE=<项目>`、`GIT_INDEX_FILE=<影子>/index`、固定的作者身份、`GIT_TERMINAL_PROMPT=0`、`GIT_OPTIONAL_LOCKS=0`、`GIT_LITERAL_PATHSPECS=1`（`a[1].txt` 这样的文件名不当模式）。不经过 shell，参数数组直接 `spawn`。
 
@@ -29,7 +29,7 @@
 
 代价：第一次要把整个项目读进影子索引，之后每次只看变过的文件。在本仓库（约 2000 个文件）上探测：首次 `add` 1.2 s，之后每次 50–150 ms（用 `add -A` + `write-tree` 量的，最终代码走的是等价的 `ls-files` + `update-index`）。超过 `timeoutMs`（默认 30 s）就放弃这一回合的快照，工具照常执行，界面上说一次。
 
-**什么时候整个会话都不拍**（2026-09-23，0.1.4）。0.1.3 在一台 1 GB 的服务器上从主目录启动时，每个改文件的回合都把整个主目录拍进 `~/.mu`，而 `~/.mu` 里就有快照自己，所以影子仓库每回合都在长。现在三种情况下这个会话不拍检查点，在第一次会改文件的调用时用用户的语言说一行（`MU_LANG`，中文或英文），同时发一个 `checkpoint.off` 展示事件（代码见 presentation-codes.md），之后不再重复：
+**什么时候整个会话都不拍**（2026-09-23，0.1.4）。0.1.3 在一台 1 GB 的服务器上从主目录启动时，每个改文件的回合都把整个主目录拍进 `~/.spec.ai.jev`，而 `~/.spec.ai.jev` 里就有快照自己，所以影子仓库每回合都在长。现在三种情况下这个会话不拍检查点，在第一次会改文件的调用时用用户的语言说一行（`SPEC_AI_JEV_LANG`，中文或英文），同时发一个 `checkpoint.off` 展示事件（代码见 presentation-codes.md），之后不再重复：
 
 - **工作目录是主目录，或者包含主目录**（例如 `/`）：主目录里是一个人的全部东西，包括密钥，不是项目。只看路径（解析过符号链接），不列文件、不建影子仓库。
 - **工作目录在 mu 自己的目录里**（影子仓库目录、mu 主目录、pi 的 agent 目录）。
@@ -90,7 +90,7 @@
 - `active` 但没有界面（print / json）：不动文件，给模型一条 steer：这条路像死胡同，退回去换一条。
 - `shadow`：只记录判定；`off`：不问。判定器不可用：继续。
 
-## 7. 清理与选项（`mu.json` 的 `features.checkpoint`）
+## 7. 清理与选项（`agent.json` 的 `features.checkpoint`）
 
 | 键 | 默认 | 含义 |
 | --- | --- | --- |
@@ -105,7 +105,7 @@
 | `propose` | `true` | 发现死路时问判定器并提议 |
 | `confirmSeconds` | 120 | 提议等待回答的时间 |
 
-会话启动时清掉 `maxAgeDays` 没用过的项目影子仓库（只认带 `mu-project.json` 的目录）；一个项目在本会话第一次拍快照时，删掉超过 `keep` 或超过 `maxAgeDays` 的引用，有删除时在后台 `gc --prune=3.days.ago` 回收对象。影子目录里 120 s 以上的 `*.lock` 和临时还原索引在打开时清掉（是死掉的进程留下的；新鲜的属于另一个会话正在跑的命令，不碰）；`session_shutdown` 等最多 3 s 让手上的命令跑完，再清锁，不留任何锁。子代理（`KYRN_SWARM_DEPTH`）不拍快照：父代理在 `delegate` 之前的检查点已经覆盖了它改的东西。
+会话启动时清掉 `maxAgeDays` 没用过的项目影子仓库（只认带 `mu-project.json` 的目录）；一个项目在本会话第一次拍快照时，删掉超过 `keep` 或超过 `maxAgeDays` 的引用，有删除时在后台 `gc --prune=3.days.ago` 回收对象。影子目录里 120 s 以上的 `*.lock` 和临时还原索引在打开时清掉（是死掉的进程留下的；新鲜的属于另一个会话正在跑的命令，不碰）；`session_shutdown` 等最多 3 s 让手上的命令跑完，再清锁，不留任何锁。子代理（`SPEC_AI_JEV_SWARM_DEPTH`）不拍快照：父代理在 `delegate` 之前的检查点已经覆盖了它改的东西。
 
 ## 8. Windows
 
@@ -129,7 +129,7 @@
 - 两个会话同时开着同一个项目：共享一个影子索引，后来者的快照会撞上锁而放弃这一回合（提示一次）；只测了陈旧锁，没有真的开两个会话。
 - 会话恢复（resume）之后 `/rewind` 依赖影子仓库里的提交还在；手改检测退化为“全部都问”。没有用例。
 - 大仓库的耗时只有上面那次探测，没有系统测量；`timeoutMs` 到期后这一回合无快照的分支没有用例。
-- 5000 个文件 / 200 MB 的默认上限是估出来的：首次快照大约是每 2000 个文件 1 秒多，慢机器上 5000 个文件在 10 秒上下。大型 monorepo 会超过它，需要在 `mu.json` 里调高 `maxFiles`；那一行提示里写了键名。列表超时（`too_slow`）只用替身跑过，没有用真的 30 秒超时跑过。
+- 5000 个文件 / 200 MB 的默认上限是估出来的：首次快照大约是每 2000 个文件 1 秒多，慢机器上 5000 个文件在 10 秒上下。大型 monorepo 会超过它，需要在 `agent.json` 里调高 `maxFiles`；那一行提示里写了键名。列表超时（`too_slow`）只用替身跑过，没有用真的 30 秒超时跑过。
 
 ## 11. 留给用户拍板的
 

@@ -169,7 +169,7 @@ export function freshnessProblems(directory) {
 
 /**
  * The harness inside the package is built from this repository: `kyrn/npm/build.mjs` bundles the workspace's sources
- * into `mu-agent`, and the packaged app starts *that*. A staged harness older than the sources it bundles means the
+ * into `spec-ai-agent`, and the packaged app starts *that*. A staged harness older than the sources it bundles means the
  * package starts code the repository no longer has — the same staleness the build and coverage gates refuse, one
  * level down. Only a checkout that has this repository's layout is judged: a package copied elsewhere has no sources
  * to compare against.
@@ -178,7 +178,7 @@ export function harnessFreshnessProblems(directory) {
 	const shell = dirname(directory);
 	const root = dirname(shell);
 	if (!existsSync(join(root, "packages", "kyrn-judge"))) return [];
-	const built = newestFile(join(root, ".artifacts", "desktop-harness", "mu-agent"));
+	const built = newestFile(join(root, ".artifacts", "desktop-harness", "spec-ai-agent"));
 	if (built === undefined) return [];
 	const inputs = [];
 	const packages = join(root, "packages");
@@ -190,7 +190,7 @@ export function harnessFreshnessProblems(directory) {
 		const newest = newestFile(input);
 		if (newest !== undefined && newest.modified > built.modified) {
 			return [
-				`${join(root, ".artifacts", "desktop-harness", "mu-agent")} is older than ${newest.path}: the package would bundle a harness built before the sources it contains — run \`node kyrn/npm/build.mjs\`, stage the package again, and repackage`,
+				`${join(root, ".artifacts", "desktop-harness", "spec-ai-agent")} is older than ${newest.path}: the package would bundle a harness built before the sources it contains — run \`node kyrn/npm/build.mjs\`, stage the package again, and repackage`,
 			];
 		}
 	}
@@ -222,9 +222,9 @@ export function packageProblems(directory, options = {}) {
 			problems.push(...forbiddenFiles(layout.resources).map((problem) => `${layout.name}: ${problem}`));
 		}
 
-		const harness = join(layout.resources, "harness", "mu-agent");
+		const harness = join(layout.resources, "harness", "spec-ai-agent");
 		if (options.requireHarness === true && !existsSync(harness)) {
-			problems.push(`${layout.name}: no resources/harness/mu-agent, so the packaged app has no harness to start`);
+			problems.push(`${layout.name}: no resources/harness/spec-ai-agent, so the packaged app has no harness to start`);
 		} else if (existsSync(harness)) {
 			problems.push(...harnessDependencyProblems(layout.name, harness));
 		}
@@ -263,7 +263,7 @@ function installerProblems(directory, options) {
 export function describePackage(directory, options = {}) {
 	const lines = layouts(directory).map((layout) => {
 		const archive = bytes(join(layout.resources, "app.asar"));
-		const harness = existsSync(join(layout.resources, "harness", "mu-agent"));
+		const harness = existsSync(join(layout.resources, "harness", "spec-ai-agent"));
 		const megabytes = (archive / (1024 * 1024)).toFixed(2);
 		const harnessNote = harness ? "harness staged" : options.requireHarness === true ? "harness missing" : "no harness (a local --dir build does not stage one)";
 		return `${layout.name}: app.asar ${megabytes} MB, ${harnessNote}`;

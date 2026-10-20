@@ -367,7 +367,7 @@ export { InMemoryTelemetryContext } from "./memory.ts";
 // writing an attribute nobody audited; the sinks are what keep a credential out of a log file.
 export {
 	allowedAttributes,
-	MU_TELEMETRY_SCHEMA,
+	SPEC_AI_JEV_TELEMETRY_SCHEMA,
 	sensitiveAttributes,
 } from "./schema.ts";
 export { type JsonlSinkOptions, type JsonlSpanRecord, JsonlTelemetryContext } from "./sinks/jsonl.ts";

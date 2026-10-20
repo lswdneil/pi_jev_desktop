@@ -6,7 +6,7 @@
  *
  * Everything else about a release can be checked without running it: the configuration against electron-builder's
  * schema, the archive against its budget, the harness folder against its dependencies. What no static check catches is
- * the app that opens a window and then cannot start the mu it carries — the failure only appears on a machine that
+ * the app that opens a window and then cannot start the spec.ai.jev it carries — the failure only appears on a machine that
  * installed it, and it did: the first package built here started, and then reported "the agent exited with code 1"
  * because the harness's own `node_modules` had been left out of the copy.
  *
@@ -63,7 +63,7 @@ async function main() {
 	const executablePath = process.argv[2] ?? EXECUTABLES[process.platform];
 	if (executablePath === undefined) throw new Error(`no packaged executable is known for ${process.platform}: pass one`);
 
-	const userData = mkdtempSync(join(tmpdir(), "mu-package-smoke-"));
+	const userData = mkdtempSync(join(tmpdir(), "spec-package-smoke-"));
 	const app = await _electron.launch({ executablePath, args: [`--user-data-dir=${userData}`] });
 	try {
 		const page = await app.firstWindow();

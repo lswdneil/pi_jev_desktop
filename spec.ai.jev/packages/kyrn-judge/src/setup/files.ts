@@ -9,26 +9,26 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import { CONFIG_FILE, LEGACY_CONFIG_FILE } from "../naming.ts";
+import { CONFIG_FILE } from "../naming.ts";
 import { setEnvValue } from "./env-file.ts";
 
 /**
- * The files `mu setup` changes that pi does not write itself: models.json, mu.json and the .env. auth.json and
- * settings.json go through pi's own classes (pi-access.ts). Whatever exists is copied to <mu home>/backups/<time>/
+ * The files `spec setup` changes that pi does not write itself: models.json, agent.json and the .env. auth.json and
+ * settings.json go through pi's own classes (pi-access.ts). Whatever exists is copied to <spec home>/backups/<time>/
  * before its first change, and nothing is rewritten that could not be read: a file with comments or broken JSON is
  * left as it is and the person is told what to add by hand.
  */
 
 export interface SetupPaths {
-	/** ~/.mu/agent: auth.json, models.json, settings.json, mu.json. */
+	/** ~/.spec.ai.jev/agent: auth.json, models.json, settings.json, agent.json. */
 	readonly agentDir: string;
-	/** ~/.mu, or ~/.kyrn on a machine that has not moved its home: backups go into its `backups` folder. */
+	/** ~/.spec.ai.jev: backups go into its `backups` folder. */
 	readonly home: string;
-	/** The .env the launcher reads: the checkout's, or ~/.mu/.env for the npm package. */
+	/** The .env the launcher reads: the checkout's, or ~/.spec.ai.jev/.env for the npm package. */
 	readonly envFile: string;
 }
 
-/** A file that may hold keys is readable by its owner alone when mu makes it. An existing file keeps its mode. */
+/** A file that may hold keys is readable by its owner alone when spec makes it. An existing file keeps its mode. */
 const PRIVATE_FILE = 0o600;
 const PRIVATE_FOLDER = 0o700;
 
@@ -112,7 +112,7 @@ export function readJsonFile(path: string): JsonFile {
 }
 
 /**
- * Writes a file mu owns — `.env`, `mu.json`, `models.json`, `auth.json` — with a private mode, always.
+ * Writes a file mu owns — `.env`, `agent.json`, `models.json`, `auth.json` — with a private mode, always.
  *
  * A new file beside it is renamed over it, so a reader never sees half of it. The mode used to be inherited from the
  * file being replaced, which is how a `.env` created at 0644 stayed
@@ -122,7 +122,7 @@ export function readJsonFile(path: string): JsonFile {
  */
 export function writeFileAtomic(path: string, text: string): void {
 	mkdirSync(dirname(path), { recursive: true });
-	const temporary = `${path}.mu-setup-${process.pid}`;
+	const temporary = `${path}.spec-ai-jev-setup-${process.pid}`;
 	writeFileSync(temporary, text, { mode: PRIVATE_FILE });
 	try {
 		chmodSync(temporary, PRIVATE_FILE);
@@ -209,17 +209,12 @@ export function withModel(
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// mu.json
+// agent.json
 // ---------------------------------------------------------------------------------------------------------------
 
-/**
- * The file the judgment layer reads (config.ts): mu.json, or kyrn.json on a machine that only has that one. Writing
- * a new mu.json beside a kyrn.json would hide everything else in kyrn.json.
- */
-export function judgeConfigPath(agentDir: string, exists: (path: string) => boolean = existsSync): string {
-	const current = join(agentDir, CONFIG_FILE);
-	const legacy = join(agentDir, LEGACY_CONFIG_FILE);
-	return !exists(current) && exists(legacy) ? legacy : current;
+/** The file the judgment layer reads (config.ts): agent.json. */
+export function judgeConfigPath(agentDir: string): string {
+	return join(agentDir, CONFIG_FILE);
 }
 
 /** The judges a config asks for, as config.ts reads them: `tiers`, else Jev. */

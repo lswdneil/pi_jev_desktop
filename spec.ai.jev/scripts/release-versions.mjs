@@ -3,7 +3,7 @@
 /**
  * The published package's version has to be one number, written in two places that must agree.
  *
- * `mu-agent` is not a workspace package: it is assembled by `kyrn/npm/build.mjs` from
+ * `spec-ai-agent` is not a workspace package: it is assembled by `kyrn/npm/build.mjs` from
  * `kyrn/npm/package.template.json`, and whose version users see is the one in the template. The changelog
  * says which versions exist. When those two drift, the release notes describe a version nobody can install
  * (or the tarball ships a version with no notes), so they are checked together.
@@ -39,14 +39,14 @@ function readJson(path) {
  * What is wrong with the release versions, as sentences a maintainer can act on. Empty means consistent.
  *
  * `desktop-next/` does not exist yet; when it does, its version must extend the package's (`0.1.8-beta.1`),
- * because the app ships this exact mu-agent inside it.
+ * because the app ships this exact spec-ai-agent inside it.
  */
 export function releaseVersionProblems(options = {}) {
 	const root = options.root ?? process.cwd();
 	const problems = [];
 	const templatePath = join(root, TEMPLATE_PATH);
 	if (!existsSync(templatePath)) {
-		problems.push(`${TEMPLATE_PATH} is missing: that file is what mu-agent's version comes from`);
+		problems.push(`${TEMPLATE_PATH} is missing: that file is what spec-ai-agent's version comes from`);
 		return problems;
 	}
 	let template;
@@ -56,7 +56,7 @@ export function releaseVersionProblems(options = {}) {
 		problems.push(`${TEMPLATE_PATH} cannot be read: ${error instanceof Error ? error.message : String(error)}`);
 		return problems;
 	}
-	if (template.name !== "mu-agent") problems.push(`${TEMPLATE_PATH} names "${String(template.name)}", not mu-agent`);
+	if (template.name !== "spec-ai-agent") problems.push(`${TEMPLATE_PATH} names "${String(template.name)}", not spec-ai-agent`);
 	if (typeof template.version !== "string" || !SEMVER.test(template.version)) {
 		problems.push(`${TEMPLATE_PATH} has no usable version: ${String(template.version)}`);
 		return problems;
@@ -82,7 +82,7 @@ export function releaseVersionProblems(options = {}) {
 			const desktop = readJson(desktopPath);
 			if (typeof desktop.version !== "string" || !desktop.version.startsWith(`${template.version}`)) {
 				problems.push(
-					`${DESKTOP_NEXT_PATH} ships mu-agent ${template.version} but is versioned ${String(desktop.version)}; it must start with the package's version`,
+					`${DESKTOP_NEXT_PATH} ships spec-ai-agent ${template.version} but is versioned ${String(desktop.version)}; it must start with the package's version`,
 				);
 			}
 		} catch (error) {
@@ -133,7 +133,7 @@ if (invokedDirectly()) {
 			process.exit(1);
 		}
 		setReleaseVersion(version);
-		console.log(`wrote mu-agent ${version} into ${TEMPLATE_PATH}`);
+		console.log(`wrote spec-ai-agent ${version} into ${TEMPLATE_PATH}`);
 		console.log(`now move [Unreleased] in ${CHANGELOG_PATH} to "## [${version}] - <date>": the check below fails until then.`);
 	}
 	const problems = releaseVersionProblems();
@@ -142,5 +142,5 @@ if (invokedDirectly()) {
 		for (const problem of problems) console.error(`  ${problem}`);
 		process.exit(1);
 	}
-	console.log(`release versions agree: mu-agent ${readJson(join(process.cwd(), TEMPLATE_PATH)).version}`);
+	console.log(`release versions agree: spec-ai-agent ${readJson(join(process.cwd(), TEMPLATE_PATH)).version}`);
 }

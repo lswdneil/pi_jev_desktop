@@ -141,7 +141,7 @@ export function defaultSessionDir(cwd: string, agentDir: string): string {
 /** Where pi keeps sessions: one folder per project under `<agent dir>/sessions`, or all in one custom folder. */
 export interface SessionStore {
 	agentDir: string;
-	/** pi's `sessionDir` setting or MU_CODING_AGENT_SESSION_DIR: every session in this one folder. */
+	/** pi's `sessionDir` setting or SPEC_CODING_AGENT_SESSION_DIR: every session in this one folder. */
 	sessionDir?: string;
 }
 

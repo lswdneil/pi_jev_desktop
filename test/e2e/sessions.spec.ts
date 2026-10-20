@@ -16,10 +16,10 @@ import { completeFirstRun, launchApp } from "./helpers/app.ts";
 
 test.describe("sessions", () => {
 	test("deletes a saved session after asking, and leaves the file gone", async () => {
-		const workspace = mkdtempSync(join(tmpdir(), "mu-e2e-delete-"));
+		const workspace = mkdtempSync(join(tmpdir(), "spec-e2e-delete-"));
 		let sessionFile = "";
 		const profile = await launchApp({
-			env: { MU_WORKSPACE: workspace },
+			env: { SPEC_AI_JEV_WORKSPACE: workspace },
 			prepareHome: (home) => {
 				const directory = join(home, ".spec.ai.jev", "agent", "sessions", "encoded");
 				mkdirSync(directory, { recursive: true });
@@ -57,10 +57,10 @@ test.describe("sessions", () => {
 	});
 
 	test("a session from another project reopens that project and switches to it", async () => {
-		const current = mkdtempSync(join(tmpdir(), "mu-e2e-current-"));
-		const other = mkdtempSync(join(tmpdir(), "mu-e2e-other-"));
+		const current = mkdtempSync(join(tmpdir(), "spec-e2e-current-"));
+		const other = mkdtempSync(join(tmpdir(), "spec-e2e-other-"));
 		const profile = await launchApp({
-			env: { MU_WORKSPACE: current },
+			env: { SPEC_AI_JEV_WORKSPACE: current },
 			prepareHome: (home) => {
 				const directory = join(home, ".spec.ai.jev", "agent", "sessions", "encoded");
 				mkdirSync(directory, { recursive: true });

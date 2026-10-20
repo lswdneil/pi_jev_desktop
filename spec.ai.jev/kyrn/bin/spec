@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# mu command line on macOS, Linux and WSL. (The project was called KYRN until 2026-09-21.)
+# spec command line on macOS, Linux and WSL. (The project was called KYRN until 2026-09-21.)
 #
-# Everything the launcher does is in mu.mjs, next to this file, so that it also runs on Windows (mu.cmd).
-# `mu help` lists the commands.
+# Everything the launcher does is in agent.mjs, next to this file, so that it also runs on Windows (spec.cmd).
+# `spec help` lists the commands.
 #
 # Only one job is left here: finding a Node >= 22.19 (pi's minimum), from PATH or else from nvm. It has to
 # happen before any JavaScript runs, because a machine whose default Node is older cannot be trusted to run
@@ -39,8 +39,8 @@ if ! new_enough "$(node --version 2>/dev/null || true)"; then
   done
 fi
 if ! new_enough "$(node --version 2>/dev/null || true)"; then
-  echo "mu needs Node >= 22.19 (found $(node --version 2>/dev/null || echo none)). Try: nvm install 24" >&2
+  echo "spec needs Node >= 22.19 (found $(node --version 2>/dev/null || echo none)). Try: nvm install 24" >&2
   exit 1
 fi
 
-exec node "$BIN/mu.mjs" "$@"
+exec node "$BIN/agent.mjs" "$@"

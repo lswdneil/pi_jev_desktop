@@ -17,12 +17,12 @@ mu 的 `browse` 工具移植自 browser-use/jev-ultrafast：主模型只说一�
 ## 2. harness 一侧（已完成）
 
 - `packages/kyrn-judge/src/browser/embedded.ts`：发现端点、握手、控制、确认、逐步通知。
-- 发现顺序：环境变量 `MU_BROWSER_ENDPOINT`（旧名 `KYRN_BROWSER_ENDPOINT` 也认）→ 数据目录里的 `desktop-browser.json`（内容 `{ "url": "ws://127.0.0.1:<端口>/<令牌>", "pid": <应用主进程号> }`）。只接受回环地址的 `ws://`；`pid` 对应的进程不在了就当没有。
-- 连上后先发 `Mu.hello`，带上 `session`：应用的适配器启动 harness 时设置的 `MU_DESKTOP_SESSION`（应用里这个对话的标识），桥据此把标签页开在对应对话旁边。终端里直接运行的 mu 没有这个变量，就不带。对方不认识这个方法（普通 Chrome）、版本不符、或回答 `embedded: false`（应用开着但没有可以放页面的对话），都退回 mu 自己的浏览器。
+- 发现顺序：环境变量 `SPEC_AI_JEV_BROWSER_ENDPOINT`（旧名 `SPEC_AI_JEV_BROWSER_ENDPOINT` 也认）→ 数据目录里的 `desktop-browser.json`（内容 `{ "url": "ws://127.0.0.1:<端口>/<令牌>", "pid": <应用主进程号> }`）。只接受回环地址的 `ws://`；`pid` 对应的进程不在了就当没有。
+- 连上后先发 `Mu.hello`，带上 `session`：应用的适配器启动 harness 时设置的 `SPEC_AI_JEV_DESKTOP_SESSION`（应用里这个对话的标识），桥据此把标签页开在对应对话旁边。终端里直接运行的 mu 没有这个变量，就不带。对方不认识这个方法（普通 Chrome）、版本不符、或回答 `embedded: false`（应用开着但没有可以放页面的对话），都退回 mu 自己的浏览器。
 - 一次运行里所有 `Mu.` 调用都带上该标签页的 DevTools `sessionId`：同一条连接上可以有多次运行，桥靠它区分。
 - 运行开始和结束各发一次 `Mu.run`，应用因此能显示目标，结束时能显示真实的结局与原因，而不只是“已结束”。
 - 键盘类命令（`Input.dispatchKeyEvent`、`Input.insertText`）被桥以“页面没有拿到键盘”拒绝时，当作页面已变（`StalePage`）：重新观察、重新判断，而不是让整次运行失败。次数受判断预算约束。
-- 子代理（`KYRN_SWARM_DEPTH`）不用应用内浏览器：几个子代理抢一个面板没有意义。
+- 子代理（`SPEC_AI_JEV_SWARM_DEPTH`）不用应用内浏览器：几个子代理抢一个面板没有意义。
 - 功能开关：`features.browser.embedded`（默认开）。
 - 展示事件：`browser.run`（开始 / 结束及状态）和 `browser.step`（步号、操作类型、目标标签、URL、概率、页面是否变化）。标签来自网页，是不可信文本，只能当文字显示。
 

@@ -85,7 +85,7 @@ describe("choosing a backend", () => {
 			selectSecretStore({
 				dir: temp(),
 				platform: "linux",
-				env: { MU_CREDENTIAL_STORE: "keychain" },
+				env: { SPEC_AI_JEV_CREDENTIAL_STORE: "keychain" },
 				run: fakeKeychain({ installed: false }).run,
 			}),
 		).rejects.toBeInstanceOf(SecretUnavailableError);
@@ -93,13 +93,13 @@ describe("choosing a backend", () => {
 
 	it("says on Windows that the keychain backend is not implemented there yet", async () => {
 		await expect(
-			selectSecretStore({ dir: temp(), platform: "win32", env: { MU_CREDENTIAL_STORE: "keychain" }, run: runTool }),
+			selectSecretStore({ dir: temp(), platform: "win32", env: { SPEC_AI_JEV_CREDENTIAL_STORE: "keychain" }, run: runTool }),
 		).rejects.toThrow(/not available on Windows yet/);
 	});
 
 	it("refuses a backend name it does not know, rather than guessing", async () => {
-		await expect(selectSecretStore({ dir: temp(), env: { MU_CREDENTIAL_STORE: "osx" } })).rejects.toThrow(
-			/MU_CREDENTIAL_STORE is "osx"/,
+		await expect(selectSecretStore({ dir: temp(), env: { SPEC_AI_JEV_CREDENTIAL_STORE: "osx" } })).rejects.toThrow(
+			/SPEC_AI_JEV_CREDENTIAL_STORE is "osx"/,
 		);
 	});
 

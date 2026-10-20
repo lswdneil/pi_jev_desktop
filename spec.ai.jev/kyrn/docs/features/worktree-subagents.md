@@ -21,11 +21,11 @@
    - 从不提交，从不暂存。
 8. **不碰用户的索引**。`--3way` 要经过索引：它要求被改的文件与索引一致，还会把结果暂存。用户的索引里可能正放着下一次提交的一半，所以合并在一个临时索引（`GIT_INDEX_FILE`）上做：先只把补丁涉及的路径按工作区现状同步进去，再应用。带 `--cached` 时它不改任何文件，这就是真正的“试运行”（`git apply --check` 做不到：对它来说三方合并出冲突不算失败）。
 9. **路径**。主模型写的指令里常带仓库的绝对路径，照着做会直接改到原仓库，隔离就白做了。所以交给子代理的指令里，仓库路径（两种写法：git 解析后的和会话实际所在的）都换成检出的路径，并附一句说明。
-10. **信任**。临时目录是一个从未被信任过的路径。它就是用户那个项目的副本，所以把主会话的信任结论原样传给子进程（`--approve` / `--no-approve`），不多给也不少给。用户的硬约束（`KYRN_SWARM_CONSTRAINTS`）照常传下去，子进程里的约束闸门照常生效。
+10. **信任**。临时目录是一个从未被信任过的路径。它就是用户那个项目的副本，所以把主会话的信任结论原样传给子进程（`--approve` / `--no-approve`），不多给也不少给。用户的硬约束（`SPEC_AI_JEV_SWARM_CONSTRAINTS`）照常传下去，子进程里的约束闸门照常生效。
 
 ## 什么时候不隔离
 
-没装 git、不在仓库里、裸仓库、还没有任何提交、正在 rebase / merge / cherry-pick / revert / bisect、`mu.json` 里关掉了、或者建检出失败：都退回原地修改，并在结果里写明原因（例如 `Not isolated (this directory is not in a git repository)`）。主会话本身在一个 detached 的 linked worktree 里（mu 自己的开发环境就是这样）是支持的，有测试。
+没装 git、不在仓库里、裸仓库、还没有任何提交、正在 rebase / merge / cherry-pick / revert / bisect、`agent.json` 里关掉了、或者建检出失败：都退回原地修改，并在结果里写明原因（例如 `Not isolated (this directory is not in a git repository)`）。主会话本身在一个 detached 的 linked worktree 里（mu 自己的开发环境就是这样）是支持的，有测试。
 
 ## 决策点 `swarm.patch`
 
@@ -36,7 +36,7 @@
 
 只有高置信的“否”才把文件标为无关；拿不准就不说。结果是给主代理看的一句话（`2 files in scope, 1 looks unrelated to the task: package-lock.json`），从不拦截。`shadow` 只记录不显示，`off` 不问，判定器不可用时兜底是什么都不说。能力类别 `relate`。
 
-## 选项（`mu.json` 的 `features.swarm`）
+## 选项（`agent.json` 的 `features.swarm`）
 
 | 键 | 默认 | 含义 |
 | --- | --- | --- |

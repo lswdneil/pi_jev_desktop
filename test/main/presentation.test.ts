@@ -12,9 +12,9 @@ import { fill, knowsCode, presentationText } from "../../src/shared/presentation
 describe("the table", () => {
 	it("uses the code's translation in the reader's language", () => {
 		const event = { code: "permissions.ask", params: { command: "rm -rf build" } };
-		expect(presentationText(event, "en")).toBe("mu wants to run rm -rf build. Allow it?");
-		expect(presentationText(event, "zh")).toBe("mu 想执行 rm -rf build，允许吗？");
-		expect(presentationText(event, "zh-TW")).toBe("mu 想執行 rm -rf build，允許嗎？");
+	expect(presentationText(event, "en")).toBe("spec.ai.jev wants to run rm -rf build. Allow it?");
+	expect(presentationText(event, "zh")).toBe("spec.ai.jev 想执行 rm -rf build，允许吗？");
+	expect(presentationText(event, "zh-TW")).toBe("spec.ai.jev 想執行 rm -rf build，允許嗎？");
 	});
 
 	it("falls back to the base language, then to English", () => {

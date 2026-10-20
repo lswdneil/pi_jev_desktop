@@ -38,8 +38,8 @@ class BadRequest(ValueError):
 
 
 def setting(name, default):
-    """`MU_<name>`, or the `KYRN_<name>` spelling from before the rename."""
-    return os.environ.get(f"MU_{name}") or os.environ.get(f"KYRN_{name}") or default
+    """`SPEC_AI_JEV_<name>`; no earlier spelling is read."""
+    return os.environ.get(f"SPEC_AI_JEV_{name}", default)
 
 
 def _text(value):

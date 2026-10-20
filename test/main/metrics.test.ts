@@ -14,7 +14,7 @@ import { describe, expect, it } from "vitest";
 import { roleOf } from "../../scripts/collect-metrics.mjs";
 
 const executable = "C:\\Users\\someone\\AppData\\Local\\Programs\\mu\\mu.exe";
-const harness = `${executable} C:\\Users\\someone\\AppData\\Local\\Programs\\mu\\resources\\harness\\mu-agent`;
+const harness = `${executable} C:\\Users\\someone\\AppData\\Local\\Programs\\mu\\resources\\harness\\spec-ai-agent`;
 
 describe("roleOf", () => {
 	it("reads Chromium's own role from the command line", () => {
@@ -24,7 +24,7 @@ describe("roleOf", () => {
 	});
 
 	it("tells the harness from the shell it lives in", () => {
-		expect(roleOf(`${executable} ${harness}\\kyrn\\bin\\mu.mjs --mode rpc`)).toBe("harness-launcher");
+		expect(roleOf(`${executable} ${harness}\\kyrn\\bin\\agent.mjs --mode rpc`)).toBe("harness-launcher");
 		expect(roleOf(`${harness}\\dist\\bundle\\cli.js -e ${harness}\\judge\\dist\\kyrn-judge.js --mode rpc`)).toBe("harness");
 	});
 

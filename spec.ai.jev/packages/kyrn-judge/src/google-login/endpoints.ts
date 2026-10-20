@@ -15,6 +15,6 @@ export const ANTIGRAVITY_ENDPOINTS = [
 	CLOUD_CODE_ENDPOINT,
 ] as const;
 
-/** Antigravity's backend checks the client's version; raise it with MU_ANTIGRAVITY_VERSION when Google raises the minimum. */
+/** Antigravity's backend checks the client's version; raise it with SPEC_AI_JEV_ANTIGRAVITY_VERSION when Google raises the minimum. */
 export const antigravityUserAgent = (env: (name: string) => string | undefined = (name) => process.env[name]) =>
-	`antigravity/${env("MU_ANTIGRAVITY_VERSION") || env("PI_AI_ANTIGRAVITY_VERSION") || "1.107.0"} darwin/arm64`;
+	`antigravity/${env("SPEC_AI_JEV_ANTIGRAVITY_VERSION") || env("PI_AI_ANTIGRAVITY_VERSION") || "1.107.0"} darwin/arm64`;

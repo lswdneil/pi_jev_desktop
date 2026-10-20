@@ -134,7 +134,7 @@ export function inheritConstraints(frame: Frame, texts: readonly string[]): Fram
 	return added.length === 0 ? frame : { ...frame, constraints: [...frame.constraints, ...added] };
 }
 
-/** What the parent put into `KYRN_SWARM_CONSTRAINTS`: a JSON list of sentences. Anything else is nothing. */
+/** What the parent put into `SPEC_AI_JEV_SWARM_CONSTRAINTS`: a JSON list of sentences. Anything else is nothing. */
 export function parseInheritedConstraints(raw: string | undefined): readonly string[] {
 	if (!raw) return [];
 	try {

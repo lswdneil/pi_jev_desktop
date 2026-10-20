@@ -33,14 +33,14 @@ import {
 /**
  * `mu setup`, the first thing a newcomer runs: which service a key belongs to, one request that shows the key works,
  * the model to start with, the judge, and then the files, each copied before it changes. pi's own files go through pi
- * (PiAccess: auth.json, settings.json); models.json, mu.json and the .env are written here. main.ts connects this to the
+ * (PiAccess: auth.json, settings.json); models.json, agent.json and the .env are written here. main.ts connects this to the
  * terminal and to pi; everything comes in as a parameter, so that the tests can run it whole.
  */
 
-/** The marker a "no" to the first-start question leaves in the agent folder; kyrn/bin/mu.mjs looks for the same name. */
+/** The marker a "no" to the first-start question leaves in the agent folder; kyrn/bin/agent.mjs looks for the same name. */
 export const SETUP_DECLINED_FILE = "setup-declined";
 
-/** Exit codes. `start`: done, and the person wants a session now, which the launcher then starts (kyrn/bin/mu.mjs). */
+/** Exit codes. `start`: done, and the person wants a session now, which the launcher then starts (kyrn/bin/agent.mjs). */
 export const SETUP_EXIT = { done: 0, failed: 1, usage: 2, start: 3, cancelled: 130 } as const;
 
 /** Options that take a value. The launcher keeps the same list: whatever else stands alone on the command line is a key. */
@@ -65,7 +65,7 @@ const SETUP_FLAGS: Readonly<Record<string, string>> = {
 };
 
 /** Where the `jev` judge finds its key, in the order it looks (registry.ts). */
-const JEV_KEY_NAMES = ["TYPESAFE_API_KEY", "MU_JUDGE_OPENROUTER_API_KEY", "AI_GATEWAY_API_KEY"] as const;
+const JEV_KEY_NAMES = ["TYPESAFE_API_KEY", "SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY", "AI_GATEWAY_API_KEY"] as const;
 const JEV_TIERS = new Set([
 	"jev",
 	"jev-direct",
@@ -137,7 +137,7 @@ export interface SetupDeps {
 	readonly stdinTerminal: boolean;
 	/** All of stdin, for --key-stdin. */
 	readonly readStdin: () => Promise<string>;
-	/** A key from the command line, which the launcher hands over in MU_SETUP_KEY rather than in the child's argv. */
+	/** A key from the command line, which the launcher hands over in SPEC_AI_JEV_SETUP_KEY rather than in the child's argv. */
 	readonly givenKey?: string;
 	/** Where the proxy for the check came from, when there is one ("HTTPS_PROXY", "settings.json"). */
 	readonly proxy?: string;
@@ -240,8 +240,8 @@ export function setupUsage(language: SetupLanguage): string {
 			"  --api, --name   服务 other 的接口（openai 或 anthropic）和它在 mu 里的名字",
 			"  --yes           不提问；替换已有的设置（订阅登录、同名服务的地址、Jev 密钥）",
 			"",
-			"会改动的文件：~/.mu/agent 里的 auth.json（密钥）、models.json、settings.json、mu.json，",
-			"以及 mu 读取的 .env（Jev 密钥）。每个文件改动前都会先复制到 ~/.mu/backups/<时间>/。",
+			"会改动的文件：~/.spec.ai.jev/agent 里的 auth.json（密钥）、models.json、settings.json、agent.json，",
+			"以及 mu 读取的 .env（Jev 密钥）。每个文件改动前都会先复制到 ~/.spec.ai.jev/backups/<时间>/。",
 		].join("\n");
 	}
 	return [
@@ -266,8 +266,8 @@ export function setupUsage(language: SetupLanguage): string {
 		"  --yes           no questions; replaces what is set up already (a subscription sign-in, a provider's",
 		"                  address, the Jev key)",
 		"",
-		"Files: auth.json (keys), models.json, settings.json and mu.json in ~/.mu/agent, and the .env mu reads",
-		"(the Jev key). Each is copied to ~/.mu/backups/<time>/ before it changes.",
+		"Files: auth.json (keys), models.json, settings.json and agent.json in ~/.spec.ai.jev/agent, and the .env mu reads",
+		"(the Jev key). Each is copied to ~/.spec.ai.jev/backups/<time>/ before it changes.",
 	].join("\n");
 }
 
@@ -1399,12 +1399,12 @@ class Setup {
 				);
 			}
 		}
-		const override = env.MU_JUDGE || env.KYRN_JUDGE;
+		const override = env.SPEC_AI_JEV_JUDGE;
 		if (override) {
 			notes.push(
 				this.t({
-					zh: `注意：环境变量 MU_JUDGE=${override} 比 mu.json 优先，由它决定判定器。`,
-					en: `Note: MU_JUDGE=${override} is set in your environment; it decides the judge over mu.json.`,
+					zh: `注意：环境变量 SPEC_AI_JEV_JUDGE=${override} 比 agent.json 优先，由它决定判定器。`,
+					en: `Note: SPEC_AI_JEV_JUDGE=${override} is set in your environment; it decides the judge over agent.json.`,
 				}),
 			);
 		}

@@ -64,7 +64,7 @@ export interface BundleManifest {
 }
 
 export interface BundleInput {
-	/** Where mu keeps its state (`~/.mu/agent`). */
+	/** Where mu keeps its state (`~/.spec.ai.jev/agent`). */
 	readonly agentDir: string;
 	/** Session files, for the verdicts. Defaults to `<agentDir>/sessions`. */
 	readonly sessionsDir?: string;
@@ -86,16 +86,16 @@ export interface BundlePlan {
 /** Variables whose *presence* is worth knowing when a judge does not answer. Values never leave. */
 const JUDGE_ENV = Object.freeze([
 	"TYPESAFE_API_KEY",
-	"MU_JUDGE_OPENROUTER_API_KEY",
+	"SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY",
 	"AI_GATEWAY_API_KEY",
 	"OPENCODE_API_KEY",
 	"CLOUDFLARE_API_KEY",
-	"MU_JUDGE_CLM_API_KEY",
-	"MU_JUDGE",
-	"MU_JUDGE_MODE",
-	"MU_JUDGE_CONSENT",
-	"MU_TELEMETRY",
-	"MU_OTEL",
+	"SPEC_AI_JEV_JUDGE_CLM_API_KEY",
+	"SPEC_AI_JEV_JUDGE",
+	"SPEC_AI_JEV_JUDGE_MODE",
+	"SPEC_AI_JEV_JUDGE_CONSENT",
+	"SPEC_AI_JEV_TELEMETRY",
+	"SPEC_AI_JEV_OTEL",
 ]);
 
 function bounded(text: string, limit: number, what: string): { content: string; truncation?: string } {
@@ -279,14 +279,14 @@ export function planBundle(input: BundleInput): BundlePlan {
 		)}\n`,
 	);
 
-	const muJson = readJson(join(input.agentDir, "mu.json")) ?? readJson(join(input.agentDir, "kyrn.json"));
+	const configJson = readJson(join(input.agentDir, "agent.json"));
 	push(
 		"config/settings.json",
 		`${JSON.stringify(
 			{
-				file: existsSync(join(input.agentDir, "mu.json")) ? "mu.json" : "kyrn.json",
-				exists: muJson !== undefined,
-				names: settingNames(muJson),
+				file: "agent.json",
+				exists: configJson !== undefined,
+				names: settingNames(configJson),
 			},
 			null,
 			2,

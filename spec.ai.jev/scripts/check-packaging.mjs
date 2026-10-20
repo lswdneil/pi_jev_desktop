@@ -47,7 +47,7 @@ const EXPECTED_TARGETS = { win: ["nsis"], mac: ["dmg", "zip"], linux: ["AppImage
 function resourcePathProblems(packaging, harnessSource, workflow, packageName) {
 	const problems = [];
 	const resources = Array.isArray(packaging.extraResources) ? packaging.extraResources : [];
-	// The copy is the folder that *holds* `mu-agent`, so that the package's own `node_modules` is a subdirectory of
+	// The copy is the folder that *holds* `spec-ai-agent`, so that the package's own `node_modules` is a subdirectory of
 	// what is copied: electron-builder skips the root `node_modules` of a source folder unconditionally, and a harness
 	// without `jiti` starts and then fails to load its judge extension.
 	const entry = resources.find((candidate) => candidate?.to === "harness");

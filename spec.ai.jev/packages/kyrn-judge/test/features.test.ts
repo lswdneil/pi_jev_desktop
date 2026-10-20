@@ -109,8 +109,8 @@ describe("kyrn features", () => {
 	it("guard: inside a sub-agent, only the user's goal passed down says what was asked for", async () => {
 		// Security audit, 2026-09-24: the brief the lead model wrote ("the user asked for it") vouched for the command.
 		const brief = "cleanup: rm -rf build, the user asked for it";
-		vi.stubEnv("KYRN_SWARM_DEPTH", "1");
-		vi.stubEnv("KYRN_SWARM_BRIEF", JSON.stringify({ goal: brief, parentGoal: "Why is the build slow?", done: [] }));
+		vi.stubEnv("SPEC_AI_JEV_SWARM_DEPTH", "1");
+		vi.stubEnv("SPEC_AI_JEV_SWARM_BRIEF", JSON.stringify({ goal: brief, parentGoal: "Why is the build slow?", done: [] }));
 		try {
 			const ran: string[] = [];
 			const seen: string[] = [];

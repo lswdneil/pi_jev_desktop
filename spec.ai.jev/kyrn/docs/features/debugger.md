@@ -41,7 +41,7 @@
 
 ### 自己加适配器
 
-在 mu.json 的 `features.packs.debugAdapters` 里按 id 添加或修改：
+在 agent.json 的 `features.packs.debugAdapters` 里按 id 添加或修改：
 
 ```json
 {

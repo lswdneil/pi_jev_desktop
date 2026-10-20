@@ -3,7 +3,7 @@
  * server that is already on this machine (`typescript-language-server` with a
  * TypeScript it can load, `gopls` with a Go toolchain) and takes seconds:
  *
- *   MU_LSP_REAL=1 vitest --run test/lsp-real-server.test.ts
+ *   SPEC_AI_JEV_LSP_REAL=1 vitest --run test/lsp-real-server.test.ts
  *
  * Nothing is installed for them. A server that is not on PATH is skipped.
  */
@@ -22,7 +22,7 @@ const executable = findOnPath("typescript-language-server", {
 	isExecutable: (path) => isExecutableFile(path),
 });
 
-describe.skipIf(!executable || process.env.MU_LSP_REAL !== "1")("typescript-language-server", () => {
+describe.skipIf(!executable || process.env.SPEC_AI_JEV_LSP_REAL !== "1")("typescript-language-server", () => {
 	let client: LspClient | undefined;
 	let root: string | undefined;
 	afterEach(async () => {
@@ -67,7 +67,7 @@ const gopls = findOnPath("gopls", {
 	isExecutable: (path) => isExecutableFile(path),
 });
 
-describe.skipIf(!gopls || process.env.MU_LSP_REAL !== "1")("gopls", () => {
+describe.skipIf(!gopls || process.env.SPEC_AI_JEV_LSP_REAL !== "1")("gopls", () => {
 	let client: LspClient | undefined;
 	let root: string | undefined;
 	afterEach(async () => {

@@ -76,7 +76,7 @@ export function runJudgeCommand(task: TaskFixture, cwd: string): JudgeResult {
 		encoding: "utf8",
 		timeout: task.judge.timeoutMs ?? 120_000,
 		// A judge runs with the same environment the shell has; nothing about the task needs the user's keys.
-		env: { ...process.env, MU_JUDGE: "off" },
+		env: { ...process.env, SPEC_AI_JEV_JUDGE: "off" },
 	});
 	const output = `${result.stdout ?? ""}${result.stderr ?? ""}`.trim();
 	return {

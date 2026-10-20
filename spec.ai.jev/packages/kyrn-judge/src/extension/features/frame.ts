@@ -243,7 +243,7 @@ export function registerFrame(runtime: KyrnRuntime): void {
 
 	const create = (ask: Ask) => {
 		// A sub-agent starts under what the user told its parent: the constraint gate holds there too.
-		const inherited = parseInheritedConstraints(process.env.KYRN_SWARM_CONSTRAINTS);
+		const inherited = parseInheritedConstraints(process.env.SPEC_AI_JEV_SWARM_CONSTRAINTS);
 		// Its goal is its part, not the whole message it was handed, and "done" is what the parent asked of the part.
 		const brief = parseBrief(process.env[BRIEF_ENV]);
 		const first = brief ? briefFrame(brief, ask.turn) : createFrame(asText(ask));

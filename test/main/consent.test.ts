@@ -66,7 +66,7 @@ describe("the state the screen shows", () => {
 		expect(state).toMatchObject({ granted: true, fromEnvironment: false, agreedAt: "2026-10-18T09:00:00.000Z" });
 	});
 
-	it("is granted for this run by MU_JUDGE_CONSENT=1, and says so", () => {
+	it("is granted for this run by SPEC_AI_JEV_JUDGE_CONSENT=1, and says so", () => {
 		const state = consentState(FILE, { [CONSENT_ENV]: "1" }, () => {
 			throw new Error("ENOENT");
 		});
@@ -87,7 +87,7 @@ describe("granting through the harness", () => {
 		const launches: { command: string; args: readonly string[] }[] = [];
 
 		const answer = runConsentCommand({
-			launch: { command: "/work/KYRN/kyrn/bin/mu.mjs", args: [], cwd: "/work/KYRN", env: {} },
+			launch: { command: "/work/spec.ai.jev/kyrn/bin/agent.mjs", args: [], cwd: "/work/spec.ai.jev", env: {} },
 			spawn: (launch) => {
 				launches.push(launch);
 				return process;
@@ -104,7 +104,7 @@ describe("granting through the harness", () => {
 	it("reports a refusal instead of pretending it worked", async () => {
 		const process = new FakeProcess();
 		const answer = runConsentCommand({
-			launch: { command: "mu", args: [], cwd: "/", env: {} },
+			launch: { command: "spec", args: [], cwd: "/", env: {} },
 			spawn: () => process,
 			action: "revoke",
 		});
@@ -117,7 +117,7 @@ describe("granting through the harness", () => {
 	it("gives up when the command never finishes", async () => {
 		const process = new FakeProcess();
 		const answer = runConsentCommand({
-			launch: { command: "mu", args: [], cwd: "/", env: {} },
+			launch: { command: "spec", args: [], cwd: "/", env: {} },
 			spawn: () => process,
 			action: "accept",
 			timeoutMs: 5,
@@ -129,7 +129,7 @@ describe("granting through the harness", () => {
 
 	it("reports a process that could not start", async () => {
 		const answer = runConsentCommand({
-			launch: { command: "mu", args: [], cwd: "/", env: {} },
+			launch: { command: "spec", args: [], cwd: "/", env: {} },
 			spawn: (launch) => {
 				void launch;
 				throw new Error("spawn mu ENOENT");

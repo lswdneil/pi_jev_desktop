@@ -20,7 +20,7 @@ describe("mid-stream correction (semantic TTSR)", () => {
 	const harnesses: Harness[] = [];
 	afterEach(() => {
 		while (harnesses.length > 0) harnesses.pop()?.cleanup();
-		delete process.env.KYRN_SWARM_CONSTRAINTS;
+		delete process.env.SPEC_AI_JEV_SWARM_CONSTRAINTS;
 	});
 
 	async function start(
@@ -147,7 +147,7 @@ describe("mid-stream correction (semantic TTSR)", () => {
 	});
 
 	it("holds the model to what the user ruled out in the task frame, and does nothing while switched off", async () => {
-		process.env.KYRN_SWARM_CONSTRAINTS = JSON.stringify(["不要提到竞品的名字"]);
+		process.env.SPEC_AI_JEV_SWARM_CONSTRAINTS = JSON.stringify(["不要提到竞品的名字"]);
 		const asked: string[] = [];
 		const harness = await start(
 			(request): Record<string, Answer> => {

@@ -43,81 +43,76 @@ function onDisk(paths: readonly string[], overrides: Partial<Parameters<typeof f
 describe("finding the harness", () => {
 	it("takes the environment variable first, even when a checkout is beside it", () => {
 		const harness = findHarness(
-			"/work/desktop-next",
-			onDisk(["/usr/local/mu/kyrn/bin/mu.mjs", "/work/KYRN/kyrn/bin/mu.mjs"], { env: { MU_ROOT: "/usr/local/mu" } }),
+			"/work/pi_jev_desktop",
+			onDisk(["/opt/spec/kyrn/bin/agent.mjs", "/work/pi_jev_desktop/spec.ai.jev/kyrn/bin/agent.mjs"], { env: { SPEC_AI_JEV_ROOT: "/opt/spec" } }),
 		);
-		expect(harness).toEqual({ root: "/usr/local/mu", layout: "repo", source: "env" });
-	});
-
-	it("reads the old KYRN_ROOT spelling too", () => {
-		const harness = findHarness("/work/desktop-next", onDisk(["/opt/mu/kyrn/bin/mu.mjs"], { env: { KYRN_ROOT: "/opt/mu" } }));
-		expect(harness).toMatchObject({ root: "/opt/mu", source: "env" });
+		expect(harness).toEqual({ root: "/opt/spec", layout: "repo", source: "env" });
 	});
 
 	it("takes the copy a packaged app carries in its resources folder", () => {
-		const bundled = bundledHarnessRoot("/Applications/mu.app/Contents/Resources", "darwin");
+		const bundled = bundledHarnessRoot("/Applications/spec.ai.jev.app/Contents/Resources", "darwin");
 		// The bundle is what makes it a package rather than a checkout: `layoutOf` looks for pi's bundle.
 		const harness = findHarness(
 			undefined,
-			onDisk([`${bundled}/kyrn/bin/mu.mjs`, `${bundled}/dist/bundle/cli.js`], {
+			onDisk([`${bundled}/kyrn/bin/agent.mjs`, `${bundled}/dist/bundle/cli.js`], {
 				platform: "darwin",
-				resourcesPath: "/Applications/mu.app/Contents/Resources",
+				resourcesPath: "/Applications/spec.ai.jev.app/Contents/Resources",
 			}),
 		);
 		expect(harness).toEqual({ root: bundled, layout: "package", source: "bundled" });
 	});
 
 	it("takes the runtime a checkout staged, before a sibling checkout", () => {
-		// `npm run stage:harness` writes exactly what a package carries; a clone that ran it needs no MU_ROOT and no
+		// `npm run stage:harness` writes exactly what a package carries; a clone that ran it needs no SPEC_AI_JEV_ROOT and no
 		// second checkout beside it.
-		const staged = "/work/pi_jev_desktop/resources/harness/mu-agent";
+		const staged = "/work/pi_jev_desktop/resources/harness/spec-ai-agent";
 		const harness = findHarness(
 			"/work/pi_jev_desktop",
-			onDisk([`${staged}/kyrn/bin/mu.mjs`, `${staged}/dist/bundle/cli.js`, "/work/KYRN/kyrn/bin/mu.mjs"]),
+			onDisk([`${staged}/kyrn/bin/agent.mjs`, `${staged}/dist/bundle/cli.js`, "/work/pi_jev_desktop/spec.ai.jev/kyrn/bin/agent.mjs"]),
 		);
 		expect(harness).toEqual({ root: staged, layout: "package", source: "bundled" });
 	});
 
-	it("still lets MU_ROOT win over the staged copy, for work on the runtime itself", () => {
-		const staged = "/work/pi_jev_desktop/resources/harness/mu-agent";
+	it("still lets SPEC_AI_JEV_ROOT win over the staged copy, for work on the runtime itself", () => {
+		const staged = "/work/pi_jev_desktop/resources/harness/spec-ai-agent";
 		const harness = findHarness(
 			"/work/pi_jev_desktop",
-			onDisk([`${staged}/kyrn/bin/mu.mjs`, "/opt/mu/kyrn/bin/mu.mjs"], { env: { MU_ROOT: "/opt/mu" } }),
+			onDisk([`${staged}/kyrn/bin/agent.mjs`, "/opt/spec/kyrn/bin/agent.mjs"], { env: { SPEC_AI_JEV_ROOT: "/opt/spec" } }),
 		);
-		expect(harness).toMatchObject({ root: "/opt/mu", source: "env" });
+		expect(harness).toMatchObject({ root: "/opt/spec", source: "env" });
 	});
 
-	it("finds a checkout two repositories side by side", () => {
-		const harness = findHarness("/work/desktop-next", onDisk(["/work/KYRN/kyrn/bin/mu.mjs"]));
-		expect(harness).toEqual({ root: "/work/KYRN", layout: "repo", source: "beside" });
+	it("finds the vendored checkout", () => {
+		const harness = findHarness("/work/pi_jev_desktop", onDisk(["/work/pi_jev_desktop/spec.ai.jev/kyrn/bin/agent.mjs"]));
+		expect(harness).toEqual({ root: "/work/pi_jev_desktop/spec.ai.jev", layout: "repo", source: "beside" });
 	});
 
-	it("follows mu on PATH to the folder it belongs to", () => {
+	it("follows spec on PATH to the folder it belongs to", () => {
 		const fileSystem = onDisk([
-			"/usr/local/bin/mu",
-			"/usr/local/lib/node_modules/mu-agent/kyrn/bin/mu.mjs",
-			"/usr/local/lib/node_modules/mu-agent/dist/bundle/cli.js",
+			"/usr/local/bin/spec",
+			"/usr/local/lib/node_modules/spec-ai-agent/kyrn/bin/agent.mjs",
+			"/usr/local/lib/node_modules/spec-ai-agent/dist/bundle/cli.js",
 		]);
 		const harness = findHarness(
-			"/work/desktop-next",
-			{ ...fileSystem, env: { PATH: "/usr/bin:/usr/local/bin" }, real: () => "/usr/local/lib/node_modules/mu-agent/kyrn/bin/mu.mjs" },
+			"/work/pi_jev_desktop",
+			{ ...fileSystem, env: { PATH: "/usr/bin:/usr/local/bin" }, real: () => "/usr/local/lib/node_modules/spec-ai-agent/kyrn/bin/agent.mjs" },
 		);
-		expect(harness).toMatchObject({ root: "/usr/local/lib/node_modules/mu-agent", layout: "package", source: "global" });
+		expect(harness).toMatchObject({ root: "/usr/local/lib/node_modules/spec-ai-agent", layout: "package", source: "global" });
 	});
 
 	it("finds a global node_modules install when PATH says nothing", () => {
 		const harness = findHarness(
-			"/work/desktop-next",
-			onDisk(["/opt/homebrew/lib/node_modules/mu-agent/kyrn/bin/mu.mjs"]),
+			"/work/pi_jev_desktop",
+			onDisk(["/opt/homebrew/lib/node_modules/spec-ai-agent/kyrn/bin/agent.mjs"]),
 		);
-		expect(harness).toMatchObject({ root: "/opt/homebrew/lib/node_modules/mu-agent", source: "global" });
+		expect(harness).toMatchObject({ root: "/opt/homebrew/lib/node_modules/spec-ai-agent", source: "global" });
 	});
 
 	it("returns nothing when there is no harness, and says where it should have been", () => {
-		expect(findHarness("/work/desktop-next", onDisk([]))).toBeUndefined();
-		expect(expectedHarness("/work/desktop-next", undefined, "linux")).toEqual({ root: "/work/KYRN", layout: "repo" });
+		expect(findHarness("/work/pi_jev_desktop", onDisk([]))).toBeUndefined();
+		expect(expectedHarness("/work/pi_jev_desktop", undefined, "linux")).toEqual({ root: "/work/pi_jev_desktop/spec.ai.jev", layout: "repo" });
 		expect(expectedHarness(undefined, "/resources", "linux")).toEqual({
-			root: "/resources/harness/mu-agent",
+			root: "/resources/harness/spec-ai-agent",
 			layout: "package",
 		});
 	});
@@ -125,27 +120,27 @@ describe("finding the harness", () => {
 
 describe("starting it", () => {
 	it("uses the bash forwarder of a checkout on macOS and Linux", () => {
-		expect(launcherOf({ root: "/work/KYRN", layout: "repo" }, "linux")).toBe("/work/KYRN/kyrn/bin/kyrn");
+		expect(launcherOf({ root: "/work/pi_jev_desktop/spec.ai.jev", layout: "repo" }, "linux")).toBe("/work/pi_jev_desktop/spec.ai.jev/kyrn/bin/spec");
 		// Windows has no bash: the Node launcher, run on the app's own binary.
-		expect(launcherOf({ root: "C:\\mu", layout: "repo" }, "win32")).toBe("C:\\mu\\kyrn\\bin\\mu.mjs");
+		expect(launcherOf({ root: "C:\\mu", layout: "repo" }, "win32")).toBe("C:\\mu\\kyrn\\bin\\agent.mjs");
 	});
 
 	it("runs the launcher on its own binary as Node when there is no node on PATH", () => {
 		const packaged = launchCommand(
-			{ root: "/resources/harness/mu-agent", layout: "package" },
-			{ platform: "darwin", processExecPath: "/Applications/mu.app/Contents/MacOS/mu", packaged: true },
+			{ root: "/resources/harness/spec-ai-agent", layout: "package" },
+			{ platform: "darwin", processExecPath: "/Applications/spec.ai.jev.app/Contents/MacOS/spec", packaged: true },
 		);
-		expect(packaged.command).toBe("/Applications/mu.app/Contents/MacOS/mu");
-		expect(packaged.args).toEqual(["/resources/harness/mu-agent/kyrn/bin/mu.mjs"]);
+		expect(packaged.command).toBe("/Applications/spec.ai.jev.app/Contents/MacOS/spec");
+		expect(packaged.args).toEqual(["/resources/harness/spec-ai-agent/kyrn/bin/agent.mjs"]);
 		expect(packaged.env).toEqual({ ELECTRON_RUN_AS_NODE: "1" });
 	});
 
 	it("keeps the checkout's own forwarder in development", () => {
 		const development = launchCommand(
-			{ root: "/work/KYRN", layout: "repo" },
+			{ root: "/work/pi_jev_desktop/spec.ai.jev", layout: "repo" },
 			{ platform: "linux", processExecPath: "/usr/bin/node", packaged: false },
 		);
-		expect(development).toEqual({ command: "/work/KYRN/kyrn/bin/kyrn", args: [], env: {} });
+		expect(development).toEqual({ command: "/work/pi_jev_desktop/spec.ai.jev/kyrn/bin/spec", args: [], env: {} });
 	});
 });
 
@@ -156,10 +151,10 @@ describe("the small pieces", () => {
 		expect(nodeVersionOk("v24.13.0")).toBe(true);
 	});
 
-	it("keeps the .env of a checkout in the checkout, and a package's in mu's home", () => {
-		expect(envFileOf({ root: "/work/KYRN", layout: "repo" }, "/home/ada", "linux")).toBe("/work/KYRN/.env");
-		expect(envFileOf({ root: "/usr/local/lib/node_modules/mu-agent", layout: "package" }, "/home/ada", "linux")).toBe(
-			"/home/ada/.env",
+	it("keeps the .env of a checkout in the checkout, and a package's in spec's home", () => {
+		expect(envFileOf({ root: "/work/pi_jev_desktop/spec.ai.jev", layout: "repo" }, "/home/ada", "linux")).toBe("/work/pi_jev_desktop/spec.ai.jev/.env");
+		expect(envFileOf({ root: "/usr/local/lib/node_modules/spec-ai-agent", layout: "package" }, "/home/ada", "linux")).toBe(
+			"/home/ada/.spec.ai.jev/.env",
 		);
 	});
 

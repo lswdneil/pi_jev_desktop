@@ -90,20 +90,20 @@ jobs:
         run: npm run budget
 
       # The harness the app starts: the npm package built from this repository, staged where electron-builder looks
-      # (`extraResources`). `build.mjs` writes `.artifacts/npm/mu-agent`; electron-builder reads the folder that holds
+      # (`extraResources`). `build.mjs` writes `.artifacts/npm/spec-ai-agent`; electron-builder reads the folder that holds
       # it, `.artifacts/desktop-harness`, so the package is moved rather than built twice.
       - name: Stage the harness
         run: |
           node kyrn/npm/build.mjs
           mkdir -p .artifacts/desktop-harness
-          mv .artifacts/npm/mu-agent .artifacts/desktop-harness/mu-agent
+          mv .artifacts/npm/spec-ai-agent .artifacts/desktop-harness/spec-ai-agent
         shell: bash
 
       # The harness's own dependencies (`jiti` loads the judge extension, `chord`, `photon-node`): the npm package
-      # declares them and a `mu-agent` install gets them from npm, but the app carries a folder, so they are installed
+      # declares them and a `spec-ai-agent` install gets them from npm, but the app carries a folder, so they are installed
       # into the folder here. Without this the packaged agent exits with "Cannot find module 'jiti'".
       - name: Install the harness's dependencies
-        working-directory: .artifacts/desktop-harness/mu-agent
+        working-directory: .artifacts/desktop-harness/spec-ai-agent
         run: npm install --omit=dev --ignore-scripts --no-package-lock --no-audit --no-fund
 
       - name: Package
@@ -139,10 +139,10 @@ jobs:
         # that cannot update. The private key is the owner's; without it this says so instead of failing, and the app
         # cannot update anyway while `UPDATE_PUBLIC_KEY` is empty.
         env:
-          MU_UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+          SPEC_AI_JEV_UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
         shell: bash
         run: |
-          if [ -z "${MU_UPDATE_SIGNING_KEY}" ]; then
+          if [ -z "${SPEC_AI_JEV_UPDATE_SIGNING_KEY}" ]; then
             echo "::warning::no UPDATE_SIGNING_KEY secret, so no installer carries an update signature"
           else
             node scripts/sign-installers.mjs desktop-next/dist

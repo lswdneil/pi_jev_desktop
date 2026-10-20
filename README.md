@@ -36,8 +36,8 @@ The product specification and clickable design prototype live in `docs/`.
 
 The runtime source lives in this repository under `spec.ai.jev/` (`packages/`, `kyrn/`, `scripts/`, `docs/`). A build
 of it lands in `spec.ai.jev/.artifacts/desktop-harness`, and `npm run stage:harness` copies that into
-`resources/harness/mu-agent`, which is what both development and the installer run. `SPEC_AI_JEV_ROOT` names a different
-checkout and wins over everything else; the historical `MU_ROOT` is still read for compatibility.
+`resources/harness/spec-ai-agent`, which is what both development and the installer run. `SPEC_AI_JEV_ROOT` names a different
+checkout and wins over everything else.
 
 ```powershell
 npm install --ignore-scripts
@@ -48,11 +48,11 @@ npm run dev
 ```
 
 ```powershell
-npm run stage:harness   # copies the built runtime into resources/harness/mu-agent (git-ignored)
+npm run stage:harness   # copies the built runtime into resources/harness/spec-ai-agent (git-ignored)
 npm run dev             # no environment variable needed once that folder exists
 ```
 
-`SPEC_AI_JEV_WORKSPACE` selects the initial project folder (`MU_WORKSPACE` still works). Without it, a repository checkout starts in its own root and a
+`SPEC_AI_JEV_WORKSPACE` selects the initial project folder. Without it, a repository checkout starts in its own root and a
 packaged app starts in the user's home folder.
 
 The Electron tests use a local fixture by default. To exercise the real runtime checkout:
@@ -98,8 +98,8 @@ npm run package             # the installer: dist/spec.ai.jev-<version>-x64.exe
 node scripts/install-rehearsal.mjs   # silent install, a real turn, uninstall
 ```
 
-`scripts/stage-harness.mjs` copies the built runtime package into `resources/harness/mu-agent` (~34 MB, git-ignored);
-it accepts `--from <folder>` and `MU_HARNESS_ROOT` when the runtime lives somewhere else.
+`scripts/stage-harness.mjs` copies the built runtime package into `resources/harness/spec-ai-agent` (~34 MB, git-ignored);
+it accepts `--from <folder>` and `SPEC_AI_JEV_HARNESS_ROOT` when the runtime lives somewhere else.
 
 `.github/workflows/desktop-package.yml` builds the same installer on Windows; `docs/release.md` is the runbook (CI,
 signing secrets, the update key, and when a draft becomes a release).

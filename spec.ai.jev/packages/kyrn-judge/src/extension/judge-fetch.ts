@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events";
 import * as undici from "undici";
-import { muEnv } from "../naming.ts";
+import { specEnv } from "../naming.ts";
 
 /** How long an idle connection to a judge stays open. Between two tool calls the model thinks for longer than Node's 4 s. */
 export const JUDGE_KEEP_ALIVE_MS = 60_000;
@@ -10,7 +10,7 @@ export const JUDGE_FAILURES_BEFORE_RECONNECT = 2;
 
 export interface JudgeFetch {
 	readonly fetch: typeof fetch;
-	/** Whether HTTP/2 is offered to the judge. `MU_JUDGE_HTTP2=off` keeps to HTTP/1.1, for a proxy that cannot carry it. */
+	/** Whether HTTP/2 is offered to the judge. `SPEC_AI_JEV_JUDGE_HTTP2=off` keeps to HTTP/1.1, for a proxy that cannot carry it. */
 	readonly http2: boolean;
 	close(): Promise<void>;
 }
@@ -48,7 +48,7 @@ export function createJudgeFetch(
 	options: { keepAliveMs?: number; http2?: boolean; failuresBeforeReconnect?: number; h2c?: boolean } = {},
 ): JudgeFetch {
 	const keepAliveMs = options.keepAliveMs ?? JUDGE_KEEP_ALIVE_MS;
-	const http2 = options.http2 ?? muEnv("JUDGE_HTTP2") !== "off";
+	const http2 = options.http2 ?? specEnv("JUDGE_HTTP2") !== "off";
 	const failuresBeforeReconnect = options.failuresBeforeReconnect ?? JUDGE_FAILURES_BEFORE_RECONNECT;
 	const connect = (): undici.Dispatcher => {
 		const dispatcher = new undici.EnvHttpProxyAgent({

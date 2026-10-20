@@ -137,7 +137,7 @@ export function registerMemory(runtime: KyrnRuntime, roots?: HarnessRoots): void
 		applied: true,
 	});
 	// A sub-agent keeps no lessons: its brief brings the ones that apply, and what it learned goes back in its report.
-	if (!options.enabled || process.env.KYRN_SWARM_DEPTH) return;
+	if (!options.enabled || process.env.SPEC_AI_JEV_SWARM_DEPTH) return;
 	const { pi } = runtime;
 	// A caller that owns the setup and named no home gets a store that lasts as long as the session.
 	const store = new LessonStore(options.path || (roots ? join(roots.agentDir, "mu", "lessons.jsonl") : undefined));

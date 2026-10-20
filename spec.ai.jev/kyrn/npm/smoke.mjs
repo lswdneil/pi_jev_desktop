@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// After `npm i -g mu-agent`: does the installed `mu` run, does it load the judgment layer, do `mu auth`,
-// `mu import` and `mu setup` answer?
+// After `npm i -g spec-ai-agent`: does the installed `spec` run, does it load the judgment layer, do `spec auth`,
+// `spec import` and `spec setup` answer?
 //
-//   node kyrn/npm/smoke.mjs [the mu command]
+//   node kyrn/npm/smoke.mjs [the spec command]
 //
-// Runs in a throwaway home with no keys, so nothing is read from or written to the real ~/.mu and no model can
+// Runs in a throwaway home with no keys, so nothing is read from or written to the real ~/.spec.ai.jev and no model can
 // be called. The judgment layer is checked over RPC: its commands, prompt templates and skills are listed
 // without a turn being taken.
 import { spawn, spawnSync } from "node:child_process";
@@ -12,11 +12,11 @@ import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const mu = process.argv[2] ?? "mu";
+const spec = process.argv[2] ?? "spec";
 const windows = process.platform === "win32";
-const home = mkdtempSync(join(tmpdir(), "mu-smoke-"));
+const home = mkdtempSync(join(tmpdir(), "spec-smoke-"));
 const env = { PATH: process.env.PATH ?? process.env.Path, HOME: home, USERPROFILE: home, TERM: "dumb", PI_OFFLINE: "1" };
-// What Windows itself needs to start programs, and where `mu doctor` looks for a browser there.
+// What Windows itself needs to start programs, and where `spec doctor` looks for a browser there.
 for (const name of [
 	"SystemRoot",
 	"SYSTEMROOT",
@@ -32,7 +32,7 @@ for (const name of [
 ]) {
 	if (process.env[name]) env[name] = process.env[name];
 }
-// npm's `mu` is a .cmd shim on Windows, which only a shell can start; every argument here is fixed.
+// npm's `spec` is a .cmd shim on Windows, which only a shell can start; every argument here is fixed.
 const options = { env, cwd: home, encoding: "utf8", shell: windows, timeout: 120_000 };
 
 const failures = [];
@@ -41,36 +41,36 @@ function check(name, ok, detail) {
 	if (!ok) failures.push(name);
 }
 
-const version = spawnSync(mu, ["version"], options);
-check("mu version", version.status === 0 && /^mu \d+\.\d+\.\d+ \(pi \d/.test(version.stdout), version.stdout.trim() || version.stderr.trim());
+const version = spawnSync(spec, ["version"], options);
+check("spec version", version.status === 0 && /^spec \d+\.\d+\.\d+ \(pi \d/.test(version.stdout), version.stdout.trim() || version.stderr.trim());
 
-const help = spawnSync(mu, ["--help"], options);
-check("mu --help", help.status === 0 && help.stdout.includes("mu command line") && help.stdout.includes("Agent flags"));
+const help = spawnSync(spec, ["--help"], options);
+check("spec --help", help.status === 0 && help.stdout.includes("spec command line") && help.stdout.includes("Agent flags"));
 
 // Without a login, doctor has something to fix and says so with exit code 1; the package row must be fine.
-const doctor = spawnSync(mu, ["doctor"], options);
+const doctor = spawnSync(spec, ["doctor"], options);
 console.log(doctor.stdout.trimEnd().replace(/^/gm, "     "));
-check("mu doctor", /^\s*ok\s+package\s/m.test(doctor.stdout), doctor.stderr.trim());
+check("spec doctor", /^\s*ok\s+package\s/m.test(doctor.stdout), doctor.stderr.trim());
 
-// `mu doctor --bundle` runs a kernel entry the launcher looks for *inside the package*. It was missing once: the
+// `spec doctor --bundle` runs a kernel entry the launcher looks for *inside the package*. It was missing once: the
 // package carried the code under a flat `judge/dist/`, the doctor asked for `judge/dist/setup/bundle-cli.js`, and every
-// installed mu answered "this mu does not carry the kernel build". The same shape of gap as the key store entry above,
+// installed spec answered "this spec does not carry the kernel build". The same shape of gap as the key store entry above,
 // so it is checked here, in the layout a person installs.
-const bundle = spawnSync(mu, ["doctor", "--bundle", "--dry-run"], options);
+const bundle = spawnSync(spec, ["doctor", "--bundle", "--dry-run"], options);
 check(
-	"mu doctor --bundle --dry-run",
+	"spec doctor --bundle --dry-run",
 	bundle.status === 0 && /would include \d+ files plus manifest\.json/.test(bundle.stdout) && /archive listing: .*manifest\.json/.test(bundle.stdout),
 	bundle.stdout.trim() || bundle.stderr.trim(),
 );
 
 // The desktop app's sign-in: one JSON line that offers pi's own subscriptions, and nobody signed in yet.
-const auth = spawnSync(mu, ["auth", "status"], options);
+const auth = spawnSync(spec, ["auth", "status"], options);
 let status;
 try {
 	status = JSON.parse(auth.stdout.trim().split("\n").at(-1));
 } catch {}
 check(
-	"mu auth status",
+	"spec auth status",
 	auth.status === 0 &&
 		status?.type === "status" &&
 		["openai-codex", "anthropic", "xai"].every((provider) => status.offered.includes(provider)) &&
@@ -78,43 +78,43 @@ check(
 	auth.stdout.trim() || auth.stderr.trim(),
 );
 
-// `mu migrate --credentials` runs the other kernel entry the launcher finds inside the package. A dry run writes
+// `spec migrate --credentials` runs the other kernel entry the launcher finds inside the package. A dry run writes
 // nothing, so a throwaway home with no `.env` is the safest possible argument: it proves the entry is there and answers.
-const migrate = spawnSync(mu, ["migrate", "--credentials", "--dry-run"], options);
+const migrate = spawnSync(spec, ["migrate", "--credentials", "--dry-run"], options);
 check(
-	"mu migrate --credentials --dry-run",
+	"spec migrate --credentials --dry-run",
 	migrate.status === 0 && /dry run: nothing was written/.test(migrate.stdout),
 	migrate.stdout.trim() || migrate.stderr.trim(),
 );
 
 // The importer runs on Node alone; the throwaway home has no Claude Code or Codex conversation to list.
-const imports = spawnSync(mu, ["import", "--list", "--json"], options);
+const imports = spawnSync(spec, ["import", "--list", "--json"], options);
 let found;
 try {
 	found = JSON.parse(imports.stdout);
 } catch {}
 check(
-	"mu import --list",
+	"spec import --list",
 	imports.status === 0 && Array.isArray(found?.conversations) && found.conversations.length === 0,
 	imports.stderr.trim() || imports.stdout.trim().slice(0, 300),
 );
 
 // The setup wizard starts with pi's bundle behind it; its help tells scripts to give the key on stdin. No key is checked.
-const setupHelp = spawnSync(mu, ["setup", "--help"], options);
+const setupHelp = spawnSync(spec, ["setup", "--help"], options);
 check(
-	"mu setup --help",
+	"spec setup --help",
 	setupHelp.status === 0 && setupHelp.stdout.includes("--key-stdin"),
 	setupHelp.stderr.trim() || setupHelp.stdout.trim().slice(0, 300),
 );
 
-// Within the heap of a 1 GB server. mu 0.1.3 transpiled the judgment layer with Babel at every start, which took
+// Within the heap of a 1 GB server. spec 0.1.3 transpiled the judgment layer with Babel at every start, which took
 // more than 500 MB, and there V8 aborted before the first frame. A transpiled copy is cached in the temp folder, and
 // with one from an earlier run 0.1.3 passed here, so the temp folder is a new one.
 const temp = join(home, "tmp");
 mkdirSync(temp);
 const heapCap = { ...env, NODE_OPTIONS: "--max-old-space-size=200", TMPDIR: temp, TMP: temp, TEMP: temp };
 const rpc = await new Promise((resolve) => {
-	const child = spawn(mu, ["--mode", "rpc", "--no-session"], { ...options, env: heapCap, stdio: ["pipe", "pipe", "pipe"] });
+	const child = spawn(spec, ["--mode", "rpc", "--no-session"], { ...options, env: heapCap, stdio: ["pipe", "pipe", "pipe"] });
 	let out = "";
 	let err = "";
 	const seen = {};
@@ -140,7 +140,7 @@ const rpc = await new Promise((resolve) => {
 				if (!message.success) return done({ error: message.error });
 				seen.names = message.data.commands.map((command) => `${command.source}:${command.name}`);
 			}
-			// /help answers with a notice whose first line names mu's version and pi's, as the welcome screen does.
+			// /help answers with a notice whose first line names spec's version and pi's, as the welcome screen does.
 			if (message.type === "extension_ui_request" && message.method === "notify" && String(message.message).includes("judgment-first")) {
 				seen.help = String(message.message).split("\n")[0];
 			}
@@ -159,7 +159,7 @@ const rpc = await new Promise((resolve) => {
 	child.stdin.write(`${JSON.stringify({ id: "help", type: "prompt", message: "/help" })}\n`);
 });
 const names = rpc.names ?? [];
-const expected = ["extension:board", "extension:goal", "extension:permissions", "prompt:implement", "skill:skill:mu-browser"];
+const expected = ["extension:board", "extension:goal", "extension:permissions", "prompt:implement", "skill:skill:spec-browser"];
 check(
 	"judgment layer loaded in a 200 MB heap (RPC get_commands)",
 	rpc.names !== undefined && expected.every((name) => names.includes(name)),
@@ -167,10 +167,10 @@ check(
 		? rpc.error
 		: `${names.length} commands, ${expected.filter((name) => !names.includes(name)).join(", ") || "all expected ones"} ${expected.every((name) => names.includes(name)) ? "present" : "missing"}`,
 );
-// mu 0.1.3 said "mu 0.1.0 · …, built on pi 0.1.3": its judgment layer's own version, and pi's, read from mu-agent's folder.
-const versions = /^mu (\S+) \(pi ([^,)]+)/.exec(version.stdout.trim());
-const greeting = versions ? `mu ${versions[1]} · judgment-first coding agent, built on pi ${versions[2]}` : undefined;
-check("/help names mu's version and pi's, as mu version does", greeting !== undefined && rpc.help === greeting, rpc.help ?? rpc.error);
+// spec 0.1.3 said "spec 0.1.0 · …, built on pi 0.1.3": its judgment layer's own version, and pi's, read from spec-ai-agent's folder.
+const versions = /^spec (\S+) \(pi ([^,)]+)/.exec(version.stdout.trim());
+const greeting = versions ? `spec ${versions[1]} · judgment-first coding agent, built on pi ${versions[2]}` : undefined;
+check("/help names spec's version and pi's, as spec version does", greeting !== undefined && rpc.help === greeting, rpc.help ?? rpc.error);
 
 try {
 	rmSync(home, { recursive: true, force: true });
@@ -181,4 +181,4 @@ if (failures.length > 0) {
 	console.error(`\n${failures.length} check(s) failed: ${failures.join(", ")}`);
 	process.exit(1);
 }
-console.log("\nThe installed mu runs and loads the judgment layer.");
+console.log("\nThe installed spec runs and loads the judgment layer.");

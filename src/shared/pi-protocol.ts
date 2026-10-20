@@ -4,7 +4,7 @@
 /**
  * The subset of pi's JSONL protocol used by this shell.
  *
- * The runtime remains mu/pi; these structural types keep the standalone desktop build independent of a local checkout.
+ * The runtime remains spec.ai.jev/pi; these structural types keep the standalone desktop build independent of a local checkout.
  * When the upstream protocol changes, update this file and the reducer/supervisor together.
  */
 

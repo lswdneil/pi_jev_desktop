@@ -10,7 +10,7 @@ import { resolveAppRequest } from "../../src/main/app-protocol.ts";
  * pure function: they are the ones worth testing, and testing them does not need a window.
  */
 
-const RENDERER_ROOT = "/work/desktop-next/out/renderer";
+const RENDERER_ROOT = "/work/pi_jev_desktop/out/renderer";
 
 describe("serving the build", () => {
 	it("serves the page at the root", () => {
@@ -47,7 +47,7 @@ describe("serving the build", () => {
 	});
 
 	it("serves from a Windows build folder with Windows separators", () => {
-		const root = "C:\\work\\desktop-next\\out\\renderer";
+		const root = "C:\\work\\pi_jev_desktop\\out\\renderer";
 		expect(resolveAppRequest("app://spec/assets/index.js", root, "win32")).toEqual({
 			kind: "file",
 			file: win32.join(root, "assets", "index.js"),
@@ -92,7 +92,7 @@ describe("what it refuses", () => {
 	});
 
 	it("refuses a Windows drive or an alternate data stream in the path", () => {
-		const root = "C:\\work\\desktop-next\\out\\renderer";
+		const root = "C:\\work\\pi_jev_desktop\\out\\renderer";
 		expect(resolveAppRequest("app://spec/C:/Windows/win.ini", root, "win32")).toMatchObject({ kind: "refused", status: 403 });
 		expect(resolveAppRequest("app://spec/assets/app.js%3Astream", root, "win32")).toMatchObject({
 			kind: "refused",

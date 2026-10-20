@@ -10,7 +10,7 @@ mu 的版本把“发现写偏”换成判定器：每输出一段，就拿输�
 
 ## 2. 怎么开
 
-`mu.json`：
+`agent.json`：
 
 ```json
 { "features": { "ttsr": { "enabled": true, "rules": ["用中文回答"] } } }

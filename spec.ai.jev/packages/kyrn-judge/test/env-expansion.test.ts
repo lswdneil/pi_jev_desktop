@@ -8,7 +8,7 @@ import { envFileValue, expandEnvValue, resolveEnvValue } from "../src/setup/env-
  * This is the bug the expansion exists for: the wizard used to write an API key into `.env` verbatim, so a
  * value written as a reference was stored as five characters of literal text, `Boolean(value)` said "a key is
  * set", and every request then failed. The rules are pi's (`resolveConfigValue`), and a test below holds the
- * two implementations to the same answers so a `.env` and a `mu.json` cannot disagree about what a reference
+ * two implementations to the same answers so a `.env` and a `agent.json` cannot disagree about what a reference
  * means.
  *
  * The references are built from parts rather than spelled out, because a source file that contains a

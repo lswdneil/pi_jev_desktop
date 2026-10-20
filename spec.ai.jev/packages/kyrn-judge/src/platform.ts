@@ -16,7 +16,7 @@ export interface HostFacts {
 
 /**
  * WSL is Linux with a Windows next to it. Its own variable says so, and so does its kernel (a shell started
- * without the variable, say by a service, still runs on it). kyrn/bin/mu.mjs has the same rule as `detectWsl`.
+ * without the variable, say by a service, still runs on it). kyrn/bin/agent.mjs has the same rule as `detectWsl`.
  */
 export function isWsl({ platform, env, procVersion }: HostFacts): boolean {
 	if (platform !== "linux") return false;

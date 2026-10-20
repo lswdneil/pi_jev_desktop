@@ -7,13 +7,13 @@ import { createTelemetryContext, NOOP_TELEMETRY_CONTEXT, OtlpTelemetryContext, t
 describe("telemetry mode", () => {
 	it("is local by default and never remote unless asked twice", () => {
 		expect(telemetryMode({})).toBe("jsonl");
-		expect(telemetryMode({ MU_TELEMETRY: "jsonl" })).toBe("jsonl");
-		expect(telemetryMode({ MU_TELEMETRY: "off" })).toBe("off");
-		expect(telemetryMode({ MU_TELEMETRY: "none" })).toBe("off");
+		expect(telemetryMode({ SPEC_AI_JEV_TELEMETRY: "jsonl" })).toBe("jsonl");
+		expect(telemetryMode({ SPEC_AI_JEV_TELEMETRY: "off" })).toBe("off");
+		expect(telemetryMode({ SPEC_AI_JEV_TELEMETRY: "none" })).toBe("off");
 		// A collector address in the environment is not consent to use it.
-		expect(telemetryMode({ MU_OTEL: "1" })).toBe("otlp");
-		expect(telemetryMode({ MU_TELEMETRY: "otlp" })).toBe("off");
-		expect(telemetryMode({ MU_TELEMETRY: "otlp", MU_OTEL: "1" })).toBe("otlp");
+		expect(telemetryMode({ SPEC_AI_JEV_OTEL: "1" })).toBe("otlp");
+		expect(telemetryMode({ SPEC_AI_JEV_TELEMETRY: "otlp" })).toBe("off");
+		expect(telemetryMode({ SPEC_AI_JEV_TELEMETRY: "otlp", SPEC_AI_JEV_OTEL: "1" })).toBe("otlp");
 	});
 });
 
@@ -29,7 +29,7 @@ describe("createTelemetryContext", () => {
 	});
 
 	it("hands back the noop context when telemetry is off", async () => {
-		const handle = createTelemetryContext({ env: { MU_TELEMETRY: "off" }, dir });
+		const handle = createTelemetryContext({ env: { SPEC_AI_JEV_TELEMETRY: "off" }, dir });
 		expect(handle.mode).toBe("off");
 		expect(handle.context).toBe(NOOP_TELEMETRY_CONTEXT);
 		await handle.close();

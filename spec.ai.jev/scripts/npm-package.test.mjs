@@ -19,7 +19,7 @@ import { test } from "node:test";
 const ROOT = join(import.meta.dirname, "..");
 const BUILD = join(ROOT, "kyrn", "npm", "build.mjs");
 /** The two programs that run *inside* the installed package and reach for the kernel's built entries by path. */
-const CONSUMERS = [join(ROOT, "kyrn", "bin", "kyrn-doctor"), join(ROOT, "kyrn", "bin", "mu.mjs")];
+const CONSUMERS = [join(ROOT, "kyrn", "bin", "kyrn-doctor"), join(ROOT, "kyrn", "bin", "agent.mjs")];
 
 /** The entry names the package build writes into `judge/dist/`. */
 export function bundledJudgeEntries(buildSource) {

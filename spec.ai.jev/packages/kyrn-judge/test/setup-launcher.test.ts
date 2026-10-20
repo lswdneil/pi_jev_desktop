@@ -16,16 +16,16 @@ import {
 	SETUP_EXIT_START,
 	SETUP_VALUE_FLAGS,
 	usage,
-} from "../../../kyrn/bin/mu.mjs";
+} from "../../../kyrn/bin/agent.mjs";
 import {
 	SETUP_EXIT,
 	SETUP_DECLINED_FILE as WIZARD_DECLINED_FILE,
 	SETUP_VALUE_FLAGS as WIZARD_VALUE_FLAGS,
 } from "../src/setup/wizard.ts";
-import { MU, removeHome, runScriptAsync } from "./fixtures/launcher.ts";
+import { SPEC, removeHome, runScriptAsync } from "./fixtures/launcher.ts";
 
 /**
- * `mu setup` in the launcher (kyrn/bin/mu.mjs): how the wizard is started in a checkout and in the npm package, on
+ * `mu setup` in the launcher (kyrn/bin/agent.mjs): how the wizard is started in a checkout and in the npm package, on
  * Windows and elsewhere, with a key on the command line kept out of the child's argv; and when a first `mu` asks to
  * set up a model. The decisions are called with an in-memory file system; one run goes through the real launcher,
  * against a server of the test's own.
@@ -65,7 +65,7 @@ const POSIX_NATIVE = [
 ];
 const POSIX_ENTRY = `${POSIX_ROOT}/packages/kyrn-judge/src/setup/main.ts`;
 
-const WIN_PACKAGE = "C:\\Users\\bai\\AppData\\Roaming\\npm\\node_modules\\mu-agent";
+const WIN_PACKAGE = "C:\\Users\\bai\\AppData\\Roaming\\npm\\node_modules\\spec-ai-agent";
 const WIN_HOME = "C:\\Users\\bai";
 const winPackage = {
 	[`${WIN_PACKAGE}\\dist\\bundle\\cli.js`]: "",
@@ -92,18 +92,17 @@ describe("mu setup, as the launcher starts it", () => {
 		expect(plan.args.join(" ")).not.toContain(KEY);
 		expect(plan.keyGiven).toBe(true);
 		expect(plan.strategy).toBe("spawn");
-		expect(plan.agentDir).toBe("/home/bai/.mu/agent");
+		expect(plan.agentDir).toBe("/home/bai/.spec.ai.jev/agent");
 		expect(plan.env).toEqual({
 			PATH: "/usr/bin",
 			LANG: "zh_CN.UTF-8",
-			MU_SETUP_KEY: KEY,
-			MU_AGENT_DIR: "/home/bai/.mu/agent",
-			MU_CODING_AGENT_DIR: "/home/bai/.mu/agent",
-			KYRN_CODING_AGENT_DIR: "/home/bai/.mu/agent",
-			PI_CODING_AGENT_DIR: "/home/bai/.mu/agent",
-			MU_SETUP_HOME: "/home/bai/.mu",
+			SPEC_AI_JEV_SETUP_KEY: KEY,
+			SPEC_AI_JEV_AGENT_DIR: "/home/bai/.spec.ai.jev/agent",
+			SPEC_CODING_AGENT_DIR: "/home/bai/.spec.ai.jev/agent",
+			PI_CODING_AGENT_DIR: "/home/bai/.spec.ai.jev/agent",
+			SPEC_AI_JEV_SETUP_HOME: "/home/bai/.spec.ai.jev",
 			// A checkout's session reads the .env at its root: the Jev key goes there.
-			MU_SETUP_ENV_FILE: `${POSIX_ROOT}/.env`,
+			SPEC_AI_JEV_SETUP_ENV_FILE: `${POSIX_ROOT}/.env`,
 		});
 	});
 
@@ -120,10 +119,10 @@ describe("mu setup, as the launcher starts it", () => {
 			"kimi-k2.6",
 		]);
 		expect(joined.error === undefined && joined.keyGiven).toBe(false);
-		expect(joined.error === undefined && "MU_SETUP_KEY" in joined.env).toBe(false);
+		expect(joined.error === undefined && "SPEC_AI_JEV_SETUP_KEY" in joined.env).toBe(false);
 		// The word after --model is its value, not a key.
 		const named = plan(["--model", "deepseek-chat", KEY]);
-		expect(named.error === undefined && named.env.MU_SETUP_KEY).toBe(KEY);
+		expect(named.error === undefined && named.env.SPEC_AI_JEV_SETUP_KEY).toBe(KEY);
 		expect(plan([KEY, "another"])).toEqual({ error: "mu setup takes one key at most (mu setup --help)", code: 2 });
 	});
 
@@ -141,10 +140,10 @@ describe("mu setup, as the launcher starts it", () => {
 		if (plan.error !== undefined) throw new Error(plan.error);
 		expect(plan.args).toEqual([built]);
 		expect(plan.env).toMatchObject({
-			MU_SETUP_KEY: KEY,
-			MU_AGENT_DIR: "C:\\Users\\bai\\.mu\\agent",
-			MU_SETUP_HOME: "C:\\Users\\bai\\.mu",
-			MU_SETUP_ENV_FILE: "C:\\Users\\bai\\.mu\\.env",
+			SPEC_AI_JEV_SETUP_KEY: KEY,
+			SPEC_AI_JEV_AGENT_DIR: "C:\\Users\\bai\\.spec.ai.jev\\agent",
+			SPEC_AI_JEV_SETUP_HOME: "C:\\Users\\bai\\.spec.ai.jev",
+			SPEC_AI_JEV_SETUP_ENV_FILE: "C:\\Users\\bai\\.spec.ai.jev\\.env",
 		});
 		// A package built before mu setup says to update, instead of passing `setup` to pi as a message.
 		const old = planSetup({
@@ -156,7 +155,7 @@ describe("mu setup, as the launcher starts it", () => {
 			execPath: "node.exe",
 			fs: disk(winPackage),
 		});
-		expect(old.error).toContain("npm i -g mu-agent");
+		expect(old.error).toContain("npm i -g spec-ai-agent");
 	});
 
 	it("says so where Node does not strip types, and follows the agent folder and old homes", () => {
@@ -172,12 +171,12 @@ describe("mu setup, as the launcher starts it", () => {
 		const moved = planSetup({
 			...setupArgs,
 			platform: "linux",
-			env: { MU_AGENT_DIR: "/srv/mu-agent" },
+			env: { SPEC_AI_JEV_AGENT_DIR: "/srv/spec-ai-agent" },
 			argv: [],
 			root: POSIX_ROOT,
 			fs: disk(posixInstalled),
 		});
-		expect(moved.error === undefined && moved.env.PI_CODING_AGENT_DIR).toBe("/srv/mu-agent");
+		expect(moved.error === undefined && moved.env.PI_CODING_AGENT_DIR).toBe("/srv/spec-ai-agent");
 		const legacy = planSetup({
 			...setupArgs,
 			platform: "linux",
@@ -185,22 +184,22 @@ describe("mu setup, as the launcher starts it", () => {
 			root: POSIX_ROOT,
 			fs: disk(posixInstalled, ["/home/bai/.kyrn"]),
 		});
-		expect(legacy.error === undefined && legacy.env.MU_SETUP_HOME).toBe("/home/bai/.kyrn");
+		expect(legacy.error === undefined && legacy.env.SPEC_AI_JEV_SETUP_HOME).toBe("/home/bai/.spec.ai.jev");
 		const bare = planSetup({ ...setupArgs, platform: "linux", argv: [], root: POSIX_ROOT, fs: disk({}) });
 		expect(bare.error).toContain("npm ci --ignore-scripts");
 	});
 
-	it("keeps the same names and codes as the wizard, and is in mu's usage", () => {
+	it("keeps the same names and codes as the wizard, and is in spec's usage", () => {
 		expect(SETUP_DECLINED_FILE).toBe(WIZARD_DECLINED_FILE);
 		expect(SETUP_EXIT_START).toBe(SETUP_EXIT.start);
 		expect(SETUP_EXIT_CANCELLED).toBe(SETUP_EXIT.cancelled);
 		expect([...SETUP_VALUE_FLAGS]).toEqual([...WIZARD_VALUE_FLAGS]);
-		expect(usage("linux")).toContain("mu setup                 connect a model");
+		expect(usage("linux")).toContain("spec setup                 connect a model");
 	});
 });
 
 describe("the first start", () => {
-	const agentDir = "/home/bai/.mu/agent";
+	const agentDir = "/home/bai/.spec.ai.jev/agent";
 	const first = (overrides: Partial<Parameters<typeof planFirstRun>[0]> = {}, files: Record<string, string> = {}) =>
 		planFirstRun({
 			platform: "linux",
@@ -233,7 +232,7 @@ describe("the first start", () => {
 			true,
 		);
 		expect(first({ envText: "TYPESAFE_API_KEY=x\nDEEPSEEK_API_KEY=\n" })).toBe(true);
-		expect(first({ env: { MU_NO_SETUP: "0" } })).toBe(true);
+		expect(first({ env: { SPEC_AI_JEV_NO_SETUP: "0" } })).toBe(true);
 	});
 
 	it("never asks a script, a command, or a run that names its model", () => {
@@ -287,8 +286,8 @@ describe("the first start", () => {
 
 	it("never asks again after a no, or when it is turned off", () => {
 		expect(first({}, { [`${agentDir}/${SETUP_DECLINED_FILE}`]: "" })).toBe(false);
-		expect(first({ env: { MU_NO_SETUP: "1" } })).toBe(false);
-		expect(first({ env: { KYRN_NO_SETUP: "yes" } })).toBe(false);
+		expect(first({ env: { SPEC_AI_JEV_NO_SETUP: "1" } })).toBe(false);
+		expect(first({ env: { SPEC_AI_JEV_NO_SETUP: "yes" } })).toBe(false);
 	});
 
 	it("never asks when something gives mu a model, or when a file cannot be read", () => {
@@ -303,7 +302,7 @@ describe("the first start", () => {
 	});
 
 	it("reads Windows paths on Windows", () => {
-		const winAgent = "C:\\Users\\bai\\.mu\\agent";
+		const winAgent = "C:\\Users\\bai\\.spec.ai.jev\\agent";
 		const files = { [`${winAgent}\\auth.json`]: '{"openai":{}}' };
 		expect(
 			planFirstRun({ platform: "win32", env: {}, argv: [], interactive: true, agentDir: winAgent, fs: disk(files) }),
@@ -370,12 +369,12 @@ describe("mu setup, run for real on this machine", () => {
 					NO_PROXY: "127.0.0.1,localhost",
 					no_proxy: "127.0.0.1,localhost",
 				};
-				const help = await runScriptAsync(MU, ["setup", "--help"], env);
+				const help = await runScriptAsync(SPEC, ["setup", "--help"], env);
 				expect(help.code).toBe(0);
 				expect(help.out).toContain("--key-stdin");
 
 				const run = await runScriptAsync(
-					MU,
+					SPEC,
 					["setup", key, "--service", "other", "--base-url", `http://127.0.0.1:${port}`],
 					env,
 					{ timeout: 90_000 },
@@ -389,7 +388,7 @@ describe("mu setup, run for real on this machine", () => {
 					{ url: "/models", authorization: `Bearer ${key}` },
 					{ url: "/v1/models", authorization: `Bearer ${key}` },
 				]);
-				const agent = join(home, ".mu", "agent");
+				const agent = join(home, ".spec.ai.jev", "agent");
 				const provider = `local-${port}`;
 				expect(JSON.parse(readFileSync(join(agent, "auth.json"), "utf8"))).toEqual({
 					[provider]: { type: "api_key", key },

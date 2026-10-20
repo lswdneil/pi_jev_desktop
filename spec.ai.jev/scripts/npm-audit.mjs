@@ -39,7 +39,7 @@ const acceptedAdvisories = {
 			"signature verification accepting extra nested DigestAlgorithm elements (CVSS 7.5, node-forge <= 1.4.0, and 1.4.0 " +
 			"is the latest release, so there is nothing to upgrade to). node-forge is reachable only through " +
 			"@earendil-works/gondolin, which the workspace pulls in because packages/coding-agent/examples/extensions/gondolin " +
-			"is a workspace member; neither shipped product installs it (mu-agent depends on chord, photon-node and jiti only, " +
+			"is a workspace member; neither shipped product installs it (spec-ai-agent depends on chord, photon-node and jiti only, " +
 			"and the staged desktop harness has no @earendil-works packages). Gondolin's only verification call is " +
 			"`caCert.verify(leafCert)` against the CA it generates in-process for its own sandbox session, so a leaf it would " +
 			"accept needs a signature from that ephemeral CA key.",

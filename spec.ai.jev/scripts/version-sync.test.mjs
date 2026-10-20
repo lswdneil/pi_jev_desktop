@@ -16,7 +16,7 @@ function fixture({ templateVersion = "0.1.8", released = "0.1.8", changelog = tr
 	mkdirSync(join(root, "kyrn", "npm"), { recursive: true });
 	writeFileSync(
 		join(root, "kyrn", "npm", "package.template.json"),
-		`${JSON.stringify({ name: "mu-agent", version: templateVersion }, null, "\t")}\n`,
+		`${JSON.stringify({ name: "spec-ai-agent", version: templateVersion }, null, "\t")}\n`,
 	);
 	if (changelog) {
 		writeFileSync(join(root, "kyrn", "npm", "CHANGELOG.md"), `# Changelog\n\n## [Unreleased]\n\n## [${released}] - 2026-10-06\n\n- something\n`);

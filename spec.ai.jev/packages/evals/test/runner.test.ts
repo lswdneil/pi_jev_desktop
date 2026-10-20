@@ -102,8 +102,8 @@ describe("the arms", () => {
 		const root = temporary();
 		const shadow = prepareAgentDir(root, "mu-shadow");
 		const active = prepareAgentDir(join(root, "other"), "mu-active");
-		expect(require("node:fs").readFileSync(join(shadow, "mu.json"), "utf8")).toContain("shadow");
-		expect(require("node:fs").readFileSync(join(active, "mu.json"), "utf8")).not.toContain("shadow");
+		expect(require("node:fs").readFileSync(join(shadow, "agent.json"), "utf8")).toContain("shadow");
+		expect(require("node:fs").readFileSync(join(active, "agent.json"), "utf8")).not.toContain("shadow");
 	});
 
 	it("costs are summed from the agent's own usage lines", () => {

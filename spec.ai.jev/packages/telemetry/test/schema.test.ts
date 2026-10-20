@@ -3,13 +3,13 @@ import {
 	allowedAttributes,
 	createTypedSpanStarter,
 	InMemoryTelemetryContext,
-	MU_TELEMETRY_SCHEMA,
+	SPEC_AI_JEV_TELEMETRY_SCHEMA,
 	sensitiveAttributes,
 } from "../src/index.ts";
 
 describe("mu span schema", () => {
 	it("defines the seven spans the plan asked for", () => {
-		expect(Object.keys(MU_TELEMETRY_SCHEMA.spans).sort()).toEqual([
+		expect(Object.keys(SPEC_AI_JEV_TELEMETRY_SCHEMA.spans).sort()).toEqual([
 			"context.admission",
 			"context.compaction",
 			"judge.decision",
@@ -18,12 +18,12 @@ describe("mu span schema", () => {
 			"tool.call",
 			"turn",
 		]);
-		expect(MU_TELEMETRY_SCHEMA.version).toBe(1);
+		expect(SPEC_AI_JEV_TELEMETRY_SCHEMA.version).toBe(1);
 	});
 
 	it("names only ids, counts and outcomes: nothing that could hold a prompt or an output", () => {
 		// Every attribute is a name from this list; a new one has to come through the schema first.
-		for (const [spanName, span] of Object.entries(MU_TELEMETRY_SCHEMA.spans)) {
+		for (const [spanName, span] of Object.entries(SPEC_AI_JEV_TELEMETRY_SCHEMA.spans)) {
 			for (const name of Object.keys({ ...span.startAttributes, ...span.endAttributes })) {
 				expect(name, `${spanName}.${name}`).toMatch(/^[a-z]+(\.[a-z_]+)+$/);
 				expect(name).not.toMatch(/prompt|message$|content|output_text|stdout|command/);
@@ -32,10 +32,10 @@ describe("mu span schema", () => {
 	});
 
 	it("keeps the parent relations the plan describes", () => {
-		const turn = MU_TELEMETRY_SCHEMA.spans.turn;
+		const turn = SPEC_AI_JEV_TELEMETRY_SCHEMA.spans.turn;
 		expect(turn.parents).toEqual({ kind: "root_or_external" });
 		for (const name of ["model.request", "tool.call", "judge.decision", "context.admission"]) {
-			const span = MU_TELEMETRY_SCHEMA.spans[name as keyof typeof MU_TELEMETRY_SCHEMA.spans];
+			const span = SPEC_AI_JEV_TELEMETRY_SCHEMA.spans[name as keyof typeof SPEC_AI_JEV_TELEMETRY_SCHEMA.spans];
 			expect(span.parents).toEqual({ kind: "spans", spans: ["turn"] });
 		}
 	});
@@ -62,7 +62,7 @@ describe("mu span schema", () => {
 
 	it("rejects a span that misses a required attribute, at compile time", async () => {
 		const telemetry = new InMemoryTelemetryContext();
-		const start = createTypedSpanStarter(telemetry, [MU_TELEMETRY_SCHEMA]);
+		const start = createTypedSpanStarter(telemetry, [SPEC_AI_JEV_TELEMETRY_SCHEMA]);
 		// `session.id`, `decision.id` and `decision.mode` are required; the type error is the point of this test.
 		// @ts-expect-error - a decision span without its required attributes must not compile
 		await start("judge.decision", { "turn.id": 1 }, () => 1);

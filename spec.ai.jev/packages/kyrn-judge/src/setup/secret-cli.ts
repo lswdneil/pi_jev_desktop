@@ -62,8 +62,8 @@ if (invokedDirectly()) {
 		const dirArgument = process.argv.slice(2).find((argument) => !argument.startsWith("--"));
 		const dir =
 			dirArgument ??
-			process.env.MU_AGENT_DIR ??
-			join(process.env.HOME ?? process.env.USERPROFILE ?? "", ".mu", "agent");
+			process.env.SPEC_AI_JEV_AGENT_DIR ??
+			join(process.env.HOME ?? process.env.USERPROFILE ?? "", ".spec.ai.jev", "agent");
 		const status = await secretStatus(dir);
 		if (process.argv.includes("--json")) console.log(JSON.stringify(status));
 		else {

@@ -1,6 +1,6 @@
 # 本地判断后端：Laya on Core ML
 
-> 已于 2026-09-21 更名为 mu（命令 `mu`，标识 μ）。本文是更名前的记录，正文保持原样；新旧名对照见 [10-rename-to-mu.md](10-rename-to-mu.md)。
+> Historical note: the kernel's internal names (`kyrn`, `kyrn.*`) predate the current product name and are kept for stored sessions. See [10-brand-history.md](10-brand-history.md).
 
 > 2026-09-20 · 实测记录。机器：M3 Max / macOS 27.0 / Python 3.12.11（uv）。
 > 目的：Vercel 账号绑卡之前 Jev 调不通（HTTP 403），先用一个本地开放权重的判断模型把整条链路跑真。
@@ -21,8 +21,8 @@ kyrn/bin/kyrn-judge-local setup     # 建 venv（uv + Python 3.12）、装锁定
 kyrn/bin/kyrn-judge-local start     # 后台常驻，全机共用一个；状态在 ~/.kyrn/local-judge/
 kyrn/bin/kyrn-judge-local status | stop | run
 
-KYRN_JUDGE=laya kyrn/bin/kyrn-dev   # 启动器会顺手把 sidecar 拉起来
-KYRN_JUDGE=laya node kyrn/spikes/judge-bench/preflight-bench.ts   # 体检（Node ≥ 23.6）
+SPEC_AI_JEV_JUDGE=laya kyrn/bin/kyrn-dev   # 启动器会顺手把 sidecar 拉起来
+SPEC_AI_JEV_JUDGE=laya node kyrn/spikes/judge-bench/preflight-bench.ts   # 体检（Node ≥ 23.6）
 kyrn/bin/kyrn-ledger [N] [--json]   # 回看最近 N 个会话里，判断模型对你每条真实消息的判定
 ```
 
@@ -111,7 +111,7 @@ pi 扩展 (kyrn-judge.ts)
 ## 6. 端到端验证（2026-09-20）
 
 ```bash
-KYRN_JUDGE=laya kyrn/bin/kyrn-dev --provider openai-codex --model gpt-5.6-luna --thinking low \
+SPEC_AI_JEV_JUDGE=laya kyrn/bin/kyrn-dev --provider openai-codex --model gpt-5.6-luna --thinking low \
   --tools read,grep,find,ls -p "Which file in packages/coding-agent/src defines the AgentSession class? Reply with the path only."
 # → packages/coding-agent/src/agent-session.ts
 ```
@@ -122,7 +122,7 @@ KYRN_JUDGE=laya kyrn/bin/kyrn-dev --provider openai-codex --model gpt-5.6-luna -
 
 ## 7. 待办
 
-- [ ] Vercel 绑卡后：`KYRN_JUDGE=gateway node --env-file=.env kyrn/spikes/judge-bench/preflight-bench.ts`，同一批场景上 Jev 对 Laya，逐字段比较；据此校准阈值、决定要不要"方言"。
+- [ ] Vercel 绑卡后：`SPEC_AI_JEV_JUDGE=gateway node --env-file=.env kyrn/spikes/judge-bench/preflight-bench.ts`，同一批场景上 Jev 对 Laya，逐字段比较；据此校准阈值、决定要不要"方言"。
 - [ ] 把 bench 的标注集扩到 ≥200 条（可以从自己的真实会话里抽），否则措辞搜索会过拟合。
 - [ ] 评估 batch=10 重新导出，把一次 preflight 压到 ~30 ms。
 - [ ] 蒸馏路线的前置：账本加"事后信号"回填接口（按 `ledgerId` 关联）。

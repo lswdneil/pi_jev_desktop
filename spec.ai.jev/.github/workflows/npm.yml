@@ -1,9 +1,9 @@
 name: npm package
 
-# Builds the npm package mu-agent (kyrn/npm/build.mjs), then installs the tarball on Linux, macOS and Windows
+# Builds the npm package spec-ai-agent (kyrn/npm/build.mjs), then installs the tarball on Linux, macOS and Windows
 # and checks that the installed `mu` runs and loads the judgment layer (kyrn/npm/smoke.mjs). No model is called.
 #
-# On a `mu-agent-v*` tag the `publish` job publishes that same tested tarball with npm trusted publishing
+# On a `spec-ai-agent-v*` tag the `publish` job publishes that same tested tarball with npm trusted publishing
 # (OIDC, no stored token) and `--provenance`, then checks the attestation the registry reports. Nothing is
 # published from a branch: a version that users get has been installed and run first.
 on:
@@ -15,7 +15,7 @@ on:
       - 'package-lock.json'
       - '.github/workflows/npm.yml'
     tags:
-      - 'mu-agent-v*'
+      - 'spec-ai-agent-v*'
   workflow_dispatch:
 
 permissions:
@@ -51,24 +51,24 @@ jobs:
       - name: Build pi
         run: npm run build
 
-      - name: Build and pack mu-agent
+      - name: Build and pack spec-ai-agent
         run: node kyrn/npm/build.mjs --pack
 
       - name: List the tarball
         run: |
           cd .artifacts/npm
-          tar -tzf mu-agent-*.tgz | sort > mu-agent-files.txt
-          wc -l < mu-agent-files.txt
-          sed -E 's#^package/##; s#/.*##' mu-agent-files.txt | sort | uniq -c
-          ls -l mu-agent-*.tgz
+          tar -tzf spec-ai-agent-*.tgz | sort > spec-ai-agent-files.txt
+          wc -l < spec-ai-agent-files.txt
+          sed -E 's#^package/##; s#/.*##' spec-ai-agent-files.txt | sort | uniq -c
+          ls -l spec-ai-agent-*.tgz
 
       - name: Upload the tarball
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: mu-agent-tarball
+          name: spec-ai-agent-tarball
           path: |
-            .artifacts/npm/mu-agent-*.tgz
-            .artifacts/npm/mu-agent-files.txt
+            .artifacts/npm/spec-ai-agent-*.tgz
+            .artifacts/npm/spec-ai-agent-files.txt
           if-no-files-found: error
           retention-days: 14
 
@@ -100,7 +100,7 @@ jobs:
       - name: Download the tarball
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: mu-agent-tarball
+          name: spec-ai-agent-tarball
           path: tarball
 
       # A prefix of its own, as `npm i -g` would use, without touching the runner's global packages.
@@ -108,7 +108,7 @@ jobs:
         shell: bash
         run: |
           prefix="$RUNNER_TEMP/mu-prefix"
-          npm i -g --prefix "$prefix" ./tarball/mu-agent-*.tgz
+          npm i -g --prefix "$prefix" ./tarball/spec-ai-agent-*.tgz
           if [ "$RUNNER_OS" = "Windows" ]; then echo "$prefix" >> "$GITHUB_PATH"; else echo "$prefix/bin" >> "$GITHUB_PATH"; fi
 
       - name: Smoke test
@@ -120,8 +120,8 @@ jobs:
   # workflow built the tarball. Only a tag reaches this job, and only the tarball the jobs above installed and
   # ran is published — never a fresh build.
   publish:
-    name: Publish mu-agent
-    if: startsWith(github.ref, 'refs/tags/mu-agent-v')
+    name: Publish spec-ai-agent
+    if: startsWith(github.ref, 'refs/tags/spec-ai-agent-v')
     needs: [pack, smoke]
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -141,31 +141,31 @@ jobs:
       - name: Download the tested tarball
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: mu-agent-tarball
+          name: spec-ai-agent-tarball
           path: tarball
 
       - name: Check the tag matches the tarball's version
         shell: bash
         run: |
-          tag="${GITHUB_REF_NAME#mu-agent-v}"
-          packed="$(ls tarball/mu-agent-*.tgz)"
+          tag="${GITHUB_REF_NAME#spec-ai-agent-v}"
+          packed="$(ls tarball/spec-ai-agent-*.tgz)"
           case "$packed" in
-            *"mu-agent-$tag.tgz") echo "tag $tag matches $packed" ;;
+            *"spec-ai-agent-$tag.tgz") echo "tag $tag matches $packed" ;;
             *) echo "::error::tag $tag does not match the packed $packed"; exit 1 ;;
           esac
 
       - name: Publish with provenance
         shell: bash
-        run: npm publish ./tarball/mu-agent-*.tgz --provenance --access public
+        run: npm publish ./tarball/spec-ai-agent-*.tgz --provenance --access public
 
       - name: Verify the registry recorded an attestation
         shell: bash
         run: |
-          tag="${GITHUB_REF_NAME#mu-agent-v}"
+          tag="${GITHUB_REF_NAME#spec-ai-agent-v}"
           attempts=0
-          until npm view "mu-agent@$tag" dist.attestations --json | grep -q '"url"'; do
+          until npm view "spec-ai-agent@$tag" dist.attestations --json | grep -q '"url"'; do
             attempts=$((attempts + 1))
-            if [ "$attempts" -ge 12 ]; then echo "::error::no attestation for mu-agent@$tag"; exit 1; fi
+            if [ "$attempts" -ge 12 ]; then echo "::error::no attestation for spec-ai-agent@$tag"; exit 1; fi
             sleep 10
           done
-          npm view "mu-agent@$tag" dist.integrity dist.attestations --json
+          npm view "spec-ai-agent@$tag" dist.integrity dist.attestations --json

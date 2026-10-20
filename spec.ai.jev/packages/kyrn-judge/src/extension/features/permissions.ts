@@ -10,7 +10,7 @@ import type { Decision } from "../../decision.ts";
 import { toolApproval } from "../../decisions/tool-approval.ts";
 import { toolRisk } from "../../decisions/tool-risk.ts";
 import { say } from "../../language.ts";
-import { muEnv } from "../../naming.ts";
+import { specEnv } from "../../naming.ts";
 import {
 	MODE_TEXT,
 	PERMISSION_MODES,
@@ -113,7 +113,7 @@ function protectedPaths(roots: HarnessRoots | undefined): string[] {
 	return real && real !== roots.agentDir ? [...spelled, real] : spelled;
 }
 
-/** The project's own mu folder (`.mu`, a stock pi's `.pi`): its settings and extensions run inside mu. */
+/** The project's own mu folder (`.spec.ai.jev`, a stock pi's `.pi`): its settings and extensions run inside mu. */
 function projectSettings(cwd: string): string[] {
 	const spelled = join(resolve(cwd), CONFIG_DIR_NAME);
 	const real = toolPath(cwd, CONFIG_DIR_NAME) ?? spelled;
@@ -123,7 +123,7 @@ function projectSettings(cwd: string): string[] {
 /**
  * Three permission modes, one switch (`/permissions`). The mode is per
  * conversation: a new one starts in the mode last chosen, a reopened one in
- * the mode it was in, a sub-agent in its parent's (MU_PERMISSIONS).
+ * the mode it was in, a sub-agent in its parent's (SPEC_AI_JEV_PERMISSIONS).
  *
  * Asking is one picker with fixed answers and a status line while it waits,
  * so the terminal shows it in its footer and the desktop as a prompt in its
@@ -145,7 +145,7 @@ export function registerPermissions(runtime: KyrnRuntime, roots: HarnessRoots | 
 	const defaults = new PermissionDefaults(roots ? join(roots.agentDir, "mu") : undefined);
 	const guarded = protectedPaths(roots);
 	const initial = (): PermissionMode =>
-		parseMode(muEnv("PERMISSIONS")) ?? defaults.get() ?? parseMode(options.mode) ?? "jev";
+		parseMode(specEnv("PERMISSIONS")) ?? defaults.get() ?? parseMode(options.mode) ?? "jev";
 	let mode: PermissionMode = initial();
 	/** What the user allowed "for this conversation": `shell:npm test`, `edit`, `tool:browse`. */
 	let grants = new Set<string>();

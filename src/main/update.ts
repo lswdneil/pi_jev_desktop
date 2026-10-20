@@ -4,7 +4,7 @@
 /**
  * Asking for an update, once, over the network.
  *
- * The network is here and nowhere else: `shared/update.ts` parses and decides, this file fetches. `MU_UPDATE_FEED`
+ * The network is here and nowhere else: `shared/update.ts` parses and decides, this file fetches. `SPEC_AI_JEV_UPDATE_FEED`
  * overrides the URL (a test serves a feed on localhost; a developer points at a staging release), and a build with no
  * feed configured reports that instead of guessing one — an update check that invents a URL is an update check that
  * phones somewhere unexpected.
@@ -29,7 +29,7 @@ const DEFAULT_TIMEOUT_MS = 8_000;
 
 /** The feed URL this build uses: the environment's override, else the packaged default. */
 export function configuredFeedUrl(env: Readonly<Record<string, string | undefined>> = process.env): string | undefined {
-	const override = env.MU_UPDATE_FEED?.trim();
+	const override = env.SPEC_AI_JEV_UPDATE_FEED?.trim();
 	return override !== undefined && override !== "" ? override : undefined;
 }
 

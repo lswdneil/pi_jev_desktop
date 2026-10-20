@@ -1,6 +1,6 @@
 # 测试日志准入实验：开源调研、设计、Jev 验证与真实会话回放
 
-> 已于 2026-09-21 更名为 mu（命令 `mu`，标识 μ）。本文是更名前的记录，正文保持原样；新旧名对照见 [10-rename-to-mu.md](10-rename-to-mu.md)。
+> Historical note: the kernel's internal names (`kyrn`, `kyrn.*`) predate the current product name and are kept for stored sessions. See [10-brand-history.md](10-brand-history.md).
 
 日期：2026-09-21。状态：**已接入为可选策略，默认关闭**（`features.admission.testLog`，取值 `off` / `rules` / `jev`）。
 
@@ -175,7 +175,7 @@
 # 离线（不调用模型）
 node kyrn/spikes/judge-bench/test-log-replay.ts
 # 真实 Jev（只发送合成样本；真实会话日志的回放脚本不调用判断器）。SET=tuned|heldout 分开报告两组
-SET=heldout KYRN_JUDGE=jev node --env-file=.env kyrn/spikes/judge-bench/test-log-replay.ts
+SET=heldout SPEC_AI_JEV_JUDGE=jev node --env-file=.env kyrn/spikes/judge-bench/test-log-replay.ts
 # 单元与集成测试（在 packages/kyrn-judge 下）
 node ../../node_modules/vitest/dist/cli.js --run test/test-log.test.ts test/admission-test-log.test.ts
 ```

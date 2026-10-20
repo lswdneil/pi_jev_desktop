@@ -21,7 +21,7 @@ describe("hard constraints on tool calls", () => {
 	afterEach(() => {
 		while (harnesses.length > 0) harnesses.pop()?.cleanup();
 		ran.length = 0;
-		delete process.env.KYRN_SWARM_CONSTRAINTS;
+		delete process.env.SPEC_AI_JEV_SWARM_CONSTRAINTS;
 	});
 
 	function tool(name: string): AgentTool {
@@ -39,7 +39,7 @@ describe("hard constraints on tool calls", () => {
 
 	async function start(responder: MockResponder, mode: DecisionMode = "active"): Promise<Harness> {
 		// A sub-agent's frame starts with what its parent was told: the shortest way to a frame with a constraint.
-		process.env.KYRN_SWARM_CONSTRAINTS = JSON.stringify(["先别修改数据库相关的文件"]);
+		process.env.SPEC_AI_JEV_SWARM_CONSTRAINTS = JSON.stringify(["先别修改数据库相关的文件"]);
 		const harness = await createHarness({
 			tools: [tool("edit"), tool("read")],
 			extensionFactories: [

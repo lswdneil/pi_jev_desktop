@@ -13,10 +13,10 @@ import { findPackageDirectories } from "./package-workspaces.mjs";
  */
 
 /** The only package this repository publishes on npm. */
-export const PUBLISHABLE_PACKAGES = Object.freeze(["mu-agent"]);
+export const PUBLISHABLE_PACKAGES = Object.freeze(["spec-ai-agent"]);
 
 /**
- * The harness packages whose source is bundled into the published `mu-agent`. They are not published
+ * The harness packages whose source is bundled into the published `spec-ai-agent`. They are not published
  * alone, and they are the ones whose imports must therefore be declared: a missing dependency here breaks
  * the package that ships. (`evals` and `kyrn-judge` are not bundled: the kernel is built separately.)
  */
@@ -41,11 +41,11 @@ export const FOREIGN_SCOPES = Object.freeze(["@earendil-works/"]);
 /**
  * Why `pkg` must not be published, or undefined when it may be.
  *
- * `MU_ALLOW_FOREIGN_SCOPE=1` exists for the maintainers of those scopes themselves, and is read at call time
+ * `SPEC_AI_JEV_ALLOW_FOREIGN_SCOPE=1` exists for the maintainers of those scopes themselves, and is read at call time
  * so a test can prove both branches.
  */
 export function publishRefusal(pkg, options = {}) {
-	const allowForeignScope = options.allowForeignScope ?? process.env.MU_ALLOW_FOREIGN_SCOPE === "1";
+	const allowForeignScope = options.allowForeignScope ?? process.env.SPEC_AI_JEV_ALLOW_FOREIGN_SCOPE === "1";
 	if (pkg.private === true) return `${pkg.name} is private:true, so npm refuses it anyway`;
 	if (allowForeignScope) return undefined;
 	const foreign = FOREIGN_SCOPES.find((scope) => pkg.name.startsWith(scope));
@@ -77,7 +77,7 @@ export function getPublicWorkspacePackages() {
 		.map(({ directory, name, version }) => ({ directory, name, version }));
 }
 
-/** The packages that pass the publish guard: in practice none, since `mu-agent` is built, not a workspace. */
+/** The packages that pass the publish guard: in practice none, since `spec-ai-agent` is built, not a workspace. */
 export function getPublishablePackages(options = {}) {
 	return getWorkspacePackages()
 		.filter((pkg) => publishRefusal(pkg, options) === undefined)

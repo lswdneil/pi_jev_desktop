@@ -9,7 +9,7 @@ import { type Profile, completeFirstRun, launchApp } from "./helpers/app.ts";
 /**
  * The update check, against a feed this test serves.
  *
- * The app reads `MU_UPDATE_FEED`, which is how a staging build or a test points at a feed; the server here is the only
+ * The app reads `SPEC_AI_JEV_UPDATE_FEED`, which is how a staging build or a test points at a feed; the server here is the only
  * thing that knows the feed's contents, so what the screen says is the app's own reading of it. Nothing is downloaded
  * or installed: this build reports, it does not install.
  */
@@ -28,10 +28,10 @@ async function serveFeed(feed: Feed): Promise<{ url: string; server: Server }> {
 			[
 				`version: ${feed.version}`,
 				"files:",
-				`  - url: mu-${feed.version}.exe`,
+				`  - url: spec.ai.jev-${feed.version}.exe`,
 				`    sha512: ${sha}`,
 				"    size: 1024",
-				`path: mu-${feed.version}.exe`,
+				`path: spec.ai.jev-${feed.version}.exe`,
 				`releaseDate: '2026-10-18T00:00:00.000Z'`,
 				"",
 			].join("\n"),
@@ -51,7 +51,7 @@ async function openUpdates(profile: Profile): Promise<void> {
 test.describe("updates", () => {
 	test("says a newer version exists, and that this build will not install it", async () => {
 		const feed = await serveFeed({ version: "9.9.9" });
-		const profile = await launchApp({ env: { MU_UPDATE_FEED: feed.url } });
+		const profile = await launchApp({ env: { SPEC_AI_JEV_UPDATE_FEED: feed.url } });
 		try {
 			await openUpdates(profile);
 			await profile.page.locator('[data-testid="update-check"]').click();
@@ -70,7 +70,7 @@ test.describe("updates", () => {
 
 	test("says the build is current when the feed is not newer", async () => {
 		const feed = await serveFeed({ version: "0.0.1" });
-		const profile = await launchApp({ env: { MU_UPDATE_FEED: feed.url } });
+		const profile = await launchApp({ env: { SPEC_AI_JEV_UPDATE_FEED: feed.url } });
 		try {
 			await openUpdates(profile);
 			await profile.page.locator('[data-testid="update-check"]').click();
@@ -84,7 +84,7 @@ test.describe("updates", () => {
 
 	test("refuses with a readable reason when the feed is unreachable", async () => {
 		// A port nobody listens on: the check has to say so, not crash the settings screen.
-		const profile = await launchApp({ env: { MU_UPDATE_FEED: "http://127.0.0.1:9/latest.yml" } });
+		const profile = await launchApp({ env: { SPEC_AI_JEV_UPDATE_FEED: "http://127.0.0.1:9/latest.yml" } });
 		try {
 			await openUpdates(profile);
 			await profile.page.locator('[data-testid="update-check"]').click();
@@ -99,7 +99,7 @@ test.describe("updates", () => {
 
 	test("refuses an artifact it cannot verify", async () => {
 		const feed = await serveFeed({ version: "9.9.9", sha512: "" });
-		const profile = await launchApp({ env: { MU_UPDATE_FEED: feed.url } });
+		const profile = await launchApp({ env: { SPEC_AI_JEV_UPDATE_FEED: feed.url } });
 		try {
 			await openUpdates(profile);
 			await profile.page.locator('[data-testid="update-check"]').click();
@@ -114,7 +114,7 @@ test.describe("updates", () => {
 
 	test("will not install what it cannot prove: no public key, no install", async () => {
 		const feed = await serveFeed({ version: "9.9.9" });
-		const profile = await launchApp({ env: { MU_UPDATE_FEED: feed.url } });
+		const profile = await launchApp({ env: { SPEC_AI_JEV_UPDATE_FEED: feed.url } });
 		try {
 			await openUpdates(profile);
 			await profile.page.locator('[data-testid="update-check"]').click();

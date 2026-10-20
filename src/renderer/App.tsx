@@ -27,7 +27,7 @@ import { JudgmentsPanel } from "./panels/Judgments/JudgmentsPanel.tsx";
 
 type View = "conversation" | "settings";
 
-/** The chip in the rail's footer. `layout` stays as it is: it names where mu came from, which is the diagnostic. */
+/** The chip in the rail's footer. `layout` stays as it is: it names where spec.ai.jev came from, which is the diagnostic. */
 function statusLabel(status: HarnessStatus, text: (key: string) => string): string {
 	switch (status.state) {
 		case "stopped":
@@ -855,7 +855,7 @@ export function App(): React.JSX.Element {
 	);
 }
 
-/** The three panels, each with its own source: the store for two, `mu ledger` for the third. */
+/** The three panels, each with its own source: the store for two, `spec ledger` for the third. */
 function Panels({
 	store,
 	api,
@@ -913,7 +913,7 @@ function Panels({
 	);
 }
 
-/** The screen a user gets when the app cannot find mu: what happened, where it looked, and what to do about it. */
+/** The screen a user gets when the app cannot find spec.ai.jev: what happened, where it looked, and what to do about it. */
 function Failure({
 	status,
 	onRetry,

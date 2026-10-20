@@ -203,8 +203,8 @@ describe("delegate and the sub-agent's frame", () => {
 	it("inside the sub-agent: the part is the goal, the criteria are its todo list, and the list is left for the parent", async () => {
 		const dir = temp();
 		const out = join(dir, "frame.json");
-		vi.stubEnv("KYRN_SWARM_DEPTH", "1");
-		vi.stubEnv("KYRN_SWARM_CONTROL", join(dir, "control.json"));
+		vi.stubEnv("SPEC_AI_JEV_SWARM_DEPTH", "1");
+		vi.stubEnv("SPEC_AI_JEV_SWARM_CONTROL", join(dir, "control.json"));
 		vi.stubEnv(FRAME_OUT_ENV, out);
 		vi.stubEnv(
 			BRIEF_ENV,

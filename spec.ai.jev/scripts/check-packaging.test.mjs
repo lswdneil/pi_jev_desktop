@@ -48,7 +48,7 @@ test("a harness folder in the wrong place inside the app is caught", () => {
 
 test("a mismatch between what the workflow stages and what is copied in is caught", () => {
 	const problems = packagingProblems(replaced("desktop-next/electron-builder.yml", "from: ../.artifacts/desktop-harness", "from: ../.artifacts/harness"));
-	assert.match(problems.join("\n"), /the workflow stages \.\.\/\.artifacts\/desktop-harness\/mu-agent/);
+	assert.match(problems.join("\n"), /the workflow stages \.\.\/\.artifacts\/desktop-harness\/spec-ai-agent/);
 });
 
 test("a workflow that stops installing the harness's dependencies is caught", () => {
@@ -58,9 +58,9 @@ test("a workflow that stops installing the harness's dependencies is caught", ()
 
 test("a workflow that stops staging the harness is caught", () => {
 	const problems = packagingProblems(
-		replaced(".github/workflows/desktop-package.yml", "mv .artifacts/npm/mu-agent .artifacts/desktop-harness/mu-agent", "mv .artifacts/npm/mu-agent .artifacts/harness"),
+		replaced(".github/workflows/desktop-package.yml", "mv .artifacts/npm/spec-ai-agent .artifacts/desktop-harness/spec-ai-agent", "mv .artifacts/npm/spec-ai-agent .artifacts/harness"),
 	);
-	assert.match(problems.join("\n"), /nothing stages \.artifacts\/desktop-harness\/mu-agent/);
+	assert.match(problems.join("\n"), /nothing stages \.artifacts\/desktop-harness\/spec-ai-agent/);
 });
 
 test("an update feed pointing at another repository than the publish settings is caught", () => {

@@ -2,7 +2,7 @@
 
 # Features
 
-Each feature is configured under `features.<name>` in `~/.mu/agent/mu.json`. `false` turns a feature off, `true` turns it on with its defaults, and an object overrides single options:
+Each feature is configured under `features.<name>` in `~/.spec.ai.jev/agent/agent.json`. `false` turns a feature off, `true` turns it on with its defaults, and an object overrides single options:
 
 ```json
 {
@@ -176,17 +176,17 @@ On by default: no. Decision points: `context.compact`.
 
 ## checkpoint
 
-**Checkpoints and rewind.** Before the first change of every turn that edits files, snapshots the working tree into mu's own shadow git directory, never touching your repository. /rewind takes files and conversation back, /rewind undo takes the rewind back.
+**Checkpoints and rewind.** Before the first change of every turn that edits files, snapshots the working tree into spec.ai.jev's own shadow git directory, never touching your repository. /rewind takes files and conversation back, /rewind undo takes the rewind back.
 
 On by default: yes. Decision points: `turn.rewind`.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `dir` | empty | Where snapshots are kept. Empty means mu/checkpoints in the mu home, one shadow repository per project. |
+| `dir` | empty | Where snapshots are kept. Empty means spec.ai.jev/checkpoints in the spec.ai.jev home, one shadow repository per project. |
 | `keep` | `50` | Snapshots kept per project. Range 1 to 1000. |
 | `maxAgeDays` | `14` days | Days a snapshot is kept. Range 1 to 365. |
 | `maxFileMb` | `5` MB | Largest file in a snapshot. Larger files stay out of snapshots, and a rewind never touches them. Range 1 to 1024. |
-| `maxFiles` | `5000` files | Most files a snapshot takes in. With more files to take in, the session goes without checkpoints and says so once. Your home folder and mu's own folders are never snapshotted. Range 100 to 1000000. |
+| `maxFiles` | `5000` files | Most files a snapshot takes in. With more files to take in, the session goes without checkpoints and says so once. Your home folder and spec.ai.jev's own folders are never snapshotted. Range 100 to 1000000. |
 | `maxTotalMb` | `200` MB | Most a snapshot takes in, in all. With more to take in, the session goes without checkpoints and says so once. Range 1 to 100000. |
 | `ignore` | none | Extra paths to ignore. gitignore patterns, one per line. The project's own .gitignore and the built-in list (node_modules, build outputs and so on) always apply. |
 | `timeoutMs` | `30000` ms | Longest a snapshot may take. Past this the turn goes without a checkpoint; the tool call still runs. Range 1000 to 600000. |
@@ -213,7 +213,7 @@ On by default: yes. Decision points: `diagnostics.delivery`.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `builtin` | `true` | Use the built-in table of well-known servers. Well-known servers for TypeScript, Python, Go, Rust and C/C++, looked up on PATH only. Your own go under features.lsp.servers in mu.json. |
+| `builtin` | `true` | Use the built-in table of well-known servers. Well-known servers for TypeScript, Python, Go, Rust and C/C++, looked up on PATH only. Your own go under features.lsp.servers in agent.json. |
 | `editTools` | `edit`, `write` | Tools that count as editing a file. |
 | `subAgents` | `false` | Sub-agents start language servers too. Off by default: one set of servers per sub-agent is heavy on the machine. |
 | `settleMs` | `1500` ms | Wait for the server after an edit, at most. Past this nothing waits: late diagnostics are handled at the next edit or when the turn ends. Range 0 to 10000. |
@@ -263,7 +263,7 @@ On by default: yes. Decision points: `board.read`.
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `defaultOn` | `false` | On for projects not switched yet. Off by default: each update of the board costs a model call. |
-| `model` | empty | Model that writes the board. As provider/model; set here, nobody is asked. Empty: you pick one the first time the board is switched on (Claude Opus 4.6 recommended, then Gemini 3.8 Flash), kept in mu/board.json; none picked: the writer model, else the session's. |
+| `model` | empty | Model that writes the board. As provider/model; set here, nobody is asked. Empty: you pick one the first time the board is switched on (Claude Opus 4.6 recommended, then Gemini 3.8 Flash), kept in spec.ai.jev/board.json; none picked: the writer model, else the session's. |
 | `language` | `auto` | Language of the board. One of `auto` (The one you write in), `zh` (Chinese), `en` (English). |
 | `everyTools` | `5` | Tool calls between two looks. Range 1 to 100. |
 | `minIntervalMs` | `20000` ms | Shortest gap between two looks while it works. When the agent stops it always looks, whatever this says. Range 0 to 600000. |
@@ -383,8 +383,8 @@ On by default: yes. Decision points: `browser.step`.
 | `headless` | `true` | Run headless. |
 | `maxSteps` | `40` | Steps per run at most. Range 1 to 200. |
 | `textChars` | `4000` chars | Page text read per step. Range 500 to 50000. |
-| `embedded` | `true` | Use the desktop app's browser panel when it is running. Every step is then visible and can be paused, stopped or taken over; without the app mu's own browser is used. |
-| `profileDir` | empty | Browser profile folder. Empty uses mu's own folder. |
+| `embedded` | `true` | Use the desktop app's browser panel when it is running. Every step is then visible and can be paused, stopped or taken over; without the app spec.ai.jev's own browser is used. |
+| `profileDir` | empty | Browser profile folder. Empty uses spec.ai.jev's own folder. |
 
 ## background
 
@@ -398,7 +398,7 @@ On by default: yes.
 | `bufferChars` | `262144` chars | Output kept in memory per job. The newest is kept; the log file has everything. |
 | `maxOutputChars` | `20000` chars | Most that one bg_output returns. |
 | `killGraceMs` | `3000` ms | Wait before a job is killed by force. SIGTERM first (taskkill without /F on Windows), force after this long. |
-| `logDir` | empty | Log directory. Empty means ~/.mu/jobs/<session id>, cleared after 7 days. |
+| `logDir` | empty | Log directory. Empty means ~/.spec.ai.jev/jobs/<session id>, cleared after 7 days. |
 | `inheritShell` | `true` | Use the foreground shell settings. Reads shellPath and shellCommandPrefix from settings.json, like the bash tool. |
 | `wakeWhenIdle` | `false` | A finished job may wake an idle agent. Only a verdict of "now" starts a turn; when off the notice is only appended. |
 
@@ -438,13 +438,13 @@ On by default: yes.
 | `codex` | `true` | From Codex. |
 | `rules` | `true` | Inherit rules. |
 | `skills` | `true` | Inherit skills. |
-| `mcp` | `true` | Inherit MCP servers. When off, only the servers under mcp.servers in mu.json are used. |
+| `mcp` | `true` | Inherit MCP servers. When off, only the servers under mcp.servers in agent.json are used. |
 | `maxRuleChars` | `4000` chars | Most of one file-scoped rule handed over. The rest stays in the file for the model to read. Range 500 to 20000. |
 | `maxAlwaysChars` | `16000` chars | Budget for always-on rules. Always-on rules that do not fit are listed by description instead, so rules cannot bloat the prompt. Range 0 to 100000. |
 
 ## mcp
 
-**MCP servers.** MCP servers are connected by pi's own client (stdio and Streamable HTTP, OAuth sign-in, managed with /mcp). Each server mu takes over from Claude Code, Cursor, Codex and mu.json is a catalog entry that stays hidden: it starts and its tools are handed to the model only when the judge finds the task needs it or the model asks through find_capability. Tool lists are cached, so the judge has a description before a server ever ran. A server defined by a project asks before its first start, and again when its definition changes. "exposure": "always" under mcp.servers in mu.json keeps a server open. Servers added with mu mcp add are pi's: they connect with the session, and tool_search loads their tools when needed.
+**MCP servers.** MCP servers are connected by pi's own client (stdio and Streamable HTTP, OAuth sign-in, managed with /mcp). Each server spec.ai.jev takes over from Claude Code, Cursor, Codex and agent.json is a catalog entry that stays hidden: it starts and its tools are handed to the model only when the judge finds the task needs it or the model asks through find_capability. Tool lists are cached, so the judge has a description before a server ever ran. A server defined by a project asks before its first start, and again when its definition changes. "exposure": "always" under mcp.servers in agent.json keeps a server open. Servers added with spec mcp add are pi's: they connect with the session, and tool_search loads their tools when needed.
 
 On by default: yes.
 
@@ -455,7 +455,7 @@ On by default: yes.
 
 ## packs
 
-**Capability packs.** Tool packs that ship with mu and stay hidden until a task needs them; a missing program gives an install hint.
+**Capability packs.** Tool packs that ship with spec.ai.jev and stay hidden until a task needs them; a missing program gives an install hint.
 
 On by default: yes. Decision points: `review.triage`.
 
@@ -474,7 +474,7 @@ On by default: yes. Decision points: `review.triage`.
 | `maxSideLines` | `80` | Lines shown per side of a conflict block. Range 10 to 1000. |
 | `maxConflictChars` | `20000` | Characters of one file's conflicts shown. Range 2000 to 200000. |
 | `maxFindings` | `40` | Findings sorted per triage at most. The rest are still reported, just not sorted. Range 5 to 200. |
-| `debugger` | `true` | Debugger: breakpoints, stepping, variables. Runs a program under a debugger, stopped at breakpoints or an uncaught exception, with the call stack and variables. debugpy for Python, delve for Go, lldb-dap for compiled programs, each if installed; add your own under debugAdapters in mu.json. One run at a time, ended with the session. |
+| `debugger` | `true` | Debugger: breakpoints, stepping, variables. Runs a program under a debugger, stopped at breakpoints or an uncaught exception, with the call stack and variables. debugpy for Python, delve for Go, lldb-dap for compiled programs, each if installed; add your own under debugAdapters in agent.json. One run at a time, ended with the session. |
 | `maxFrames` | `20` | Frames shown at a stop. Range 1 to 200. |
 | `maxVariables` | `50` | Variables listed per scope. Range 5 to 1000. |
 | `debugOutputChars` | `4000` chars | Program output one result carries. Only the tail is kept when there is more. Range 500 to 100000. |

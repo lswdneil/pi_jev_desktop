@@ -11,7 +11,7 @@ import { defineTelemetrySchema } from "./index.ts";
  * `sensitive: true` marks an attribute the JSONL sink drops entirely; everything else is also run
  * through the host's redaction before it is written.
  */
-export const MU_TELEMETRY_SCHEMA = defineTelemetrySchema({
+export const SPEC_AI_JEV_TELEMETRY_SCHEMA = defineTelemetrySchema({
 	version: 1,
 	spans: {
 		turn: {
@@ -162,10 +162,10 @@ export const MU_TELEMETRY_SCHEMA = defineTelemetrySchema({
 	},
 });
 
-type SchemaSpanDefinition = (typeof MU_TELEMETRY_SCHEMA.spans)[keyof typeof MU_TELEMETRY_SCHEMA.spans];
+type SchemaSpanDefinition = (typeof SPEC_AI_JEV_TELEMETRY_SCHEMA.spans)[keyof typeof SPEC_AI_JEV_TELEMETRY_SCHEMA.spans];
 
 function spanDefinition(spanName: string): SchemaSpanDefinition | undefined {
-	return (MU_TELEMETRY_SCHEMA.spans as Record<string, SchemaSpanDefinition>)[spanName];
+	return (SPEC_AI_JEV_TELEMETRY_SCHEMA.spans as Record<string, SchemaSpanDefinition>)[spanName];
 }
 
 /** Attribute names a span may carry in one phase, from the schema; a sink keeps only these. */
@@ -179,7 +179,7 @@ export function allowedAttributes(spanName: string, phase: "start" | "end"): Rea
 /** Attributes the schema marks `sensitive`, which no sink may write. */
 export function sensitiveAttributes(): ReadonlySet<string> {
 	const names = new Set<string>();
-	for (const span of Object.values(MU_TELEMETRY_SCHEMA.spans)) {
+	for (const span of Object.values(SPEC_AI_JEV_TELEMETRY_SCHEMA.spans)) {
 		for (const definitions of [span.startAttributes, span.endAttributes]) {
 			for (const [name, definition] of Object.entries(definitions)) {
 				if (definition.sensitive) names.add(name);

@@ -33,7 +33,7 @@ import {
 import { turnRewind } from "../../decisions/turn-rewind.ts";
 import type { Coded } from "../../language.ts";
 import { say } from "../../language.ts";
-import { muHome } from "../../naming.ts";
+import { specHome } from "../../naming.ts";
 import { clip, failOpen, type KyrnRuntime, textOf } from "../runtime.ts";
 import { describeCall } from "./admission.ts";
 import type { HarnessRoots } from "./inherit.ts";
@@ -287,20 +287,20 @@ export function registerCheckpoint(
 		confirmSeconds: 120,
 	});
 	// A sub-agent works inside its parent's turn: the parent's checkpoint before `delegate` covers what it changes.
-	if (!options.enabled || process.env.KYRN_SWARM_DEPTH) return;
+	if (!options.enabled || process.env.SPEC_AI_JEV_SWARM_DEPTH) return;
 	const baseDir = options.dir || (roots ? join(roots.agentDir, "mu", "checkpoints") : "");
 	// No home to keep snapshots in (an embedder that injected its own setup): the feature stays out of the way.
 	if (!baseDir) return;
 	const { pi } = runtime;
 	const home = (): string => roots?.home ?? homedir();
 	/** mu's own folders hold the snapshots, the sessions and the credentials: never in a snapshot, and no place to take one. */
-	const muFolders = (): string[] => [baseDir, muHome(home()), ...(roots ? [roots.agentDir] : [])];
+	const specFolders = (): string[] => [baseDir, specHome(home()), ...(roots ? [roots.agentDir] : [])];
 	const limits: ScanLimits = { maxFiles: options.maxFiles, maxBytes: options.maxTotalMb * 1024 * 1024 };
 
 	/** Why no snapshot of this folder may be taken at all: it holds everything the user has, or it is mu's own. */
 	const placeOff = (cwd: string): CheckpointsOff | undefined => {
 		if (isWithin(cwd, home())) return "home_folder";
-		return muFolders().some((folder) => isWithin(folder, cwd)) ? "mu_folder" : undefined;
+		return specFolders().some((folder) => isWithin(folder, cwd)) ? "mu_folder" : undefined;
 	};
 
 	let store: Store | undefined;
@@ -361,7 +361,7 @@ export function registerCheckpoint(
 			run: deps.run ?? spawnGit("git", options.timeoutMs),
 			maxFileBytes: options.maxFileMb * 1024 * 1024,
 			ignore: [...BUILT_IN_IGNORES, ...options.ignore],
-			ownFolders: muFolders(),
+			ownFolders: specFolders(),
 		});
 		store = opened;
 		// Old snapshots go when a project is first used in a session; their objects follow in the background.

@@ -10,7 +10,7 @@ export default mergeConfig(
 			testTimeout: 30000,
 			// Tests run offline by default; opt in with allowNetwork() from test/test-network-env.ts.
 			// Telemetry writes files; a test run must not write into the developer's agent directory.
-			env: { PI_OFFLINE: "1", MU_TELEMETRY: "off" },
+			env: { PI_OFFLINE: "1", SPEC_AI_JEV_TELEMETRY: "off" },
 			unstubEnvs: true,
 			reporters: process.env.GITHUB_ACTIONS ? ["dot", "github-actions"] : ["dot"],
 			silent: "passed-only",

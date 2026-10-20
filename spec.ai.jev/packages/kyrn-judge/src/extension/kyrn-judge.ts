@@ -3,11 +3,11 @@
  *
  *   pi -e packages/kyrn-judge/src/extension/kyrn-judge.ts
  *
- * Configuration lives in `<agent dir>/kyrn.json` (see `../config.ts`), with
+ * Configuration lives in `<agent dir>/agent.json` (see `../config.ts`), with
  * environment overrides:
- *   KYRN_JUDGE            judges to use, in order: jev | laya | mock | classifier:<provider>/<model> | llm:<provider>/<model> | a name from kyrn.json; "off" disables
- *   KYRN_JUDGE_MODE       default mode of every decision: active (default) | shadow | off
- *   KYRN_LOCAL_JUDGE_URL  sidecar address for `laya` (default http://127.0.0.1:47823)
+ *   SPEC_AI_JEV_JUDGE            judges to use, in order: jev | laya | mock | classifier:<provider>/<model> | llm:<provider>/<model> | a name from agent.json; "off" disables
+ *   SPEC_AI_JEV_JUDGE_MODE       default mode of every decision: active (default) | shadow | off
+ *   SPEC_AI_JEV_LOCAL_JUDGE_URL  sidecar address for `laya` (default http://127.0.0.1:47823)
  *
  * The decision model is pluggable: features ask typed questions through one
  * engine and never know which model answers. Every handler fails open. pi
@@ -77,9 +77,9 @@ export interface KyrnJudgeExtensionOptions {
 	onPresentation?: PresentationListener;
 	/** A single judge backend, bypassing the configured tiers. Meant for tests and embedding. */
 	provider?: JudgeProvider;
-	/** Default decision mode. Overrides the config file and KYRN_JUDGE_MODE. */
+	/** Default decision mode. Overrides the config file and SPEC_AI_JEV_JUDGE_MODE. */
 	mode?: DecisionMode;
-	/** Use this instead of reading kyrn.json and the environment. */
+	/** Use this instead of reading agent.json and the environment. */
 	config?: KyrnConfig;
 	/** How the `delegate` tool runs a sub-agent. Defaults to a child pi process. */
 	swarmRunner?: SwarmRunner;
@@ -158,7 +158,7 @@ function registerKyrn(pi: ExtensionAPI, options: KyrnJudgeExtensionOptions): voi
 		options.config || options.provider
 			? { config: options.config ?? DEFAULT_CONFIG, disabled: false, problems: [] }
 			: loadConfig({ dir: getAgentDir(), env: process.env });
-	// KYRN_JUDGE=off keeps the CLI (welcome screen, commands) and the permission modes, and asks no judge: every
+	// SPEC_AI_JEV_JUDGE=off keeps the CLI (welcome screen, commands) and the permission modes, and asks no judge: every
 	// decision is off.
 	const config: KyrnConfig = loaded.disabled
 		? { ...loaded.config, tiers: ["mock"], modes: { default: "off" } }
@@ -210,8 +210,8 @@ function registerKyrn(pi: ExtensionAPI, options: KyrnJudgeExtensionOptions): voi
 	}
 
 	// A sub-agent first of all listens to its parent: a wrap-up request has to be known before anything else reacts to a step.
-	if (process.env.KYRN_SWARM_CONTROL)
-		registerSwarmChild(runtime, process.env.KYRN_SWARM_CONTROL, process.env[FRAME_OUT_ENV]);
+	if (process.env.SPEC_AI_JEV_SWARM_CONTROL)
+		registerSwarmChild(runtime, process.env.SPEC_AI_JEV_SWARM_CONTROL, process.env[FRAME_OUT_ENV]);
 
 	// Order matters where two features share an event: interjection must see a
 	// mid-run message before anything else, and preflight must set the turn's

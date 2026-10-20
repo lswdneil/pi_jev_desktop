@@ -41,7 +41,7 @@ function home(files: Record<string, string> = {}): { home: string; agentDir: str
 		mkdirSync(dirname(join(root, path)), { recursive: true });
 		writeFileSync(join(root, path), content);
 	}
-	return { home: root, agentDir: join(root, ".mu", "agent") };
+	return { home: root, agentDir: join(root, ".spec.ai.jev", "agent") };
 }
 
 const fake = (...args: string[]) => ({ command: process.execPath, args: [FAKE_SERVER, ...args] });
@@ -254,10 +254,10 @@ describe("MCP servers in the capability catalog", () => {
 	});
 
 	it("starts a server without mu's environment, which holds model keys", async () => {
-		process.env.MU_MCP_TEST_MODEL_KEY = SECRET;
+		process.env.SPEC_AI_JEV_MCP_TEST_MODEL_KEY = SECRET;
 		try {
 			const { harness, events } = await start({
-				servers: { nosy: fake("--crash-on-start", "--leak-env", "MU_MCP_TEST_MODEL_KEY") },
+				servers: { nosy: fake("--crash-on-start", "--leak-env", "SPEC_AI_JEV_MCP_TEST_MODEL_KEY") },
 			});
 			harness.setResponses([
 				fauxAssistantMessage([fauxToolCall("find_capability", { open: "mcp:nosy" })], { stopReason: "toolUse" }),
@@ -267,14 +267,14 @@ describe("MCP servers in the capability catalog", () => {
 			// The server printed what it found under that name: nothing.
 			expect(kinds(events, "mcp.failed")[0]?.reason).toContain("starting with token undefined");
 		} finally {
-			delete process.env.MU_MCP_TEST_MODEL_KEY;
+			delete process.env.SPEC_AI_JEV_MCP_TEST_MODEL_KEY;
 		}
 	});
 
 	it("passes values literally: pi reads neither a variable nor a command into them", async () => {
-		process.env.MU_MCP_TEST_VALUE = "!a$b";
+		process.env.SPEC_AI_JEV_MCP_TEST_VALUE = "!a$b";
 		// mu's own placeholder, as Claude Code writes it.
-		const placeholder = ["$", "{MU_MCP_TEST_VALUE}"].join("");
+		const placeholder = ["$", "{SPEC_AI_JEV_MCP_TEST_VALUE}"].join("");
 		try {
 			const { harness, events } = await start({
 				servers: {
@@ -288,7 +288,7 @@ describe("MCP servers in the capability catalog", () => {
 			await harness.session.prompt("Open it.");
 			expect(kinds(events, "mcp.failed")[0]?.reason).toContain("starting with token !a$b");
 		} finally {
-			delete process.env.MU_MCP_TEST_VALUE;
+			delete process.env.SPEC_AI_JEV_MCP_TEST_VALUE;
 		}
 	});
 

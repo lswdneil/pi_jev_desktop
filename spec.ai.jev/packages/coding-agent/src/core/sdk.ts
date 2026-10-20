@@ -25,7 +25,7 @@ let processTelemetry: TelemetryHandle | undefined;
 /**
  * The process's telemetry sink, created once from the environment.
  *
- * Default is local JSONL under the agent directory; a remote collector needs `MU_OTEL=1` as well, so a
+ * Default is local JSONL under the agent directory; a remote collector needs `SPEC_AI_JEV_OTEL=1` as well, so a
  * copied config cannot start shipping spans on its own. Spans are ids, counts and durations only.
  */
 function sessionTelemetry(): TelemetryHandle {

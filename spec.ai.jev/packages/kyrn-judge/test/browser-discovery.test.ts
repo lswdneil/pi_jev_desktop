@@ -76,18 +76,18 @@ describe("finding a browser on Windows", () => {
 		expect(findBrowser(host("win32", [EDGE], { env }))).toEqual({ executable: EDGE, side: "native" });
 		expect(findChrome(env, host("win32", [EDGE], { env }))).toBe(EDGE);
 		expect(findBrowser(host("win32", [], { env }))).toBeUndefined();
-		expect(browserAdvice(host("win32", []))).toContain("set MU_CHROME to its .exe");
+		expect(browserAdvice(host("win32", []))).toContain("set SPEC_AI_JEV_CHROME to its .exe");
 	});
 
 	it("starts it with a Windows profile path and the usual flags", () => {
 		const plan = planBrowserLaunch({
 			host: host("win32", [EDGE]),
 			browser: { executable: EDGE, side: "native" },
-			profileDir: "C:\\Users\\bai\\.mu\\browser-profile",
+			profileDir: "C:\\Users\\bai\\.spec.ai.jev\\browser-profile",
 			headless: true,
 		});
 		expect(plan.command).toBe(EDGE);
-		expect(plan.args[0]).toBe("--user-data-dir=C:\\Users\\bai\\.mu\\browser-profile");
+		expect(plan.args[0]).toBe("--user-data-dir=C:\\Users\\bai\\.spec.ai.jev\\browser-profile");
 		expect(plan.args).toContain("--remote-debugging-port=0");
 		expect(plan.args).toContain("--headless=new");
 		// Never opened to the network: the port stays on the loopback, which is Chrome's default.
@@ -112,14 +112,14 @@ describe("finding a browser on Linux", () => {
 		expect(new Set(paths).size).toBe(paths.length);
 	});
 
-	it("lets MU_CHROME, or KYRN_CHROME as before, win over everything found", () => {
+	it("lets SPEC_AI_JEV_CHROME win over everything found", () => {
 		const installed = ["/usr/bin/chromium", "/opt/my/chrome"];
 		expect(findBrowser(host("linux", installed))?.executable).toBe("/usr/bin/chromium");
-		expect(findBrowser(host("linux", installed, { env: { KYRN_CHROME: "/opt/my/chrome" } }))?.executable).toBe(
+		expect(findBrowser(host("linux", installed, { env: { SPEC_AI_JEV_CHROME: "/opt/my/chrome" } }))?.executable).toBe(
 			"/opt/my/chrome",
 		);
 		// Named but not there: the search goes on.
-		expect(findBrowser(host("linux", installed, { env: { MU_CHROME: "/nowhere" } }))?.executable).toBe(
+		expect(findBrowser(host("linux", installed, { env: { SPEC_AI_JEV_CHROME: "/nowhere" } }))?.executable).toBe(
 			"/usr/bin/chromium",
 		);
 	});
@@ -137,10 +137,10 @@ describe("finding a browser on Linux", () => {
 		const plan = planBrowserLaunch({
 			host: linux,
 			browser: { executable: "/snap/bin/chromium", side: "native" },
-			profileDir: "/home/bai/.mu/browser-profile",
+			profileDir: "/home/bai/.spec.ai.jev/browser-profile",
 			headless: false,
 		});
-		// A snap cannot see ~/.mu (hidden) nor the machine's /tmp.
+		// A snap cannot see ~/.spec.ai.jev (hidden) nor the machine's /tmp.
 		expect(plan.profileDir).toBe("/home/bai/snap/chromium/common/mu-browser-profile");
 		expect(plan.args[0]).toBe("--user-data-dir=/home/bai/snap/chromium/common/mu-browser-profile");
 		expect(plan.args).not.toContain("--headless=new");
@@ -182,12 +182,12 @@ describe("finding a browser under WSL", () => {
 		const plan = planBrowserLaunch({
 			host: host("linux", [WSL_EDGE], { mode: "mirrored", distro: "Ubuntu-24.04" }),
 			browser: { executable: WSL_EDGE, side: "windows" },
-			profileDir: "/home/bai/.mu/browser-profile",
+			profileDir: "/home/bai/.spec.ai.jev/browser-profile",
 			headless: true,
 		});
 		expect(plan.command).toBe(WSL_EDGE);
-		expect(plan.args[0]).toBe("--user-data-dir=\\\\wsl.localhost\\Ubuntu-24.04\\home\\bai\\.mu\\browser-profile");
-		expect(plan.profileDir).toBe("/home/bai/.mu/browser-profile");
+		expect(plan.args[0]).toBe("--user-data-dir=\\\\wsl.localhost\\Ubuntu-24.04\\home\\bai\\.spec.ai.jev\\browser-profile");
+		expect(plan.profileDir).toBe("/home/bai/.spec.ai.jev/browser-profile");
 		expect(plan.cwd).toBe("/mnt/c/Program Files (x86)/Microsoft/Edge/Application");
 		expect(plan.args.join(" ")).not.toContain("remote-debugging-address");
 
@@ -267,8 +267,8 @@ describe("telling the platforms apart, and their paths", () => {
 	it("spells a WSL path the way Windows needs it, as wslpath -w would", () => {
 		expect(wslToWindowsPath("/mnt/c/Users/bai/AppData/Local")).toBe("C:\\Users\\bai\\AppData\\Local");
 		expect(wslToWindowsPath("/mnt/d")).toBe("D:\\");
-		expect(wslToWindowsPath("/home/bai/.mu/browser-profile/", { distro: "Ubuntu" })).toBe(
-			"\\\\wsl.localhost\\Ubuntu\\home\\bai\\.mu\\browser-profile",
+		expect(wslToWindowsPath("/home/bai/.spec.ai.jev/browser-profile/", { distro: "Ubuntu" })).toBe(
+			"\\\\wsl.localhost\\Ubuntu\\home\\bai\\.spec.ai.jev\\browser-profile",
 		);
 		// /mnt/wsl and friends are not drives.
 		expect(wslToWindowsPath("/mnt/wsl/x", { distro: "Ubuntu" })).toBe("\\\\wsl.localhost\\Ubuntu\\mnt\\wsl\\x");

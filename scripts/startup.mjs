@@ -30,14 +30,14 @@ const MAIN = join(DESKTOP, "out", "main", "index.js");
 const FIXTURE_HARNESS = join(DESKTOP, "test", "e2e", "fixtures", "harness");
 
 async function launchAndMeasure() {
-	const home = mkdtempSync(join(tmpdir(), "mu-startup-"));
-	const profile = mkdtempSync(join(tmpdir(), "mu-startup-profile-"));
+	const home = mkdtempSync(join(tmpdir(), "spec-startup-"));
+	const profile = mkdtempSync(join(tmpdir(), "spec-startup-profile-"));
 	const started = Date.now();
 	const app = await electron.launch({
 		args: [MAIN, `--user-data-dir=${profile}`],
 		env: {
 			...process.env,
-			MU_ROOT: FIXTURE_HARNESS,
+			SPEC_AI_JEV_ROOT: FIXTURE_HARNESS,
 			USERPROFILE: home,
 			HOME: home,
 		},

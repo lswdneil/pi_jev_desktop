@@ -76,7 +76,7 @@ const policy = contentSecurityPolicy(
  * The folder the agent runs in. A project selected from the rail wins; a checkout defaults to its own root, and a
  * packaged app defaults to the user's home folder until the person opens a project.
  */
-let workspaceRoot = (process.env.SPEC_AI_JEV_WORKSPACE ?? process.env.MU_WORKSPACE ?? "").trim() || undefined;
+let workspaceRoot = (process.env.SPEC_AI_JEV_WORKSPACE ?? "").trim() || undefined;
 
 function defaultWorkspace(harness: Harness): string {
 	return harness.layout === "repo" ? harness.root : homedir();
@@ -163,12 +163,12 @@ const consent = {
 	},
 	async grant(): Promise<unknown> {
 		const result = await runConsentCommand({ launch: cliLaunch(currentHarness()), spawn: spawnAgentProcess, action: "accept" });
-		if (!result.ok) throw new Error(result.output.trim() === "" ? "mu judge consent accept failed" : result.output.trim());
+		if (!result.ok) throw new Error(result.output.trim() === "" ? "spec judge consent accept failed" : result.output.trim());
 		return consent.status();
 	},
 	async revoke(): Promise<unknown> {
 		const result = await runConsentCommand({ launch: cliLaunch(currentHarness()), spawn: spawnAgentProcess, action: "revoke" });
-		if (!result.ok) throw new Error(result.output.trim() === "" ? "mu judge consent revoke failed" : result.output.trim());
+		if (!result.ok) throw new Error(result.output.trim() === "" ? "spec judge consent revoke failed" : result.output.trim());
 		return consent.status();
 	},
 };
@@ -283,13 +283,13 @@ const sessions = {
 };
 
 /**
- * The judgments panel's own source: `mu ledger --json`, which the kernel already provides and keeps in step with the
+ * The judgments panel's own source: `spec ledger --json`, which the kernel already provides and keeps in step with the
  * ledger format. Reading the file directly would be a second parser for the same lines.
  */
 const judgments = {
 	async recent(): Promise<readonly JudgmentRecord[]> {
 		const result = await runHarnessCommand({ launch: cliLaunch(currentHarness()), spawn: spawnAgentProcess, args: ["ledger", "--json"] });
-		if (!result.ok) throw new Error(result.output.trim() === "" ? "mu ledger --json failed" : result.output.trim());
+		if (!result.ok) throw new Error(result.output.trim() === "" ? "spec ledger --json failed" : result.output.trim());
 		const records: JudgmentRecord[] = [];
 		for (const line of result.output.split("\n")) {
 			const text = line.trim();
@@ -463,17 +463,11 @@ type ShellLogger = (level: ShellLogLevel, message: string, details?: Readonly<Re
 /**
  * This app's agent folder: settings, consent, sessions and the log all live under `~/.spec.ai.jev/agent`.
  *
- * `mu` (the command line) and `spec.ai.jev` (this app) are two products with their own state, so the kernel is told
- * `MU_AGENT_DIR` (`packages/kyrn-judge/src/main.ts` reads it before its `~/.mu/agent` default) and never touches a
- * user's `~/.mu`. Nothing migrates: an existing command-line installation keeps its files where they are.
+ * The kernel is told `SPEC_AI_JEV_AGENT_DIR` and never touches a command line's own state. Nothing migrates between
+ * them: an existing installation keeps its files where they are.
  */
 const agentDir = agentDirFor(homedir(), process.platform);
-// The harness still reads `MU_AGENT_DIR`; the product's own spelling is set beside it so a future rename is a
-// configuration change rather than a data migration.
-if ((process.env.SPEC_AI_JEV_AGENT_DIR ?? process.env.MU_AGENT_DIR ?? "").trim() === "") {
-	process.env.MU_AGENT_DIR = agentDir;
-	process.env.SPEC_AI_JEV_AGENT_DIR = agentDir;
-}
+if ((process.env.SPEC_AI_JEV_AGENT_DIR ?? "").trim() === "") process.env.SPEC_AI_JEV_AGENT_DIR = agentDir;
 
 /** The one file the shell writes; the crash dialog names it, so both paths agree by construction. */
 const logFile = shellLogPath(agentDir);
@@ -602,7 +596,7 @@ async function main(): Promise<void> {
 	app.on("web-contents-created", (_event, contents) => guardContents(contents));
 
 	// A packaged app has no console: without this file an error in the shell leaves nothing to inspect. It sits in the
-	// agent's `logs` folder, which `mu doctor --bundle` already collects, so a report can carry it.
+	// agent's `logs` folder, which `spec doctor --bundle` already collects, so a report can carry it.
 	const log: ShellLogger = (level, message, details) => {
 		try {
 			appendShellLog(logFile, formatShellLogLine(level, message, details));

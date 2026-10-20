@@ -4,8 +4,8 @@
  *   mu import --list [--json] [--cwd <dir>] [--sub-agents] [--agent-dir <dir>]
  *   mu import <file>... [--json] [--agent-dir <dir>]
  *
- * mu's agent folder comes from --agent-dir, else MU_CODING_AGENT_DIR (the launcher sets it), else ~/.mu/agent.
- * Sessions go where pi puts them: MU_CODING_AGENT_SESSION_DIR, else `sessionDir` in the agent folder's
+ * mu's agent folder comes from --agent-dir, else SPEC_CODING_AGENT_DIR (the launcher sets it), else ~/.spec.ai.jev/agent.
+ * Sessions go where pi puts them: SPEC_CODING_AGENT_SESSION_DIR, else `sessionDir` in the agent folder's
  * settings.json, else `<agent folder>/sessions/<project>/`.
  */
 import { readFileSync } from "node:fs";
@@ -27,7 +27,7 @@ export const USAGE = [
 	"  mu import --list [--json] [--cwd <dir>]   the conversations on this machine (only <dir>'s with --cwd)",
 	"  mu import <file>... [--json]              import these transcripts; each becomes a mu session",
 	"",
-	"  --agent-dir <dir>   mu's agent folder (default: MU_CODING_AGENT_DIR, else ~/.mu/agent)",
+	"  --agent-dir <dir>   mu's agent folder (default: SPEC_CODING_AGENT_DIR, else ~/.spec.ai.jev/agent)",
 	"  --sub-agents        also list the threads sub-agents ran",
 	"",
 	"Looks in ~/.claude/projects (CLAUDE_CONFIG_DIR) and ~/.codex/sessions (CODEX_HOME).",
@@ -80,13 +80,13 @@ export interface Io {
 	home: string;
 }
 
-/** Where mu keeps its sessions, decided the way pi decides it (apart from a project's own settings). */
+/** Where spec keeps its sessions, decided the way pi decides it (apart from a project's own settings). */
 export function storeFor(agentDirArg: string | undefined, io: Pick<Io, "env" | "home" | "cwd">): SessionStore {
 	const agentDir = absolute(
-		agentDirArg ?? io.env.MU_CODING_AGENT_DIR ?? io.env.KYRN_CODING_AGENT_DIR ?? join(io.home, ".mu", "agent"),
+		agentDirArg ?? io.env.SPEC_CODING_AGENT_DIR ?? join(io.home, ".spec.ai.jev", "agent"),
 		io.cwd,
 	);
-	const fromEnv = io.env.MU_CODING_AGENT_SESSION_DIR;
+	const fromEnv = io.env.SPEC_CODING_AGENT_SESSION_DIR;
 	if (fromEnv) return { agentDir, sessionDir: absolute(fromEnv, io.cwd) };
 	try {
 		const settings = JSON.parse(readFileSync(join(agentDir, "settings.json"), "utf8")) as unknown;

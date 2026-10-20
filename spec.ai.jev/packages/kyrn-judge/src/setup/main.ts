@@ -8,7 +8,7 @@ import {
 	SettingsManager,
 } from "@earendil-works/pi-coding-agent";
 import { exitWhenUnlocked } from "../auth/exit.ts";
-import { muEnv, muHome } from "../naming.ts";
+import { specEnv, specHome } from "../naming.ts";
 import { redactSecrets } from "../redact.ts";
 import { readEnvEntries } from "./env-file.ts";
 import { readTextFile } from "./files.ts";
@@ -18,19 +18,19 @@ import { readAll, terminalPrompter } from "./terminal.ts";
 import { runSetup } from "./wizard.ts";
 
 /**
- * The entry of `mu setup` (wizard.ts), which kyrn/bin/mu.mjs starts: from its sources in a checkout, as
- * judge/dist/setup.js in the npm package. The launcher names the folders: MU_AGENT_DIR, MU_SETUP_HOME (mu's home, for
- * the backups) and MU_SETUP_ENV_FILE (the .env it reads for a session).
+ * The entry of `mu setup` (wizard.ts), which kyrn/bin/agent.mjs starts: from its sources in a checkout, as
+ * judge/dist/setup.js in the npm package. The launcher names the folders: SPEC_AI_JEV_AGENT_DIR, SPEC_AI_JEV_SETUP_HOME (mu's home, for
+ * the backups) and SPEC_AI_JEV_SETUP_ENV_FILE (the .env it reads for a session).
  */
 
 // A key given on the command line comes in the environment, never in this process's argv (the launcher moved it
 // there). It is taken out at once, so that nothing this process might start inherits it.
-const givenKey = process.env.MU_SETUP_KEY || undefined;
-delete process.env.MU_SETUP_KEY;
+const givenKey = process.env.SPEC_AI_JEV_SETUP_KEY || undefined;
+delete process.env.SPEC_AI_JEV_SETUP_KEY;
 
-const home = process.env.MU_SETUP_HOME || muHome();
-const agentDir = muEnv("AGENT_DIR") || join(home, "agent");
-const envFile = process.env.MU_SETUP_ENV_FILE || join(home, ".env");
+const home = process.env.SPEC_AI_JEV_SETUP_HOME || specHome();
+const agentDir = specEnv("AGENT_DIR") || join(home, "agent");
+const envFile = process.env.SPEC_AI_JEV_SETUP_ENV_FILE || join(home, ".env");
 /** The files pi keeps under a lock, named once so that the exit waits for the same ones pi opens (../auth/exit.ts). */
 const authPath = join(agentDir, "auth.json");
 const modelsStorePath = join(agentDir, "models-store.json");

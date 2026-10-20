@@ -32,7 +32,7 @@ function dist({ archive = 1024, extra = {}, harness = false, harnessManifest, ha
 	writeFileSync(join(resources, "app.asar"), Buffer.alloc(archive, 0));
 	for (const [name, content] of Object.entries(extra)) writeFileSync(join(resources, name), content);
 	if (harness) {
-		const root = join(resources, "harness", "mu-agent");
+		const root = join(resources, "harness", "spec-ai-agent");
 		mkdirSync(root, { recursive: true });
 		writeFileSync(join(root, "package.json"), JSON.stringify(harnessManifest ?? {}));
 		for (const module of harnessModules) {
@@ -68,7 +68,7 @@ test("a package without an executable or without an archive is not a package", (
 });
 
 test("a credentials file inside the package is refused by name", () => {
-	const problems = packageProblems(dist({ extra: { ".env": "MU_JUDGE_API_KEY=x" } }));
+	const problems = packageProblems(dist({ extra: { ".env": "SPEC_AI_JEV_JUDGE_API_KEY=x" } }));
 	assert.match(problems.join("\n"), /\.env is a credentials file by name/);
 });
 
@@ -84,7 +84,7 @@ test("a harness without the dependencies it declares is caught", () => {
 test("a missing harness fails where the release asks for one, and is a note elsewhere", () => {
 	const directory = dist();
 	assert.deepEqual(packageProblems(directory), []);
-	assert.match(packageProblems(directory, { requireHarness: true }).join("\n"), /no resources\/harness\/mu-agent/);
+	assert.match(packageProblems(directory, { requireHarness: true }).join("\n"), /no resources\/harness\/spec-ai-agent/);
 	assert.match(describePackage(directory)[0], /no harness \(a local --dir build does not stage one\)/);
 
 	const staged = dist({ harness: true });
@@ -121,7 +121,7 @@ test("a staged harness older than the workspace sources is refused, and a curren
 	mkdirSync(join(source, ".."), { recursive: true });
 	writeFileSync(source, "// newer than the staged harness");
 	writeFileSync(manifest, "{}");
-	const harness = join(root, ".artifacts", "desktop-harness", "mu-agent");
+	const harness = join(root, ".artifacts", "desktop-harness", "spec-ai-agent");
 	mkdirSync(harness, { recursive: true });
 	writeFileSync(join(harness, "package.json"), "{}");
 	// The package itself is written last, so only the harness check is what this test exercises.
@@ -134,7 +134,7 @@ test("a staged harness older than the workspace sources is refused, and a curren
 	utimesSync(source, later, later);
 	assert.match(
 		packageProblems(directory).join("\n"),
-		/desktop-harness[\\/]mu-agent is older than .*later\.ts: the package would bundle a harness built before the sources/,
+		/desktop-harness[\\/]spec-ai-agent is older than .*later\.ts: the package would bundle a harness built before the sources/,
 	);
 	assert.deepEqual(packageProblems(directory, { allowStale: true }), []);
 

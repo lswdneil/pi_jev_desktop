@@ -75,8 +75,8 @@ const STAGE_ENV_NAMES = [
 const warnedOverrides = new Set<string>();
 
 /**
- * The policy for a preset, with `MU_DEADLINE_<PRESET>_<STAGE>` overrides applied
- * (e.g. `MU_DEADLINE_JUDGE_TOTAL=15000`). The override exists for tests and
+ * The policy for a preset, with `SPEC_AI_JEV_DEADLINE_<PRESET>_<STAGE>` overrides applied
+ * (e.g. `SPEC_AI_JEV_DEADLINE_JUDGE_TOTAL=15000`). The override exists for tests and
  * diagnosis; the user-facing knob stays the setting in `settings.json`.
  */
 export function deadlinePolicy(
@@ -84,7 +84,7 @@ export function deadlinePolicy(
 	env: Readonly<Record<string, string | undefined>> = process.env,
 ): DeadlinePolicy {
 	const policy: DeadlinePolicy = { ...DEADLINE_PRESETS[preset] };
-	const prefix = `MU_DEADLINE_${preset.toUpperCase().replaceAll("-", "_")}`;
+	const prefix = `SPEC_AI_JEV_DEADLINE_${preset.toUpperCase().replaceAll("-", "_")}`;
 	for (const [field, stageName] of STAGE_ENV_NAMES) {
 		const name = `${prefix}_${stageName}`;
 		const raw = env[name];

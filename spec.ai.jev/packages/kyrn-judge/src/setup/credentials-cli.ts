@@ -4,12 +4,12 @@ import { credentialFiles, describeMigration, migrateCredentials } from "./creden
 /**
  * `mu migrate --credentials`: moves the keys in `.env` into the credential store.
  *
- *   node packages/kyrn-judge/src/setup/credentials-cli.ts --agent-dir ~/.mu/agent
+ *   node packages/kyrn-judge/src/setup/credentials-cli.ts --agent-dir ~/.spec.ai.jev/agent
  *   ... --dry-run          what it would do, writing nothing
  *   ... --rewrite-env      also drop the keys pi reads (only when they are in the real environment)
  *   ... --json             the result as one object, for a script
  *
- * `mu.mjs` starts this (from the sources in a checkout, from the build in the package), because the store and
+ * `agent.mjs` starts this (from the sources in a checkout, from the build in the package), because the store and
  * the `.env` parser are the kernel's and the launcher must not grow a second copy of either.
  */
 
@@ -24,7 +24,7 @@ export function parseCredentialsArgs(
 	argv: readonly string[],
 	env: NodeJS.ProcessEnv = process.env,
 ): CredentialsCliOptions {
-	let agentDir = env.MU_AGENT_DIR ?? env.MU_CODING_AGENT_DIR;
+	let agentDir = env.SPEC_AI_JEV_AGENT_DIR ?? env.SPEC_CODING_AGENT_DIR;
 	let dryRun = false;
 	let rewriteEnv = false;
 	let json = false;

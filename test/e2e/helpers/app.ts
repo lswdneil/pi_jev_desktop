@@ -4,12 +4,12 @@
 /**
  * Launching the built app with its own home and its own browser profile.
  *
- * A settings test that read this machine's `~/.mu` or its previous window storage would be a test of this developer's
- * laptop. Every launch gets a fresh home directory (where `mu.json` and `consent.json` live) and a fresh
+ * A settings test that read this machine's `~/.spec.ai.jev` or its previous window storage would be a test of this developer's
+ * laptop. Every launch gets a fresh home directory (where `agent.json` and `consent.json` live) and a fresh
  * `--user-data-dir` (where the renderer keeps its language and its "onboarded" flag).
  *
  * Three harnesses are launchable: the fixture (a stub that answers the protocol and writes the kernel's consent file),
- * no harness at all (a `MU_ROOT` pointing at an empty folder), and this checkout (the real `kyrn/bin/mu.mjs`).
+ * no harness at all (a `SPEC_AI_JEV_ROOT` pointing at an empty folder), and this checkout (the real `kyrn/bin/agent.mjs`).
  */
 
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -32,10 +32,10 @@ export interface Profile {
 	readonly profileDir: string;
 	/** The environment the app was started with, for a test that has to start it a second time. */
 	readonly environment: Record<string, string>;
-	/** `~/.mu/agent/mu.json` as the app wrote it. */
+	/** `~/.spec.ai.jev/agent/agent.json` as the app wrote it. */
 	settings(): Record<string, unknown> | undefined;
 	consent(): Record<string, unknown> | undefined;
-	/** The shell's log (`~/.mu/agent/logs/mu-shell.log`), as it is on disk right now. */
+	/** The shell's log (`~/.spec.ai.jev/agent/logs/spec-shell.log`), as it is on disk right now. */
 	shellLog(): string | undefined;
 	close(): Promise<void>;
 }
@@ -50,33 +50,33 @@ export async function launchApp(
 		readonly prepareHome?: (home: string) => void;
 	} = {},
 ): Promise<Profile> {
-	const home = mkdtempSync(join(tmpdir(), "mu-e2e-home-"));
-	const profile = options.profileDir ?? mkdtempSync(join(tmpdir(), "mu-e2e-profile-"));
+	const home = mkdtempSync(join(tmpdir(), "spec-e2e-home-"));
+	const profile = options.profileDir ?? mkdtempSync(join(tmpdir(), "spec-e2e-profile-"));
 	const ownsProfile = options.profileDir === undefined;
 	const harness = options.harness ?? "fixture";
-	const checkoutRoot = (process.env.SPEC_AI_JEV_HARNESS ?? process.env.PI_JEV_HARNESS)?.trim() || undefined;
-	const muRoot =
+	const checkoutRoot = process.env.SPEC_AI_JEV_HARNESS?.trim() || undefined;
+	const specRoot =
 		harness === "none"
 			? join(home, "no-harness-here")
 			: harness === "fixture"
 				? FIXTURE_HARNESS
 				: checkoutRoot;
-	if (harness === "checkout" && muRoot === undefined) {
-		throw new Error("checkout tests require PI_JEV_HARNESS to point at a mu checkout");
+	if (harness === "checkout" && specRoot === undefined) {
+		throw new Error("checkout tests require SPEC_AI_JEV_HARNESS to point at a spec.ai.jev checkout");
 	}
-	if (muRoot !== undefined) mkdirSync(muRoot, { recursive: true });
+	if (specRoot !== undefined) mkdirSync(specRoot, { recursive: true });
 	options.prepareHome?.(home);
 
 	const environment: Record<string, string> = {
 		...process.env,
 		// `os.homedir()` on Windows reads USERPROFILE; on POSIX it reads HOME. Set both so the app and the harness's
-		// own command line agree on where mu's files are.
+		// own command line agree on where spec.ai.jev's files are.
 		USERPROFILE: home,
 		HOME: home,
 		...options.env,
 	};
-	if (muRoot !== undefined) environment.MU_ROOT = muRoot;
-	else delete environment.MU_ROOT;
+	if (specRoot !== undefined) environment.SPEC_AI_JEV_ROOT = specRoot;
+	else delete environment.SPEC_AI_JEV_ROOT;
 
 	const app = await electron.launch({
 		args: [MAIN_ENTRY, `--user-data-dir=${profile}`],
@@ -93,7 +93,7 @@ export async function launchApp(
 			return undefined;
 		}
 	};
-	const settingsFile = join(home, ".spec.ai.jev", "agent", "mu.json");
+	const settingsFile = join(home, ".spec.ai.jev", "agent", "agent.json");
 	const consentFile = join(home, ".spec.ai.jev", "agent", "consent.json");
 
 	return {
@@ -106,7 +106,7 @@ export async function launchApp(
 		consent: () => readJson(consentFile),
 		shellLog: () => {
 			try {
-				return readFileSync(join(home, ".spec.ai.jev", "agent", "logs", "mu-shell.log"), "utf8");
+				return readFileSync(join(home, ".spec.ai.jev", "agent", "logs", "spec-shell.log"), "utf8");
 			} catch {
 				return undefined;
 			}

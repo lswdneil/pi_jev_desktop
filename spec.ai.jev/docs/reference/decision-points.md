@@ -2,7 +2,7 @@
 
 # Decision points
 
-Every decision point mu has, 38 in all, grouped as the desktop app's settings group them. Each is asked as a short question about a small state; [How mu works](../architecture.md) explains the engine and [Judges](../judges.md) who answers.
+Every decision point spec.ai.jev has, 38 in all, grouped as the desktop app's settings group them. Each is asked as a short question about a small state; [How spec.ai.jev works](../architecture.md) explains the engine and [Judges](../judges.md) who answers.
 
 Each point has a mode:
 
@@ -10,7 +10,7 @@ Each point has a mode:
 - `shadow`: Asked and recorded, but nothing changes. For watching how well it judges first.
 - `off`: Not asked; this decision is off.
 
-Every point is `active` unless set otherwise (`"modes": { "default": "active" }` is the built-in default). Set `"default": "shadow"`, or a point's own mode, in `~/.mu/agent/mu.json` to only record verdicts; the desktop app's settings switch a point on or off; `/mu mode <point|default> <off|shadow|active>` switches one for the current session. See [Configuration](../configuration.md).
+Every point is `active` unless set otherwise (`"modes": { "default": "active" }` is the built-in default). Set `"default": "shadow"`, or a point's own mode, in `~/.spec.ai.jev/agent/agent.json` to only record verdicts; the desktop app's settings switch a point on or off; `/spec mode <point|default> <off|shadow|active>` switches one for the current session. See [Configuration](../configuration.md).
 
 The feature column names the switch in `features` that turns the whole behaviour off; its options are in [Features](features.md).
 

@@ -16,8 +16,8 @@ import { join } from "node:path";
 /** Bumped when what the person agrees to changes; an old file then counts as no consent. */
 export const JUDGE_CONSENT_VERSION = 1;
 
-/** Non-interactive path, for a headless setup: `MU_JUDGE_CONSENT=1` means "I read the notice". */
-export const JUDGE_CONSENT_ENV = "MU_JUDGE_CONSENT";
+/** Non-interactive path, for a headless setup: `SPEC_AI_JEV_JUDGE_CONSENT=1` means "I read the notice". */
+export const JUDGE_CONSENT_ENV = "SPEC_AI_JEV_JUDGE_CONSENT";
 
 export const CONSENT_SCOPE = "remote-judge";
 
@@ -87,7 +87,7 @@ export interface ConsentState {
 /**
  * Whether the keyless remote judge may run.
  *
- * Precedence: `MU_JUDGE=off` wins over everything elsewhere (the judge is not consulted at all); a file
+ * Precedence: `SPEC_AI_JEV_JUDGE=off` wins over everything elsewhere (the judge is not consulted at all); a file
  * written by the consent command is the durable answer; the environment variable is the headless answer.
  */
 export function judgeConsentState(
@@ -110,7 +110,7 @@ export function judgeConsentState(
 
 function consentHint(agentDir: string | undefined): string {
 	const where = agentDir ? `it in ${consentFile(agentDir)}` : "the consent file";
-	return `the default judge sends your messages to a shared endpoint; mu asks first. Run \`mu judge consent accept\` (writes ${where}), or set ${JUDGE_CONSENT_ENV}=1 for a headless run. Local judges and \`MU_JUDGE=off\` need neither.`;
+	return `the default judge sends your messages to a shared endpoint; mu asks first. Run \`mu judge consent accept\` (writes ${where}), or set ${JUDGE_CONSENT_ENV}=1 for a headless run. Local judges and \`SPEC_AI_JEV_JUDGE=off\` need neither.`;
 }
 
 /** True when a consent file exists and is usable, for `mu judge consent status`. */

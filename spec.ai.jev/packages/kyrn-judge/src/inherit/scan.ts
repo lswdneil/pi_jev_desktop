@@ -22,7 +22,7 @@ export interface InheritanceScan extends McpDiscovery {
 export interface ScanOptions {
 	readonly roots: InheritRoots;
 	readonly switches?: Partial<InheritSwitches>;
-	/** The `mcp` section of mu.json. */
+	/** The `mcp` section of agent.json. */
 	readonly own?: unknown;
 	readonly ownSource?: string;
 	/** Folders pi loads skills from by itself. */

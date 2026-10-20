@@ -3,7 +3,7 @@ import { join } from "node:path";
 import type { JudgeProfile } from "./cascade.ts";
 import { CONFIG_SCHEMA_VERSION, migrateConfig } from "./config/migrations/index.ts";
 import type { DecisionMode } from "./decision.ts";
-import { CONFIG_FILE, LEGACY_CONFIG_FILE, muEnv } from "./naming.ts";
+import { CONFIG_FILE, specEnv } from "./naming.ts";
 
 /**
  * How one judge is reached. The decision points never see this: they ask
@@ -21,7 +21,7 @@ import { CONFIG_FILE, LEGACY_CONFIG_FILE, muEnv } from "./naming.ts";
 export interface JudgeConfig {
 	/**
 	 * `jev` is Jev by whichever access this machine has: TypeSafe directly when TYPESAFE_API_KEY is set, else
-	 * OpenRouter when MU_JUDGE_OPENROUTER_API_KEY is set, else the Vercel AI Gateway when AI_GATEWAY_API_KEY is
+	 * OpenRouter when SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY is set, else the Vercel AI Gateway when AI_GATEWAY_API_KEY is
 	 * set, else OpenCode Zen when OPENCODE_API_KEY is set, else Cloudflare Workers AI when CLOUDFLARE_API_KEY and
 	 * CLOUDFLARE_ACCOUNT_ID are, else the Vercel AI Gateway with the key pi keeps for it. `typesafe` is Jev over
 	 * System One at `baseUrl` (TypeSafe's own, OpenRouter's, a relay's), `gateway` through the Vercel AI Gateway.
@@ -43,8 +43,8 @@ export interface JudgeConfig {
 	readonly path?: string;
 	/**
 	 * http, typesafe, clm: name of the environment variable holding a bearer token. The token itself never goes in the
-	 * file. A typesafe judge keyed by MU_JUDGE_OPENROUTER_API_KEY, MU_JUDGE_CUSTOM_API_KEY or MU_JUDGE_CLM_API_KEY needs
-	 * its own `baseUrl`: those keys belong to another service and never go to TypeSafe. clm reads MU_JUDGE_CLM_API_KEY
+	 * file. A typesafe judge keyed by SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY, SPEC_AI_JEV_JUDGE_CUSTOM_API_KEY or SPEC_AI_JEV_JUDGE_CLM_API_KEY needs
+	 * its own `baseUrl`: those keys belong to another service and never go to TypeSafe. clm reads SPEC_AI_JEV_JUDGE_CLM_API_KEY
 	 * unless told otherwise, and calls without a key when it is not set: a CLM server asks for one only when it was
 	 * started with CLM_API_KEY.
 	 */
@@ -95,7 +95,7 @@ export const BUILT_IN_JUDGES: Readonly<Record<string, JudgeConfig>> = {
 		type: "typesafe",
 		baseUrl: "https://openrouter.ai/api/v1/systemone",
 		model: "~typesafe/jev-latest",
-		apiKeyEnv: "MU_JUDGE_OPENROUTER_API_KEY",
+		apiKeyEnv: "SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY",
 	},
 	"jev-gateway": { type: "gateway", model: "typesafe-ai/jev" },
 	// Jev on OpenCode Zen, with the key of OpenCode's models (OPENCODE_API_KEY, or `mu auth`). The free one is a
@@ -180,7 +180,7 @@ function readJudges(value: unknown): Record<string, JudgeConfig> {
 	return judges;
 }
 
-/** Parses the contents of `mu.json`. Unknown or malformed parts fall back to defaults instead of throwing. */
+/** Parses the contents of `agent.json`. Unknown or malformed parts fall back to defaults instead of throwing. */
 export function parseConfig(value: unknown): KyrnConfig {
 	if (!isRecord(value)) return DEFAULT_CONFIG;
 	const tiers = Array.isArray(value.tiers)
@@ -215,12 +215,12 @@ function readJudgeQuota(value: unknown): KyrnConfig["judgeQuota"] {
 }
 
 export interface ConfigSource {
-	/** Directory holding `mu.json`, normally the agent directory (~/.mu/agent). */
+	/** Directory holding `agent.json`, normally the agent directory (~/.spec.ai.jev/agent). */
 	readonly dir?: string;
 	readonly env?: Readonly<Record<string, string | undefined>>;
 }
 
-/** Everything a `mu.json` may hold. A key outside this list is reported rather than ignored, because a typo is silent otherwise. */
+/** Everything a `agent.json` may hold. A key outside this list is reported rather than ignored, because a typo is silent otherwise. */
 const KNOWN_CONFIG_KEYS: readonly string[] = [
 	"schemaVersion",
 	"tiers",
@@ -235,7 +235,7 @@ const KNOWN_CONFIG_KEYS: readonly string[] = [
 ];
 
 /**
- * What is wrong with a `mu.json` the parser would otherwise drop on the floor.
+ * What is wrong with a `agent.json` the parser would otherwise drop on the floor.
  *
  * `parseConfig` is deliberately forgiving — a broken field must not stop mu from starting — but forgiving and
  * silent are different things: a user who typed the wrong judge type used to believe the setting took effect.
@@ -325,13 +325,13 @@ export interface LoadedConfig {
 }
 
 /**
- * `mu.json` from the agent directory (`kyrn.json` when there is none), then environment overrides:
- *   MU_JUDGE        comma-separated tiers, e.g. "laya" or "laya,jev"; "off" disables the kernel
- *   MU_JUDGE_MODE   default mode for every decision
- *   MU_WRITER       "provider/model-id"
- * Each is also read under its old `KYRN_` spelling.
+ * `agent.json` from the agent directory, then environment overrides:
+ *   SPEC_AI_JEV_JUDGE        comma-separated tiers, e.g. "laya" or "laya,jev"; "off" disables the kernel
+ *   SPEC_AI_JEV_JUDGE_MODE   default mode for every decision
+ *   SPEC_AI_JEV_WRITER       "provider/model-id"
+ * Only the `SPEC_AI_JEV_` spelling is read.
  *
- * A file from an older mu is migrated, and its previous contents kept beside it as `mu.json.bak`. A file that
+ * A file from an older schema is migrated, and its previous contents kept beside it as `agent.json.bak`. A file that
  * cannot be used (not JSON, a newer schema than this build knows, a migration that does not exist) leaves the
  * defaults in place and says why: starting with silence is what made a mistyped setting look applied.
  *
@@ -343,8 +343,8 @@ export function loadConfig(source: ConfigSource = {}): LoadedConfig {
 	let config = DEFAULT_CONFIG;
 	let problem: string | undefined;
 	const problems: string[] = [];
-	// The first file that exists wins, even when it is broken: a half-written mu.json must not silently bring back old settings.
-	for (const file of source.dir ? [CONFIG_FILE, LEGACY_CONFIG_FILE] : []) {
+	// The first file that exists wins, even when it is broken: a half-written agent.json must not silently bring back old settings.
+	for (const file of source.dir ? [CONFIG_FILE] : []) {
 		const path = join(source.dir as string, file);
 		let text: string;
 		try {
@@ -374,7 +374,7 @@ export function loadConfig(source: ConfigSource = {}): LoadedConfig {
 		if (migrated.unsupported) {
 			problem = `${file} cannot be used: ${migrated.unsupported}`;
 			problems.push(problem);
-			// Left exactly as it is: a newer mu wrote it, and this build must not rewrite what it cannot read.
+			// Left exactly as it is: a newer build wrote it, and this build must not rewrite what it cannot read.
 			break;
 		}
 		if (migrated.notes.length > 0) {
@@ -395,7 +395,7 @@ export function loadConfig(source: ConfigSource = {}): LoadedConfig {
 		break;
 	}
 
-	const judge = muEnv("JUDGE", env)?.trim();
+	const judge = specEnv("JUDGE", env)?.trim();
 	const withProblems = (loaded: LoadedConfig): LoadedConfig => ({
 		...loaded,
 		problem: problem ?? problems[0],
@@ -407,9 +407,9 @@ export function loadConfig(source: ConfigSource = {}): LoadedConfig {
 		const tiers = judge.split(",").map((tier) => (tier.trim() === "gateway" ? "jev" : tier.trim()));
 		config = { ...config, tiers: tiers.filter(Boolean) };
 	}
-	const mode = muEnv("JUDGE_MODE", env);
+	const mode = specEnv("JUDGE_MODE", env);
 	if (mode && MODES.includes(mode)) config = { ...config, modes: { ...config.modes, default: mode as DecisionMode } };
-	const writer = muEnv("WRITER", env);
+	const writer = specEnv("WRITER", env);
 	if (writer) config = { ...config, writer };
 	return withProblems({ config, disabled: false, problems });
 }

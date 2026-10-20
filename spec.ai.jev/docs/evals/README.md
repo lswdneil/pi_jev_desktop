@@ -12,7 +12,7 @@ node --experimental-strip-types packages/evals/src/tasks/cli.ts --self-check
 node --experimental-strip-types packages/evals/src/tasks/cli.ts --executor faux --arm all
 
 # A real measurement, one arm at a time (needs a key and a budget).
-node --experimental-strip-types packages/evals/src/tasks/cli.ts --executor agent --arm mu-active \
+node --experimental-strip-types packages/evals/src/tasks/cli.ts --executor agent --arm spec.ai.jev-active \
   --model anthropic/claude-sonnet-4 --budget 5
 ```
 
@@ -39,10 +39,10 @@ The judgment layer is the only thing that changes between them: same binary, sam
 
 | Arm | What it changes | The number a reader compares |
 | --- | --- | --- |
-| `pi-baseline` | the judgment layer off | what the agent does without mu's kernel |
-| `mu-active` | judgments act on the run | what mu does today |
-| `mu-shadow` | judgments recorded, not acted on | what a careful rollout would cost |
-| `mu-off` | judgments not consulted at all | the floor |
+| `pi-baseline` | the judgment layer off | what the agent does without spec.ai.jev's kernel |
+| `spec.ai.jev-active` | judgments act on the run | what spec.ai.jev does today |
+| `spec.ai.jev-shadow` | judgments recorded, not acted on | what a careful rollout would cost |
+| `spec.ai.jev-off` | judgments not consulted at all | the floor |
 
 `pi-baseline` runs the same coding agent with the kernel switched off. This repository ships one agent, so a true
 second checkout of upstream pi is not available here; the arm is the closest executable baseline, and the report names
@@ -53,7 +53,7 @@ it that way.
 - **`faux`** applies every task's reference fix. It measures discovery, judging, the report and the CI wiring — and
   **nothing about a model**. Its 100% completion is true by construction; read it as a smoke test, never as quality.
 - **`agent`** runs `<cli> --mode json "<prompt>"` in a copy of the task's repository, with the arm's settings written to
-  a temporary `mu.json`, then judges the copy. It needs a model and a key, and a run that fails to start is recorded as
+  a temporary `agent.json`, then judges the copy. It needs a model and a key, and a run that fails to start is recorded as
   `action: "error"` with the command's own output — not as a zero.
 
 ## Budget
@@ -72,7 +72,7 @@ it that way.
 
 - Six seed tasks. The corpus is meant to grow to the 12–20 the plan calls for; each is data entry, not code.
 - No wall-clock or cost isolation: the arms run on the same machine, and the numbers in a report are from one run.
-- `mu-shadow` and `mu-active` differ only in what `mu.json` says; a task that never reaches a decision point cannot tell
+- `spec.ai.jev-shadow` and `spec.ai.jev-active` differ only in what `agent.json` says; a task that never reaches a decision point cannot tell
   them apart, and the report does not pretend otherwise.
 - An agent arm starts the real command line, so it inherits the machine's configuration. A broken extension in the
   user's config fails the arm before the task begins — the report shows it as `action: "error"` with the CLI's own

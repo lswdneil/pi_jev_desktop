@@ -61,7 +61,7 @@ Grok 的登录（SuperGrok / X Premium，提供商 `xai`）是 pi 自带的，�
 - 429 / 5xx：按服务器说的时间等（`retry-after`、“reset after 1m2s”、“Please retry in 2s”、`retryDelay`），最多重试 3 次；服务器要等的比 `maxRetryDelayMs`（默认 60 秒）还久，就直接报出来，不干等。
 - 其它错误（比如 400）不重试。
 - 回答是空的：再问两次。
-- Antigravity 特有：客户端版本 `antigravity/1.107.0 darwin/arm64`（Google 提高最低版本时用 `MU_ANTIGRAVITY_VERSION` 改）、`requestType: "agent"`、它要求的系统提示放在最前、Claude 的工具用旧的 `parameters` 写法、Claude 思考模型带 `anthropic-beta: interleaved-thinking-2025-05-14`。
+- Antigravity 特有：客户端版本 `antigravity/1.107.0 darwin/arm64`（Google 提高最低版本时用 `SPEC_AI_JEV_ANTIGRAVITY_VERSION` 改）、`requestType: "agent"`、它要求的系统提示放在最前、Claude 的工具用旧的 `parameters` 写法、Claude 思考模型带 `anthropic-beta: interleaved-thinking-2025-05-14`。
 - 思考：Gemini 3 及以后按等级（`thinkingLevel`），Gemini 2.5 和 Claude 按预算（1024 / 2048 / 8192 / 16384，塞在输出上限里）；关掉思考时，Gemini 3 Pro 这类关不掉的用最低等级，且不显示思考内容。
 
 ## 6. 设置（`features.googleLogin.*`）

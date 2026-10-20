@@ -13,7 +13,7 @@ Some things hold in every mode:
 - **Hard constraints still apply.** What you said not to do is stopped by the constraint gate, even in full access. That gate is about your words, not about permission.
 - **Reading is never asked about.** This covers `read`, `grep`, `find`, `ls`, `todo`, `web_search`, `web_fetch`, background output, `sg_search`, the debugger's inspect/step/stop, and shell commands made only of read-only programs (`git status`, `cat … | grep … | head`).
 - **Unlisted tools are asked about.** A tool mu does not know (an MCP tool, for example) needs permission. A command counts as read-only only when every part of it is on the short read-only list.
-- **mu's own settings are always yours to decide.** Any call that touches the agent folder (`~/.mu/agent`, spelled as a path, with `~` or with `$HOME`) is asked every time. Jev cannot approve it, and "allow for this conversation" is not offered.
+- **mu's own settings are always yours to decide.** Any call that touches the agent folder (`~/.spec.ai.jev/agent`, spelled as a path, with `~` or with `$HOME`) is asked every time. Jev cannot approve it, and "allow for this conversation" is not offered.
 
 ## What Jev is asked
 
@@ -37,7 +37,7 @@ Jev's verdict counts even when the decision's own mode is `shadow`, because choo
 
 Commands that the risk rules flag work differently: `rm -rf`, force push, `sudo`, running a downloaded script and the rest of the guard's rules. In Jev mode they use the guard's `tool.risk` question and run only when Jev is sure you asked for them. In minimal mode the flag is shown in the question. A flagged command can only be allowed once, never for the whole conversation.
 
-With permission modes on (the default), they take over the old guard. With `features.permissions: false` in mu.json, the guard works on its own as before.
+With permission modes on (the default), they take over the old guard. With `features.permissions: false` in agent.json, the guard works on its own as before.
 
 ## Asking
 
@@ -70,13 +70,13 @@ When nobody can be asked (print mode, a sub-agent), a call that would ask is ref
 When a conversation starts:
 
 1. If the conversation was switched before, it keeps that mode (from a `mu.permissions` session entry), including when it is reopened.
-2. Otherwise `MU_PERMISSIONS` (or `KYRN_PERMISSIONS`) applies. Sub-agents get their parent's current mode this way.
+2. Otherwise `SPEC_AI_JEV_PERMISSIONS` (or `SPEC_AI_JEV_PERMISSIONS`) applies. Sub-agents get their parent's current mode this way.
 3. Otherwise the mode last chosen with `/permissions` applies, read from `<agentDir>/mu/permissions.json` (`{"version":1,"mode":"ask"}`, mode 600).
-4. Otherwise `features.permissions.mode` in mu.json applies, which defaults to `jev`.
+4. Otherwise `features.permissions.mode` in agent.json applies, which defaults to `jev`.
 
 `/permissions <mode>` switches this conversation, writes the session entry, saves the new default for later conversations, and forgets allowances. Other running conversations keep their own mode.
 
-`/permissions <mode> --here` switches this conversation only: the session entry, the status line and `permissions.mode` as above, but the saved default stays as it was and nothing is notified. When the conversation is already in that mode, nothing changes and allowances stay; only `permissions.mode` is sent again. This is for the app putting a conversation back in the mode it had there (on load, fork or a new conversation seeded from the last pick): only a switch the person made should change the default for the terminal and for new conversations. Keep the order above: session entry, then `MU_PERMISSIONS`, then `permissions.json`.
+`/permissions <mode> --here` switches this conversation only: the session entry, the status line and `permissions.mode` as above, but the saved default stays as it was and nothing is notified. When the conversation is already in that mode, nothing changes and allowances stay; only `permissions.mode` is sent again. This is for the app putting a conversation back in the mode it had there (on load, fork or a new conversation seeded from the last pick): only a switch the person made should change the default for the terminal and for new conversations. Keep the order above: session entry, then `SPEC_AI_JEV_PERMISSIONS`, then `permissions.json`.
 
 **`permissions.json` is a contract with the desktop app.** The app's settings page writes it (2026-09-22, KYRN-desktop `4e26995`), and `PermissionDefaults` reads it back:
 

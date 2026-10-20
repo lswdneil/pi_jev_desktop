@@ -1,46 +1,46 @@
 <p align="center">
-  <img src="../../desktop/resources/app.png" width="96" alt="mu">
+  <img src="../../desktop/resources/app.png" width="96" alt="spec.ai.jev">
 </p>
-<h1 align="center">mu</h1>
+<h1 align="center">spec.ai.jev</h1>
 <p align="center">μ · Only what's needed.</p>
 <p align="center">判定カーネルを持つコーディングエージェント。ベースは <a href="https://github.com/earendil-works/pi">pi</a>。</p>
 
 <p align="center">
-  <a href="https://github.com/qybaihe/mu/actions/workflows/ci.yml"><img src="https://github.com/qybaihe/mu/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/qybaihe/mu/actions/workflows/desktop.yml"><img src="https://github.com/qybaihe/mu/actions/workflows/desktop.yml/badge.svg" alt="Desktop app"></a>
-  <a href="https://www.npmjs.com/package/mu-agent"><img src="https://img.shields.io/npm/v/mu-agent?label=mu-agent" alt="npm"></a>
-  <a href="https://github.com/qybaihe/mu/releases"><img src="https://img.shields.io/github/v/release/qybaihe/mu?include_prereleases&label=desktop" alt="Desktop release"></a>
+  <a href="https://github.com/qybaihe/spec/actions/workflows/ci.yml"><img src="https://github.com/qybaihe/spec/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/qybaihe/spec/actions/workflows/desktop.yml"><img src="https://github.com/qybaihe/spec/actions/workflows/desktop.yml/badge.svg" alt="Desktop app"></a>
+  <a href="https://www.npmjs.com/package/spec-ai-agent"><img src="https://img.shields.io/npm/v/spec-ai-agent?label=spec-ai-agent" alt="npm"></a>
+  <a href="https://github.com/qybaihe/spec/releases"><img src="https://img.shields.io/github/v/release/qybaihe/spec?include_prereleases&label=desktop" alt="Desktop release"></a>
   <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-MIT%20%2B%20Apache--2.0-blue" alt="License"></a>
-  <a href="https://github.com/qybaihe/mu/discussions"><img src="https://img.shields.io/github/discussions/qybaihe/mu?label=discussions" alt="Discussions"></a>
+  <a href="https://github.com/qybaihe/spec/discussions"><img src="https://img.shields.io/github/discussions/qybaihe/spec?label=discussions" alt="Discussions"></a>
 </p>
 
 <p align="center">
   <a href="../../README.md">English</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.zh-TW.md">繁體中文</a> · <b>日本語</b> · <a href="README.ko.md">한국어</a>
 </p>
 
-コーディングエージェントは 1 回のセッションで、コードとは関係のない判断を何百回も下します。何をコンテキストに残すか、このコマンドは安全か、この発見を別のエージェントに伝える価値があるか、作業は終わったか。大きなモデルに任せれば、トークンとレイテンシと注意力を消費します。固定のルールに任せれば、間違いが多すぎます。mu はこうした判断を**判定器**に任せます。判定器は小さくて速いモデルで、答えの範囲が決まった問いに一度に一つずつ答えます。判定ポイントは各ターンに 38 あります。大きなモデルは、注意力を本来の作業に使えます。
+コーディングエージェントは 1 回のセッションで、コードとは関係のない判断を何百回も下します。何をコンテキストに残すか、このコマンドは安全か、この発見を別のエージェントに伝える価値があるか、作業は終わったか。大きなモデルに任せれば、トークンとレイテンシと注意力を消費します。固定のルールに任せれば、間違いが多すぎます。spec.ai.jev はこうした判断を**判定器**に任せます。判定器は小さくて速いモデルで、答えの範囲が決まった問いに一度に一つずつ答えます。判定ポイントは各ターンに 38 あります。大きなモデルは、注意力を本来の作業に使えます。
 
-- **mu**：コマンドライン版です。pi にできることすべてに、判定カーネルが加わります。
-- **mu デスクトップ**：mu とそのランタイムを内蔵したネイティブアプリです。ダウンロードしてモデルをつなげば、すぐに始められます。
+- **spec.ai.jev**：コマンドライン版です。pi にできることすべてに、判定カーネルが加わります。
+- **spec.ai.jev デスクトップ**：spec.ai.jev とそのランタイムを内蔵したネイティブアプリです。ダウンロードしてモデルをつなげば、すぐに始められます。
 - **Jev**：判定器です。Yes/No、選択、スコアの問いに答え、答えごとに確率を付け、すべての判定を台帳に残します。ローカルの判定器（Laya）や任意の LLM が、Jev の代わりに判定ポイントを受け持つこともできます。
 
-> まだ開発の初期段階です。プレリリース版（0.1.x）を npm と [Releases](https://github.com/qybaihe/mu/releases) で公開していて、作者たちは毎日使っています。名前、設定、形式は今後も変わる可能性があります。
+> まだ開発の初期段階です。プレリリース版（0.1.x）を npm と [Releases](https://github.com/qybaihe/spec/releases) で公開していて、作者たちは毎日使っています。名前、設定、形式は今後も変わる可能性があります。
 
 **目次：**[クイックスタート](#クイックスタート) · [1 ターンの流れ](#1-ターンの流れ) · [判定ポイント](#判定ポイント) · [判定器](#判定器) · [実測](#実測) · [ハイブ](#ハイブ) · [わかりやすいボード](#わかりやすいボード) · [デスクトップアプリ](#デスクトップアプリ) · [コマンドライン](#コマンドライン) · [ドキュメント](#ドキュメント) · [コントリビュート](#コントリビュート)
 
 ## クイックスタート
 
-**デスクトップアプリ。** [Releases](https://github.com/qybaihe/mu/releases/latest) から macOS、Windows、Linux 用のインストーラーをダウンロードして開き、API キーを貼り付けるか、ChatGPT、Claude、Grok、Google のサブスクリプションでサインインします。ほかにインストールするものはありません。
+**デスクトップアプリ。** [Releases](https://github.com/qybaihe/spec/releases/latest) から macOS、Windows、Linux 用のインストーラーをダウンロードして開き、API キーを貼り付けるか、ChatGPT、Claude、Grok、Google のサブスクリプションでサインインします。ほかにインストールするものはありません。
 
 **コマンドライン。**
 
 ```bash
-npm i -g mu-agent   # Node.js 22.19 以降
-mu setup            # モデルを接続する
-mu                  # 現在のディレクトリでセッションを始める
+npm i -g spec-ai-agent   # Node.js 22.19 以降
+spec setup            # モデルを接続する
+spec.ai.jev                  # 現在のディレクトリでセッションを始める
 ```
 
-始めるのに判定器のキーは要りません。キーを設定するまでは、OpenCode Zen の無料の Jev が答えます。すべての判定ポイントは最初から判定を反映し、判定はすべて記録されます（`/status`、`mu ledger`、デスクトップアプリの判定タブ）。判定器がどうするかを記録するだけにしたい場合は、`~/.mu/agent/mu.json` に `{"modes": {"default": "shadow"}}` と書きます。詳しくは [Getting started](../getting-started.md)（英語）。
+始めるのに判定器のキーは要りません。キーを設定するまでは、OpenCode Zen の無料の Jev が答えます。すべての判定ポイントは最初から判定を反映し、判定はすべて記録されます（`/status`、`spec ledger`、デスクトップアプリの判定タブ）。判定器がどうするかを記録するだけにしたい場合は、`~/.spec.ai.jev/agent/agent.json` に `{"modes": {"default": "shadow"}}` と書きます。詳しくは [Getting started](../getting-started.md)（英語）。
 
 ## 1 ターンの流れ
 
@@ -131,7 +131,7 @@ mu                  # 現在のディレクトリでセッションを始める
 
 ## 判定器
 
-- **Jev**（クラウド）。範囲の決まった問いに、確率付きで答えます。TypeSafe、OpenRouter、Vercel AI Gateway、OpenCode Zen、Cloudflare Workers AI、または同じプロトコルを話す任意のサービスから呼び出せて、サービスごとにキーを持ちます（`TYPESAFE_API_KEY`、`MU_JUDGE_OPENROUTER_API_KEY`、`AI_GATEWAY_API_KEY`、`OPENCODE_API_KEY`、`CLOUDFLARE_API_KEY` と `CLOUDFLARE_ACCOUNT_ID`）。デスクトップアプリの「判定器」ページで選べて、既定ではキーが設定されている最初のものを使います。キーが一つもなければ、OpenCode Zen 上で期間限定無料の Jev 1.13 が答えます。判定に必要な内容は OpenCode に送られますが、モデルの学習には使われません。mu はそのことを 1 日 1 回知らせます。キーを設定すると（`mu setup`、または「判定器」ページ）、次の問いからそのキーを使います。作者たち自身のセッションでの実測では、HTTP/2 のウォームな接続で 1 問あたり約 0.3 秒、ツール出力 16 チャンクを 1 リクエストで判定して 0.44 秒で、状態の課金は 1 回だけでした。判定、確率、所要時間は台帳に残ります。`mu ledger`、またはデスクトップアプリの「判定」タブで見られます。
+- **Jev**（クラウド）。範囲の決まった問いに、確率付きで答えます。TypeSafe、OpenRouter、Vercel AI Gateway、OpenCode Zen、Cloudflare Workers AI、または同じプロトコルを話す任意のサービスから呼び出せて、サービスごとにキーを持ちます（`TYPESAFE_API_KEY`、`SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY`、`AI_GATEWAY_API_KEY`、`OPENCODE_API_KEY`、`CLOUDFLARE_API_KEY` と `CLOUDFLARE_ACCOUNT_ID`）。デスクトップアプリの「判定器」ページで選べて、既定ではキーが設定されている最初のものを使います。キーが一つもなければ、OpenCode Zen 上で期間限定無料の Jev 1.13 が答えます。判定に必要な内容は OpenCode に送られますが、モデルの学習には使われません。spec.ai.jev はそのことを 1 日 1 回知らせます。キーを設定すると（`spec setup`、または「判定器」ページ）、次の問いからそのキーを使います。作者たち自身のセッションでの実測では、HTTP/2 のウォームな接続で 1 問あたり約 0.3 秒、ツール出力 16 チャンクを 1 リクエストで判定して 0.44 秒で、状態の課金は 1 回だけでした。判定、確率、所要時間は台帳に残ります。`spec ledger`、またはデスクトップアプリの「判定」タブで見られます。
 - **Laya**（ローカル）。322M パラメータの判定器で、あなたのマシンで動き、ネットワークには一切触れません。あなたの同意なしには何もダウンロードしません。単純な述語には強く、メタ判断には弱めです。判定ポイントを任せる前に、シャドーモードで Jev と並べて動かし、台帳を確認してください。
 - **pi のモデルカタログにある任意の分類モデル**も、階層の一つとして使えます：`classifier:<provider>/<model>`。Cloudflare の Clef（`clef`、`clef-flash`）、OpenRouter と Vercel AI Gateway の System One モデル、llama.cpp の分類モデルなど。
 - **任意の LLM** も、階層の一つとして使えます：`llm:<provider>/<model>`。
@@ -142,7 +142,7 @@ mu                  # 現在のディレクトリでセッションを始める
 
 以下の数字は、リポジトリに含まれるリプレイ [`kyrn/spikes/judge-bench/test-log-replay.ts`](../../kyrn/spikes/judge-bench/test-log-replay.ts) によるものです。方法と完全な表は [kyrn/docs/09-test-log-admission.md](../../kyrn/docs/09-test-log-admission.md)（中国語）にあります。
 
-**完全な繰り返し。** 失敗した実行は、失敗したテストごとに同じ diff、DOM ダンプ、スタックを何度も出力しがちです。mu は最初の 1 つを残し、それ以降の繰り返しを「どの行の繰り返しか」を示す 1 行に置き換えます。モデルは呼び出しません。マーカーを展開すると元のログとバイト単位で一致し、完全なログはディスクに残り、出力の末尾にその場所が示されます。
+**完全な繰り返し。** 失敗した実行は、失敗したテストごとに同じ diff、DOM ダンプ、スタックを何度も出力しがちです。spec.ai.jev は最初の 1 つを残し、それ以降の繰り返しを「どの行の繰り返しか」を示す 1 行に置き換えます。モデルは呼び出しません。マーカーを展開すると元のログとバイト単位で一致し、完全なログはディスクに残り、出力の末尾にその場所が示されます。
 
 <p align="center">
   <picture>
@@ -164,7 +164,7 @@ mu                  # 現在のディレクトリでセッションを始める
 
 *Perfect judge*（完璧な判定器）はラベルを直接読みます。正しい判定器が省ける上限です。*Keep failures only*（失敗だけを残す）は常に「省く」と答える判定器で、目標を見ないフィルターがすることと同じです。この調査で実際に送った Jev のリクエストは全部で 282 件、定価で約 $0.017 でした。既定の問い方では、1 リクエストの所要時間の中央値は 345 ms です。
 
-どちらも既定ではオフです。`~/.mu/agent/mu.json` に `"features": { "admission": { "testLog": "rules" } }` と書くか、デスクトップアプリの設定で「テストログの削減」をオンにすると、繰り返しが折りたたまれます。`"jev"` にすると、残った部分のうち今の目標に必要なものを判定器が選びます。`/mu mode tool.admission.test-log shadow` とすると、選択は記録されるだけになります。
+どちらも既定ではオフです。`~/.spec.ai.jev/agent/agent.json` に `"features": { "admission": { "testLog": "rules" } }` と書くか、デスクトップアプリの設定で「テストログの削減」をオンにすると、繰り返しが折りたたまれます。`"jev"` にすると、残った部分のうち今の目標に必要なものを判定器が選びます。`/spec mode tool.admission.test-log shadow` とすると、選択は記録されるだけになります。
 
 これらの数字が示していないこと：
 
@@ -180,7 +180,7 @@ mu                  # 現在のディレクトリでセッションを始める
 
 | 目標に応じた選択 | 調整に使った目標（29）：省いた割合 | 失われた必要な行 | 調整に使っていない目標（9）：省いた割合 | 失われた必要な行 |
 | --- | --- | --- | --- | --- |
-| mu · Jev | 40.2% | 72 行中 0 行 | 46.4% | 19 行中 0 行 |
+| spec.ai.jev · Jev | 40.2% | 72 行中 0 行 | 46.4% | 19 行中 0 行 |
 | 完璧な判定器 | 52.5% | 72 行中 0 行 | 46.5% | 19 行中 0 行 |
 | 失敗だけを残す | 61.9% | 72 行中 9 行 | 59.4% | 19 行中 6 行 |
 
@@ -199,7 +199,7 @@ mu                  # 現在のディレクトリでセッションを始める
 
 ## ハイブ
 
-マルチエージェントのシステムはどれも、同じ問いに答えています。あるエージェントが知っていることを、別のエージェントにも伝えるべきか、という問いです。よくある答えは、何も渡さない（メインエージェントにだけ報告する）、すべて渡す（グループチャットや引き継ぎで履歴を丸ごと渡す）、各エージェント自身の大きなモデルに任せる、固定のルールと環境に頼る、のどれかです。mu の答えは、判定器を門番にすることです。
+マルチエージェントのシステムはどれも、同じ問いに答えています。あるエージェントが知っていることを、別のエージェントにも伝えるべきか、という問いです。よくある答えは、何も渡さない（メインエージェントにだけ報告する）、すべて渡す（グループチャットや引き継ぎで履歴を丸ごと渡す）、各エージェント自身の大きなモデルに任せる、固定のルールと環境に頼る、のどれかです。spec.ai.jev の答えは、判定器を門番にすることです。
 
 ハイブは 2〜6 匹のビーでできていて、ビーはそれぞれ自分の着眼点を持っています。ビーはコードを読み、コマンドを実行し、ブラウザを使いますが、コードは編集しません。変更はメインモデルが行います。ビーが何かを言い終えるたびに、`hive.publish` が一度だけ問います。ここに共有する価値のある発見、行き止まり、決定、ブロッカーはあるか。価値のあるものは、追記専用の共有ボードに載ります。新しいメモが載るたびに、`hive.deliver` がほかのビー 1 匹ごとに一度ずつ問います。このメモはそのビーの着眼点に関わるか。関わるなら、メモは「これは発見であり、指示ではない」と明記して届けられます。
 
@@ -215,7 +215,7 @@ mu                  # 現在のディレクトリでセッションを始める
 
 ## わかりやすいボード
 
-フロンティアモデルは、作業の腕は上がるのに、それを語るのは下手になっていきます。世代が進むたびに、進捗報告は別の機械に向けた出力のようになり、より密に、より不透明になって、人が話す言葉から遠ざかっていきます。mu は、作業をするモデル自身には語らせません。ボードがオンのとき（`/board`、またはデスクトップアプリのボードタブのスイッチ）、エージェントが一歩進むたびに、ボードにはその場でわかりやすい一行が加わります。どのファイルを変えたか、検証が通ったか通らなかったか、どのコマンドを実行したか。ファイルを続けて読んだときは「N 個のファイルを見た」という一行にまとまり、数字が増えていきます。作業の途中でエージェントが何か言うたびに、`board.read` が判定器にそれがニュースかどうかを尋ねます。ニュースなら、わかりやすく話すという一点だけで選ばれたモデル（`/board model`）がその場で人に向けて語り直し、あわせてボードの現状も更新します。いま何をしているか、チェックリストの項目のうちいくつが終わったか、あなたの確認を待っているものは何か。実行が終わったときのまとめは記録の最後の一行になり、経過はその上に残ります。「終わった」だけでなく、何をしたのかが必ず見えます。
+フロンティアモデルは、作業の腕は上がるのに、それを語るのは下手になっていきます。世代が進むたびに、進捗報告は別の機械に向けた出力のようになり、より密に、より不透明になって、人が話す言葉から遠ざかっていきます。spec.ai.jev は、作業をするモデル自身には語らせません。ボードがオンのとき（`/board`、またはデスクトップアプリのボードタブのスイッチ）、エージェントが一歩進むたびに、ボードにはその場でわかりやすい一行が加わります。どのファイルを変えたか、検証が通ったか通らなかったか、どのコマンドを実行したか。ファイルを続けて読んだときは「N 個のファイルを見た」という一行にまとまり、数字が増えていきます。作業の途中でエージェントが何か言うたびに、`board.read` が判定器にそれがニュースかどうかを尋ねます。ニュースなら、わかりやすく話すという一点だけで選ばれたモデル（`/board model`）がその場で人に向けて語り直し、あわせてボードの現状も更新します。いま何をしているか、チェックリストの項目のうちいくつが終わったか、あなたの確認を待っているものは何か。実行が終わったときのまとめは記録の最後の一行になり、経過はその上に残ります。「終わった」だけでなく、何をしたのかが必ず見えます。
 
 <p align="center"><img src="board.png" width="960" alt="デスクトップアプリのわかりやすいボード：作業がどこまで進んだか、いま何をしているか、それまでに何があったか。上部にはコンテキストの使用量とキャッシュヒット率"></p>
 
@@ -223,30 +223,30 @@ mu                  # 現在のディレクトリでセッションを始める
 
 ## デスクトップアプリ
 
-mu とそのランタイムを内蔵したネイティブアプリです。Node のインストールは不要で、初回起動時にも何もダウンロードしません。コマンドラインにあるものはすべて揃っていて、さらに会話の横に作業パネルがあります。
+spec.ai.jev とそのランタイムを内蔵したネイティブアプリです。Node のインストールは不要で、初回起動時にも何もダウンロードしません。コマンドラインにあるものはすべて揃っていて、さらに会話の横に作業パネルがあります。
 
 **ボード** · **判定**（リアルタイムの台帳：すべての判定とその問い） · **ハイブ** · **教訓** · **ファイル** · **プレビュー** · **ソース** · **ブラウザ**（エージェントが一歩ずつ操作する内蔵ブラウザ。目標、一時停止、停止付き）
 
 権限モードと目標は入力欄にあり、`⌘K` でコマンドパレットが開きます。モデルへのログインはアプリの中で行います。ChatGPT、Claude、Grok、Google（Gemini CLI / Antigravity）のサブスクリプションか、pi が対応する任意のプロバイダーの API キーを使えます。Claude Code と Codex CLI の会話は、インポートして続きから話せます。
 
-macOS（Apple シリコン / Intel）、Windows（x64 / Arm）、Linux（x64 / Arm）向けのビルドは GitHub Actions で作成し、[Releases](https://github.com/qybaihe/mu/releases) で公開しています。
+macOS（Apple シリコン / Intel）、Windows（x64 / Arm）、Linux（x64 / Arm）向けのビルドは GitHub Actions で作成し、[Releases](https://github.com/qybaihe/spec/releases) で公開しています。
 
 ## コマンドライン
 
 ```bash
-npm i -g mu-agent
-mu            # カレントディレクトリで対話セッションを始める
-mu doctor     # インストール、判定器、各接続を確認する
+npm i -g spec-ai-agent
+spec.ai.jev            # カレントディレクトリで対話セッションを始める
+spec doctor     # インストール、判定器、各接続を確認する
 ```
 
-Node 22.19 以降が必要です。`mu -p "prompt"` は 1 回だけ実行して結果を出力し、`mu -c` は前回のセッションを続けます。`mu import --list` は Claude Code と Codex の会話を探し、`mu import <file>` はそれを取り込みます。`mu ledger [n]` は直近 n 回のセッションで判定器が下した判定を出力します。コマンドラインとデスクトップアプリは、アカウント、設定、教訓を共有します。
+Node 22.19 以降が必要です。`spec.ai.jev -p "prompt"` は 1 回だけ実行して結果を出力し、`spec.ai.jev -c` は前回のセッションを続けます。`spec import --list` は Claude Code と Codex の会話を探し、`spec import <file>` はそれを取り込みます。`spec ledger [n]` は直近 n 回のセッションで判定器が下した判定を出力します。コマンドラインとデスクトップアプリは、アカウント、設定、教訓を共有します。
 
 | コマンド | 内容 |
 | --- | --- |
 | `/status` | 判定器、各判定ポイントのモード、コンテキストに入れなかったもの、最新の判定 |
-| `/mu judge <judges>` | どの判定器がどの順で答えるか：`laya`、`laya,jev`、`jev-opencode-free`、`classifier:<provider>/<model>`、`llm:<provider>/<model>` |
-| `/mu route <point> <judge>` | 一つの判定ポイントに専用の判定器を割り当てる |
-| `/mu mode <point> <off\|shadow\|active>` | 一つの判定ポイントを切り替える |
+| `/spec judge <judges>` | どの判定器がどの順で答えるか：`laya`、`laya,jev`、`jev-opencode-free`、`classifier:<provider>/<model>`、`llm:<provider>/<model>` |
+| `/spec route <point> <judge>` | 一つの判定ポイントに専用の判定器を割り当てる |
+| `/spec mode <point> <off\|shadow\|active>` | 一つの判定ポイントを切り替える |
 | `/frame` | タスクフレーム：目標、あなたの制約とその出どころ、受け入れ条件 |
 | `/goal <condition>` | 条件が満たされるまで作業を続ける。`/goal clear` で終了 |
 | `/permissions` | フルアクセス / Jev が承認 / 最小権限 |
@@ -260,41 +260,41 @@ Node 22.19 以降が必要です。`mu -p "prompt"` は 1 回だけ実行して�
 | `/import-chat` | Claude Code または Codex の会話をインポートする |
 | `/doctor` | セットアップと接続を確認する |
 
-pi 自身のコマンド（`/model`、`/thinking`、`/login`、`/resume`、`/tree`、`/fork`、`/compact`、`/export` など）はそのままです。`MU_JUDGE=laya,jev mu` とすると、その 1 回の実行だけ判定器を上書きできます。
+pi 自身のコマンド（`/model`、`/thinking`、`/login`、`/resume`、`/tree`、`/fork`、`/compact`、`/export` など）はそのままです。`SPEC_AI_JEV_JUDGE=laya,jev spec.ai.jev` とすると、その 1 回の実行だけ判定器を上書きできます。
 
 ## プライバシー
 
-キーはこのマシンから出ません。mu が自分からモデルやランタイムをダウンロードすることはなく、ダウンロードが必要なものは必ず先に確認します。判定器が見るのは、問いに必要なフィールドだけです（キーがなければ、それは OpenCode Zen の無料 Jev に送られます。`MU_JUDGE=off` か Laya なら、すべてこのマシンに残ります）。すべての判定はローカルに記録され、どれでも読み返せます。
+キーはこのマシンから出ません。spec.ai.jev が自分からモデルやランタイムをダウンロードすることはなく、ダウンロードが必要なものは必ず先に確認します。判定器が見るのは、問いに必要なフィールドだけです（キーがなければ、それは OpenCode Zen の無料 Jev に送られます。`SPEC_AI_JEV_JUDGE=off` か Laya なら、すべてこのマシンに残ります）。すべての判定はローカルに記録され、どれでも読み返せます。
 
 ## ドキュメント
 
 - [Getting started](../getting-started.md) · [設定](../configuration.md) · [判定器](../judges.md) · [トラブルシューティング](../troubleshooting.md)（英語）
 - リファレンス：[すべての判定ポイント](../reference/decision-points.md) · [すべての機能とオプション](../reference/features.md) · [変更履歴](../../CHANGELOG.md)
-- コントリビューター向け：[mu の仕組み](../architecture.md) · [判定ポイントの追加](../adding-a-decision-point.md) · [翻訳](../translations.md)
+- コントリビューター向け：[spec.ai.jev の仕組み](../architecture.md) · [判定ポイントの追加](../adding-a-decision-point.md) · [翻訳](../translations.md)
 
 ## コントリビュート
 
-バグ報告、修正、新しい判定ポイント、判定器の評価、翻訳を歓迎します。英語か中国語で書いてください。まず [CONTRIBUTING.md](../../CONTRIBUTING.md) を読んでください。[`good first issue`](https://github.com/qybaihe/mu/labels/good%20first%20issue) ラベルの issue から始めるのがおすすめです。
+バグ報告、修正、新しい判定ポイント、判定器の評価、翻訳を歓迎します。英語か中国語で書いてください。まず [CONTRIBUTING.md](../../CONTRIBUTING.md) を読んでください。[`good first issue`](https://github.com/qybaihe/spec/labels/good%20first%20issue) ラベルの issue から始めるのがおすすめです。
 
 ```bash
 npm install --ignore-scripts   # 依存パッケージのインストール（ライフサイクルスクリプトは実行しない）
-node kyrn/bin/mu.mjs           # このチェックアウトから mu を起動
+node kyrn/bin/agent.mjs           # このチェックアウトから spec.ai.jev を起動
 npm run check                  # フォーマット、lint、型チェック
 ./test.sh                      # テスト（モデルが必要なテストは、キーがなければスキップ）
 ```
 
-デスクトップアプリは `desktop/` にあります。`bun install` のあと、`KYRN_ROOT="$(cd .. && pwd)" bun run start` を実行すると、このリポジトリの mu を使う開発版が起動します（先にルートで `npm install` を実行してください）。
+デスクトップアプリは `desktop/` にあります。`bun install` のあと、`SPEC_AI_JEV_ROOT="$(cd .. && pwd)" bun run start` を実行すると、このリポジトリの spec.ai.jev を使う開発版が起動します（先にルートで `npm install` を実行してください）。
 
 参加者は全員[行動規範](../../CODE_OF_CONDUCT.md)に従います。セキュリティの問題は [SECURITY.md](../../SECURITY.md) のとおり非公開で報告してください。
 
 ## クレジットとライセンス
 
-mu は [pi](https://github.com/earendil-works/pi)（コーディングエージェント、MIT。ルートの [LICENSE](../../LICENSE) が `packages/` と `kyrn/` に適用されます）と [AionUi](https://github.com/iOfficeAI/AionUi)（デスクトップアプリ、Apache 2.0。`desktop/` には AionUi の [LICENSE](../../desktop/LICENSE) を残しています）をもとに作られています。二つのプロジェクトに感謝します。いくつかの判定ポイントは他のプロジェクトのアイデアをもとにしています。プロンプトインジェクション検査の問い方は [hermes-jev-skills](https://github.com/kerpopule/hermes-jev-skills) から、続行チェックと一括判定ツールは [oh-my-pi](https://github.com/can1357/oh-my-pi) にならっています。判定カーネルで使っているサードパーティのコードは [THIRD_PARTY_NOTICES.md](../../packages/kyrn-judge/THIRD_PARTY_NOTICES.md) に記載しています。
+spec.ai.jev は [pi](https://github.com/earendil-works/pi)（コーディングエージェント、MIT。ルートの [LICENSE](../../LICENSE) が `packages/` と `kyrn/` に適用されます）と [AionUi](https://github.com/iOfficeAI/AionUi)（デスクトップアプリ、Apache 2.0。`desktop/` には AionUi の [LICENSE](../../desktop/LICENSE) を残しています）をもとに作られています。二つのプロジェクトに感謝します。いくつかの判定ポイントは他のプロジェクトのアイデアをもとにしています。プロンプトインジェクション検査の問い方は [hermes-jev-skills](https://github.com/kerpopule/hermes-jev-skills) から、続行チェックと一括判定ツールは [oh-my-pi](https://github.com/can1357/oh-my-pi) にならっています。判定カーネルで使っているサードパーティのコードは [THIRD_PARTY_NOTICES.md](../../packages/kyrn-judge/THIRD_PARTY_NOTICES.md) に記載しています。
 
 ## コミュニティ
 
-- 質問とアイデア：[Discussions](https://github.com/qybaihe/mu/discussions)。中国語のディスカッションは [linux.do](https://linux.do) でも。
-- バグ報告と要望：[Issues](https://github.com/qybaihe/mu/issues/new/choose)。
+- 質問とアイデア：[Discussions](https://github.com/qybaihe/spec/discussions)。中国語のディスカッションは [linux.do](https://linux.do) でも。
+- バグ報告と要望：[Issues](https://github.com/qybaihe/spec/issues/new/choose)。
 - そのほか：[SUPPORT.md](../../SUPPORT.md)。
 
-mu が役に立ったら、スターを付けてもらえると、ほかの人が見つけやすくなります。
+spec.ai.jev が役に立ったら、スターを付けてもらえると、ほかの人が見つけやすくなります。

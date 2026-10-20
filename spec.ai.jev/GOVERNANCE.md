@@ -11,7 +11,7 @@ Most decisions happen in the open, on the issue or pull request they concern. Ma
 
 Larger changes (a new feature or setting, a new decision point, a change to what leaves the user's machine, a new dependency) are discussed in an issue before code is written. What decides them, in order:
 
-1. What users of mu need, and what they can see and control. A verdict changes what the model does, never whether it asks the user.
+1. What users of spec.ai.jev need, and what they can see and control. A verdict changes what the model does, never whether it asks the user.
 2. Measurements over opinions: a judge or a decision point is switched on by default only with numbers from real sessions.
 3. Staying close to pi and AionUi, so that their releases can keep being merged.
 
@@ -21,7 +21,7 @@ Contributors who have made several substantial contributions, review others' wor
 
 ## Upstream projects
 
-mu is built on [pi](https://github.com/earendil-works/pi) (MIT) and [AionUi](https://github.com/iOfficeAI/AionUi) (Apache 2.0). Their maintainers govern their projects; mu follows their releases, reports problems that belong upstream, and keeps their licenses and notices.
+spec.ai.jev is built on [pi](https://github.com/earendil-works/pi) (MIT) and [AionUi](https://github.com/iOfficeAI/AionUi) (Apache 2.0). Their maintainers govern their projects; spec.ai.jev follows their releases, reports problems that belong upstream, and keeps their licenses and notices.
 
 ## Changes to this document
 

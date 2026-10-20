@@ -361,20 +361,20 @@ describe("checkpoint store", () => {
 		).rejects.toBeInstanceOf(GitMissing);
 	});
 
-	// mu 0.1.3 run in a home folder: the first snapshot took in ~/.mu, the snapshots themselves among it, so every
+	// mu 0.1.3 run in a home folder: the first snapshot took in ~/.spec.ai.jev, the snapshots themselves among it, so every
 	// later snapshot copied the store's own new objects again, and the store grew with every turn that changed a file.
 	it("never snapshots mu's own folders, the snapshots among them, and reads their names literally", async () => {
 		const root = temp("mu-own-");
 		write(root, "src/app.ts", "v1\n");
-		write(root, ".mu/agent/sessions/one.jsonl", '{"type":"session"}\n');
+		write(root, ".spec.ai.jev/agent/sessions/one.jsonl", '{"type":"session"}\n');
 		write(root, "[odd] dir/x.txt", "mu's\n");
 		// What "[odd] dir" would match as a pattern: it is the user's, and stays in.
 		write(root, "o dir/y.txt", "the user's\n");
 		const store = await openStore({
-			baseDir: join(root, ".mu", "agent", "mu", "checkpoints"),
+			baseDir: join(root, ".spec.ai.jev", "agent", "mu", "checkpoints"),
 			root,
 			run: spawnGit(),
-			ownFolders: [join(root, ".mu"), join(root, "[odd] dir")],
+			ownFolders: [join(root, ".spec.ai.jev"), join(root, "[odd] dir")],
 		});
 		await snapshot(store, "s/1");
 		// The second snapshot sees what the first one wrote into the store.

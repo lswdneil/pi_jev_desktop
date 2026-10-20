@@ -20,11 +20,11 @@ From these, each task gets a brief (`src/swarm/brief.ts`) with:
 The brief reaches the child in two ways:
 
 - **Its first message.** This keeps the task, then adds "This is one part of a larger piece of work: …", the item it serves, the previous step's report inside `<previous-step>` (marked as data, not instructions), the criteria as `a1. …`, and "End with a short report".
-- **Its environment.** `KYRN_SWARM_BRIEF` is set, which drives the child's task frame. The goal is the part rather than the whole message. The criteria become its acceptance items and are marked as the user's, so the child's writer cannot drop them. The child's `todo` tool and its completion check then work on exactly those items.
+- **Its environment.** `SPEC_AI_JEV_SWARM_BRIEF` is set, which drives the child's task frame. The goal is the part rather than the whole message. The criteria become its acceptance items and are marked as the user's, so the child's writer cannot drop them. The child's `todo` tool and its completion check then work on exactly those items.
 
 ## The checklist coming back
 
-The child writes its acceptance list to `KYRN_SWARM_FRAME_OUT` after every tool step and at `agent_settled`. The write goes through a temp file and a rename, so a stopped child leaves either the whole list or nothing.
+The child writes its acceptance list to `SPEC_AI_JEV_SWARM_FRAME_OUT` after every tool step and at `agent_settled`. The write goes through a temp file and a rename, so a stopped child leaves either the whole list or nothing.
 
 Extensions hear `agent_settled` before the parent does, so the list is on disk by the time the parent reads it.
 
@@ -68,5 +68,5 @@ Each command tells the main model to do three things:
 
 ## Where this interacts
 
-- **Permissions.** A sub-agent runs in its parent's current permission mode (`MU_PERMISSIONS`). It has no UI, so whatever would ask the user is refused, with a reason it reports back.
-- **Constraints.** The user's hard constraints still reach every sub-agent through `KYRN_SWARM_CONSTRAINTS`.
+- **Permissions.** A sub-agent runs in its parent's current permission mode (`SPEC_AI_JEV_PERMISSIONS`). It has no UI, so whatever would ask the user is refused, with a reason it reports back.
+- **Constraints.** The user's hard constraints still reach every sub-agent through `SPEC_AI_JEV_SWARM_CONSTRAINTS`.

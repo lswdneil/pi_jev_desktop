@@ -6,7 +6,7 @@ import { spawn } from "node:child_process";
 import { MAIN_ENTRY, completeFirstRun, launchApp } from "./helpers/app.ts";
 
 /**
- * A second start: the icon clicked again while mu is open.
+ * A second start: the icon clicked again while spec.ai.jev is open.
  *
  * The lock in the main process decides this, and until now nothing tested it. Two copies over one profile would fight
  * over the same session files; one copy that ignores the second click looks like the app did nothing. What is asserted

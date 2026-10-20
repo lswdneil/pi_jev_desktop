@@ -1,6 +1,6 @@
 # KYRN Desktop: integrate into original AionUi first
 
-> 已于 2026-09-21 更名为 mu（命令 `mu`，标识 μ）。本文是更名前的记录，正文保持原样；新旧名对照见 [10-rename-to-mu.md](10-rename-to-mu.md)。
+> Historical note: the kernel's internal names (`kyrn`, `kyrn.*`) predate the current product name and are kept for stored sessions. See [10-brand-history.md](10-brand-history.md).
 
 ## Current direction (2026-09-21)
 

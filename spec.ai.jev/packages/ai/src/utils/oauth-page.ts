@@ -6,10 +6,10 @@
 
 // The mu glyph and its tile, as the desktop draws them (components/brand/glyph.ts): three round-capped
 // strokes in a 100x100 box over the icon's diagonal gradient. Fixed brand colours on purpose.
-const MU_MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" aria-hidden="true"><defs><linearGradient id="mu-tile" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F3C6FA"/><stop offset="0.5" stop-color="#B79CF7"/><stop offset="1" stop-color="#8680EB"/></linearGradient></defs><rect width="100" height="100" rx="27" fill="url(#mu-tile)"/><path d="M41 32 L35 74.4 M38.9 47 C37.77 55 41 59.4 47.6 59.4 C54.8 59.4 61.05 54.5 61.9 48.5 M64.25 32 L61.35 52.5 C60.6 58 62.3 61.2 66.4 60.4" stroke="#FFFFFF" stroke-width="9.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const SPEC_AI_JEV_MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" aria-hidden="true"><defs><linearGradient id="mu-tile" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F3C6FA"/><stop offset="0.5" stop-color="#B79CF7"/><stop offset="1" stop-color="#8680EB"/></linearGradient></defs><rect width="100" height="100" rx="27" fill="url(#mu-tile)"/><path d="M41 32 L35 74.4 M38.9 47 C37.77 55 41 59.4 47.6 59.4 C54.8 59.4 61.05 54.5 61.9 48.5 M64.25 32 L61.35 52.5 C60.6 58 62.3 61.2 66.4 60.4" stroke="#FFFFFF" stroke-width="9.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 // The same mark as the tab icon, so the browser tab shows mu rather than a blank page icon.
-const MU_FAVICON = `data:image/svg+xml,${encodeURIComponent(MU_MARK_SVG)}`;
+const SPEC_AI_JEV_FAVICON = `data:image/svg+xml,${encodeURIComponent(SPEC_AI_JEV_MARK_SVG)}`;
 
 function escapeHtml(value: string): string {
 	return value
@@ -34,7 +34,7 @@ function renderPage(options: { heading: string; message: string; details?: strin
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
   <title>${title}</title>
-  <link rel="icon" type="image/svg+xml" href="${MU_FAVICON}" />
+  <link rel="icon" type="image/svg+xml" href="${SPEC_AI_JEV_FAVICON}" />
   <style>
     :root {
       color-scheme: light dark;
@@ -105,7 +105,7 @@ function renderPage(options: { heading: string; message: string; details?: strin
 </head>
 <body>
   <main>
-    <div class="mark">${MU_MARK_SVG}</div>
+    <div class="mark">${SPEC_AI_JEV_MARK_SVG}</div>
     <h1>${heading}</h1>
     <p>${message}</p>
     ${details ? `<div class="details">${details}</div>` : ""}

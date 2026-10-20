@@ -74,7 +74,7 @@ export function parseGoalEntry(data: unknown): GoalState | undefined {
 	};
 }
 
-/** For the person, in the app's language (MU_LANG): Chinese or English. */
+/** For the person, in the app's language (SPEC_AI_JEV_LANG): Chinese or English. */
 export function describeGoal(goal: GoalState | undefined): string {
 	if (!goal || goal.status === "cleared") {
 		return say({

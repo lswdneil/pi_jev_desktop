@@ -20,7 +20,7 @@ export type LocalizedText = Readonly<Record<string, string>>;
 /** A feature switched off is `false` under `features.<name>`; switched on it is an object of option values. */
 export type FeatureSettings = Readonly<Record<string, unknown>> | false;
 
-/** A `mu.json` as this shell touches it: it preserves everything it does not understand. */
+/** A `agent.json` as this shell touches it: it preserves everything it does not understand. */
 export type SettingsDocument = Readonly<Record<string, unknown>>;
 
 interface OptionBase {

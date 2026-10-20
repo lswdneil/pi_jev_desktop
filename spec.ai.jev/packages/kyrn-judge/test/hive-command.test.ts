@@ -70,7 +70,7 @@ describe("/hive in a session", () => {
 	) {
 		const bees: string[] = [];
 		const runner: SwarmRunner = async (task, _assignment, signal, env) => {
-			bees.push(env?.KYRN_HIVE_BEE ?? "");
+			bees.push(env?.SPEC_AI_JEV_HIVE_BEE ?? "");
 			if (options.hold) {
 				await Promise.race([
 					options.hold,

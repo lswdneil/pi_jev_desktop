@@ -60,22 +60,22 @@ afterEach(() => {
 	for (const directory of DIRECTORIES.splice(0)) rmSync(directory, { recursive: true, force: true });
 });
 
-describe("where mu keeps its files", () => {
-	it("puts mu.json and consent.json in the agent directory", () => {
-		// This app's own folder, not the command line's `~/.mu`: the two products never read each other's state.
+describe("where the agent keeps its files", () => {
+	it("puts agent.json and consent.json in the agent directory", () => {
+		// This app's own folder, not the command line's `~/.spec.ai.jev`: the two products never read each other's state.
 		expect(agentDirFor("/home/ada", "linux")).toBe("/home/ada/.spec.ai.jev/agent");
-		expect(settingsFileFor("/home/ada", "linux")).toBe("/home/ada/.spec.ai.jev/agent/mu.json");
+		expect(settingsFileFor("/home/ada", "linux")).toBe("/home/ada/.spec.ai.jev/agent/agent.json");
 		expect(consentFileFor("/home/ada", "linux")).toBe("/home/ada/.spec.ai.jev/agent/consent.json");
-		expect(settingsFileFor("C:\\Users\\ada", "win32")).toBe("C:\\Users\\ada\\.spec.ai.jev\\agent\\mu.json");
+		expect(settingsFileFor("C:\\Users\\ada", "win32")).toBe("C:\\Users\\ada\\.spec.ai.jev\\agent\\agent.json");
 	});
 
 	it("looks in the checkout first, then the installed package", () => {
-		const [checkout, npmPackage] = manifestCandidates("/work/KYRN", "linux");
-		expect(checkout).toBe("/work/KYRN/packages/kyrn-judge/manifest.json");
-		expect(npmPackage).toBe("/work/KYRN/judge/manifest.json");
+		const [checkout, npmPackage] = manifestCandidates("/work/spec.ai.jev", "linux");
+		expect(checkout).toBe("/work/spec.ai.jev/packages/kyrn-judge/manifest.json");
+		expect(npmPackage).toBe("/work/spec.ai.jev/judge/manifest.json");
 
-		expect(findManifest("/work/KYRN", "linux", (file) => file === npmPackage)).toBe(npmPackage);
-		expect(findManifest("/work/KYRN", "linux", () => false)).toBeUndefined();
+		expect(findManifest("/work/spec.ai.jev", "linux", (file) => file === npmPackage)).toBe(npmPackage);
+		expect(findManifest("/work/spec.ai.jev", "linux", () => false)).toBeUndefined();
 	});
 });
 
@@ -130,14 +130,14 @@ describe("the texts", () => {
 	});
 });
 
-describe("reading mu.json", () => {
+describe("reading agent.json", () => {
 	it("treats a missing file as the defaults", () => {
-		expect(readSettings(join(temporary(), "mu.json"))).toEqual({ document: {}, problems: [] });
+		expect(readSettings(join(temporary(), "agent.json"))).toEqual({ document: {}, problems: [] });
 	});
 
 	it("reports a broken file and keeps going with the defaults", () => {
 		const directory = temporary();
-		const file = join(directory, "mu.json");
+		const file = join(directory, "agent.json");
 		writeFileSync(file, "{ not json");
 		const result = readSettings(file);
 		expect(result.document).toEqual({});
@@ -182,11 +182,11 @@ describe("writing a change", () => {
 
 	it("writes owner-only, atomically, and leaves no temporary file behind", () => {
 		const directory = temporary();
-		const file = join(directory, "mu.json");
+		const file = join(directory, "agent.json");
 		writeSettings(file, { features: { preflight: { thinking: true } } });
 
 		expect(JSON.parse(readFileSync(file, "utf8"))).toEqual({ features: { preflight: { thinking: true } } });
-		expect(readdirSync(directory)).toEqual(["mu.json"]);
+		expect(readdirSync(directory)).toEqual(["agent.json"]);
 		if (process.platform !== "win32") {
 			// Windows does not report the mode bits it enforces; the kernel's write is the same shape.
 			expect(statSync(file).mode & 0o777).toBe(0o600);

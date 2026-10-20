@@ -7,7 +7,7 @@ import { launchApp } from "./helpers/app.ts";
 /**
  * The first run: language, consent, model, usable.
  *
- * Every step is a normal path, including refusing consent and having no key: mu is meant to start and work locally
+ * Every step is a normal path, including refusing consent and having no key: spec.ai.jev is meant to start and work locally
  * regardless. The consent file is written by the harness's own command — this test checks the file the kernel reads,
  * not a file this shell invented.
  */
@@ -32,7 +32,7 @@ test.describe("first run", () => {
 			await page.locator('[data-testid="first-run-decline"]').click();
 			await expect(page.locator('[data-testid="first-run-model"]')).toBeVisible();
 			await expect(page.locator('[data-testid="first-run-key-hint"]')).toContainText("auth");
-			await expect(page.locator('[data-testid="first-run-key-hint"]')).not.toContainText("mu auth");
+			await expect(page.locator('[data-testid="first-run-key-hint"]')).not.toContainText("spec auth");
 			await expect(page.locator('[data-testid="first-run-error"]')).toHaveCount(0);
 
 			await page.locator('[data-testid="first-run-finish"]').click();

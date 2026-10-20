@@ -647,7 +647,7 @@ describe("board feature", () => {
 	});
 
 	it("writes in the app's language when the desktop says which, even one mu has no wording for", async () => {
-		vi.stubEnv("MU_LANG", "ja-JP");
+		vi.stubEnv("SPEC_AI_JEV_LANG", "ja-JP");
 		const { harness } = await start(reading(() => ({ phase: choice("changing"), needs_user: no, changed: yes })));
 		await harness.session.prompt("/board on");
 		const asked: string[] = [];
@@ -953,7 +953,7 @@ describe("board feature", () => {
 		expect(asked).toEqual([]);
 	});
 	it("puts a permission the agent waits for on the board at once, and takes it off once answered", async () => {
-		vi.stubEnv("MU_PERMISSIONS", "ask");
+		vi.stubEnv("SPEC_AI_JEV_PERMISSIONS", "ask");
 		const judged: string[] = [];
 		const whileAsked: string[] = [];
 		let events: KyrnPresentationEvent[] = [];

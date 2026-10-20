@@ -51,7 +51,7 @@ test.describe("settings from the manifest", () => {
 		}
 	});
 
-	test("saves a change to mu.json and says it takes effect on restart", async () => {
+	test("saves a change to agent.json and says it takes effect on restart", async () => {
 		const profile = await launchApp();
 		try {
 			await openSettings(profile);

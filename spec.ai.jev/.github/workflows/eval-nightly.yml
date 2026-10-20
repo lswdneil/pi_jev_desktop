@@ -76,8 +76,8 @@ jobs:
     # A key is the owner's to provide: without the secret the job is skipped, not failed.
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      MU_TASK_MODEL: ${{ vars.MU_TASK_MODEL }}
-      MU_TASK_BUDGET_USD: ${{ vars.MU_TASK_BUDGET_USD }}
+      SPEC_AI_JEV_TASK_MODEL: ${{ vars.SPEC_AI_JEV_TASK_MODEL }}
+      SPEC_AI_JEV_TASK_BUDGET_USD: ${{ vars.SPEC_AI_JEV_TASK_BUDGET_USD }}
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -99,8 +99,8 @@ jobs:
           node --experimental-strip-types packages/evals/src/tasks/cli.ts \
             --executor agent \
             --arm all \
-            --model "${MU_TASK_MODEL:-anthropic/claude-sonnet-4}" \
-            --budget "${MU_TASK_BUDGET_USD:-5}" \
+            --model "${SPEC_AI_JEV_TASK_MODEL:-anthropic/claude-sonnet-4}" \
+            --budget "${SPEC_AI_JEV_TASK_BUDGET_USD:-5}" \
             --out evals-out
 
       - name: Say why nothing ran

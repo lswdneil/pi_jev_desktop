@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { defaultModelPerProvider, ModelRuntime, resolveConfigValue } from "@earendil-works/pi-coding-agent";
 import { afterEach, describe, expect, it } from "vitest";
-import { envFileAdditions, resolveEnvValue as launcherResolveEnvValue, parseEnvFile } from "../../../kyrn/bin/mu.mjs";
+import { envFileAdditions, resolveEnvValue as launcherResolveEnvValue, parseEnvFile } from "../../../kyrn/bin/agent.mjs";
 import {
 	type CheckResult,
 	checkKey,
@@ -352,7 +352,7 @@ describe("the check", () => {
 describe("the .env", () => {
 	it("resolves a reference in the launcher, in the kernel and in pi the same way", () => {
 		// Three readers, one meaning: the launcher builds a session's environment, the kernel's env-file.ts
-		// answers the wizard, and pi resolves a mu.json value. A reference has to mean the same thing in all.
+		// answers the wizard, and pi resolves a agent.json value. A reference has to mean the same thing in all.
 		const env = { HOME: "/home/ada", TOKEN: "sk-from-env", EMPTY: "" };
 		const ref = (name: string) => `$${name}`;
 		const braced = (name: string) => `$${"{"}${name}}`;
@@ -547,11 +547,8 @@ describe("the files", () => {
 		});
 	});
 
-	it("writes the judge into mu.json, or into kyrn.json on a machine that has only that one", () => {
-		const has = (names: string[]) => (path: string) => names.some((name) => path.endsWith(name));
-		expect(judgeConfigPath("/a", has([]))).toBe(join("/a", "mu.json"));
-		expect(judgeConfigPath("/a", has(["kyrn.json"]))).toBe(join("/a", "kyrn.json"));
-		expect(judgeConfigPath("/a", has(["kyrn.json", "mu.json"]))).toBe(join("/a", "mu.json"));
+	it("writes the judge into agent.json", () => {
+		expect(judgeConfigPath("/a")).toBe(join("/a", "agent.json"));
 	});
 });
 
@@ -565,7 +562,7 @@ describe("the language", () => {
 		expect(setupLanguage({ LANG: "zh_CN.UTF-8" }, "en-US")).toBe("zh");
 		expect(setupLanguage({ LC_ALL: "en_US.UTF-8", LANG: "zh_CN.UTF-8" }, "zh-CN")).toBe("en");
 		expect(setupLanguage({ LC_ALL: "C", LANG: "zh_TW.UTF-8" }, undefined)).toBe("zh");
-		expect(setupLanguage({ MU_LANG: "en", LANG: "zh_CN.UTF-8" }, undefined)).toBe("en");
+		expect(setupLanguage({ SPEC_AI_JEV_LANG: "en", LANG: "zh_CN.UTF-8" }, undefined)).toBe("en");
 		expect(setupLanguage({}, "zh-Hans-CN")).toBe("zh");
 		expect(setupLanguage({}, undefined)).toBe("en");
 		expect(["DeepSeek", "OpenAI", "xAI", "GLM", "Ollama"].map(article)).toEqual([
@@ -746,8 +743,8 @@ describe("mu setup, asking in a terminal", () => {
 		const pi = run.pi as FakePi;
 		expect(pi.stored).toEqual([{ provider: "qwen", key: KEYS.hex32 }]);
 		expect(pi.defaults).toEqual([{ provider: "qwen", model: "qwen3-coder-plus" }]);
-		// No judge: neither mu.json nor the .env was touched.
-		expect(run.read("mu.json")).toBeUndefined();
+		// No judge: neither agent.json nor the .env was touched.
+		expect(run.read("agent.json")).toBeUndefined();
 		expect(run.read(".env")).toBeUndefined();
 		expect(run.said).toContain("Done. mu starts on Qwen · qwen3-coder-plus. Judge: none for now.");
 	});
@@ -796,7 +793,7 @@ describe("mu setup, asking in a terminal", () => {
 		expect(run.printed).not.toContain("Save it without the check");
 		expect(run.said).toContain("Model to start with: deepseek-chat");
 		expect((run.pi as FakePi).stored).toEqual([{ provider: "deepseek", key: good }]);
-		expect(run.json("mu.json")).toEqual({ tiers: ["llm:deepseek/deepseek-chat"] });
+		expect(run.json("agent.json")).toEqual({ tiers: ["llm:deepseek/deepseek-chat"] });
 		expect(run.code).toBe(SETUP_EXIT.start);
 	});
 
@@ -805,7 +802,7 @@ describe("mu setup, asking in a terminal", () => {
 		mkdirSync(join(home, "agent"));
 		writeFileSync(join(home, ".env"), "# mine\nOTHER=1\n");
 		if (!windows) chmodSync(join(home, ".env"), 0o644);
-		writeFileSync(join(home, "agent", "mu.json"), JSON.stringify({ tiers: ["laya"], modes: { default: "active" } }));
+		writeFileSync(join(home, "agent", "agent.json"), JSON.stringify({ tiers: ["laya"], modes: { default: "active" } }));
 		const run = await wizard({
 			home,
 			// The second "2": Jev with a key of one's own (the free Jev is offered first while no key is set).
@@ -818,10 +815,10 @@ describe("mu setup, asking in a terminal", () => {
 		expect(run.read(".env")).toBe(`# mine\nOTHER=1\nTYPESAFE_API_KEY=${KEYS.jev}\n`);
 		// The file it rewrote is the one place the key reaches disk: it comes back private, whatever it was before.
 		if (!windows) expect(statSync(join(home, ".env")).mode & 0o777).toBe(0o600);
-		expect(run.json("mu.json")).toEqual({ tiers: ["jev"], modes: { default: "active" } });
+		expect(run.json("agent.json")).toEqual({ tiers: ["jev"], modes: { default: "active" } });
 		const backup = join(home, "backups", "2026-09-27T12-00-00");
 		expect(readFileSync(join(backup, ".env"), "utf8")).toBe("# mine\nOTHER=1\n");
-		expect(JSON.parse(readFileSync(join(backup, "mu.json"), "utf8")).tiers).toEqual(["laya"]);
+		expect(JSON.parse(readFileSync(join(backup, "agent.json"), "utf8")).tiers).toEqual(["laya"]);
 		expect(run.printed).toContain(
 			`The files as they were are copied to ${join("~", "backups", "2026-09-27T12-00-00")}`,
 		);
@@ -989,8 +986,8 @@ describe("mu setup in a script", () => {
 		expect((run.pi as FakePi).stored).toEqual([{ provider: "deepseek", key: KEYS.hex32 }]);
 		expect(run.read(".env")).toBe(`OTHER=1\nTYPESAFE_API_KEY=${KEYS.jev}\n`);
 		expect(readFileSync(join(home, "backups", "2026-09-27T12-00-00", ".env"), "utf8")).toBe("OTHER=1\n");
-		// Jev is the judge already when mu.json names none.
-		expect(run.read("mu.json")).toBeUndefined();
+		// Jev is the judge already when agent.json names none.
+		expect(run.read("agent.json")).toBeUndefined();
 	});
 
 	it("makes the model the judge with --judge model", async () => {
@@ -998,7 +995,7 @@ describe("mu setup in a script", () => {
 			respond: () => listing("deepseek-v4-pro"),
 		});
 		expect(run.code).toBe(SETUP_EXIT.done);
-		expect(run.json("mu.json")).toEqual({ tiers: ["llm:deepseek/deepseek-v4-pro"] });
+		expect(run.json("agent.json")).toEqual({ tiers: ["llm:deepseek/deepseek-v4-pro"] });
 	});
 
 	it("fails with the reason when the check fails, and changes nothing", async () => {
@@ -1105,13 +1102,13 @@ describe("mu setup in a script", () => {
 		expect(run.code).toBe(SETUP_EXIT.done);
 		expect((run.pi as FakePi).stored).toEqual([{ provider: "opencode", key: good }]);
 		expect((run.pi as FakePi).defaults).toEqual([{ provider: "opencode", model: "kimi-k2.6" }]);
-		expect(run.json("mu.json")).toEqual({ tiers: ["jev-opencode"] });
+		expect(run.json("agent.json")).toEqual({ tiers: ["jev-opencode"] });
 		expect(run.said).toContain("Done. mu starts on OpenCode Zen · kimi-k2.6. Judge: Jev on OpenCode Zen.");
 
 		// In a terminal, Jev on OpenCode Zen comes first once there is an OpenCode key.
 		const asked = await wizard({ answers: ["2", "9", "", "", "n"], secrets: [good], respond });
 		expect(asked.printed).toContain("1) Jev (recommended) on OpenCode Zen, with your OpenCode key, billed per call");
-		expect(asked.json("mu.json")).toEqual({ tiers: ["jev-opencode"] });
+		expect(asked.json("agent.json")).toEqual({ tiers: ["jev-opencode"] });
 	});
 
 	it("makes free Jev on OpenCode Zen the judge with no key, and wants a key for the paid one", async () => {
@@ -1120,7 +1117,7 @@ describe("mu setup in a script", () => {
 		});
 		expect(free.code).toBe(SETUP_EXIT.done);
 		// `jev`, the default, answers with the free Jev while no key is set, and with a key once one is: nothing to write.
-		expect(free.read("mu.json")).toBeUndefined();
+		expect(free.read("agent.json")).toBeUndefined();
 		expect(free.read(".env")).toBeUndefined();
 		expect(free.said.join("\n")).toContain(
 			"Judge: Jev, free on OpenCode Zen for a limited time until you add a key.",
@@ -1135,7 +1132,7 @@ describe("mu setup in a script", () => {
 			env: { OPENCODE_API_KEY: "o" },
 			respond: () => listing("deepseek-v4-pro"),
 		});
-		expect(keyed.json("mu.json")).toEqual({ tiers: ["jev-opencode"] });
+		expect(keyed.json("agent.json")).toEqual({ tiers: ["jev-opencode"] });
 	});
 
 	it("checks an OpenRouter key where only a working key is answered", async () => {

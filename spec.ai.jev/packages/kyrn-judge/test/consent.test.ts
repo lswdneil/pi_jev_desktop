@@ -80,7 +80,7 @@ describe("judge consent", () => {
 
 	it("consent given by the environment covers a headless run", async () => {
 		const classifier = countingClassifier();
-		const state = judgeConsentState(undefined, { MU_JUDGE_CONSENT: "1" });
+		const state = judgeConsentState(undefined, { SPEC_AI_JEV_JUDGE_CONSENT: "1" });
 		expect(state.consented).toBe(true);
 		const { judge } = buildJudge(
 			{ ...loadConfig({ env: {} }).config, tiers: ["jev"] },
@@ -130,16 +130,16 @@ describe("judge consent", () => {
 		expect(consent.scope).toBe(CONSENT_SCOPE);
 
 		const hint = judgeConsentState(agentDir(), {}).grantHint;
-		expect(hint).toContain("MU_JUDGE_CONSENT=1");
+		expect(hint).toContain("SPEC_AI_JEV_JUDGE_CONSENT=1");
 	});
 
-	it("MU_JUDGE=off wins over an existing consent", () => {
+	it("SPEC_AI_JEV_JUDGE=off wins over an existing consent", () => {
 		const dir = agentDir();
 		writeJudgeConsent(dir);
-		const loaded = loadConfig({ env: { MU_JUDGE: "off" } });
+		const loaded = loadConfig({ env: { SPEC_AI_JEV_JUDGE: "off" } });
 		expect(loaded.disabled).toBe(true);
 		// The factory turns a disabled run into the mock judge in off mode; loadConfig only reports the switch.
-		expect(judgeConsentState(dir, { MU_JUDGE: "off" }).consented).toBe(true);
+		expect(judgeConsentState(dir, { SPEC_AI_JEV_JUDGE: "off" }).consented).toBe(true);
 	});
 
 	it("a configured judge is its own consent: the gate only guards the keyless default", async () => {

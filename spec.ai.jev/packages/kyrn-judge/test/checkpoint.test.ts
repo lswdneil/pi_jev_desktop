@@ -509,7 +509,7 @@ describe("checkpoints and the judged rewind", () => {
 	});
 
 	// mu 0.1.3 started in a home folder on a small server: the first change of every turn snapshotted the whole
-	// home into ~/.mu, mu's own snapshots included, so the copy grew with every turn.
+	// home into ~/.spec.ai.jev, mu's own snapshots included, so the copy grew with every turn.
 	it("takes no checkpoint in the home folder, copies nothing, and says why once, in one line", async () => {
 		const ui = scriptedUi({});
 		const { harness, root, shadow, file, entries, events } = await start({ ui, navigation: true });
@@ -563,8 +563,8 @@ describe("checkpoints and the judged rewind", () => {
 
 	it("says why in the user's language", () => {
 		const limits = { maxFiles: 5000, maxTotalMb: 200, timeoutMs: 30_000 };
-		const saved = process.env.MU_LANG;
-		process.env.MU_LANG = "zh-CN";
+		const saved = process.env.SPEC_AI_JEV_LANG;
+		process.env.SPEC_AI_JEV_LANG = "zh-CN";
 		try {
 			expect(offNotice("too_many_bytes", limits)).toEqual({
 				line: "mu：本次会话不拍检查点，因为这个文件夹要拍的文件加起来超过 200 MB。在项目文件夹里启动 mu 就有检查点，或者调高 features.checkpoint.maxTotalMb。",
@@ -577,8 +577,8 @@ describe("checkpoints and the judged rewind", () => {
 				"mu：检查点已关闭，因为这台 Mac 没有安装 git 所需的命令行开发者工具。用 xcode-select --install 安装后，新开一个会话就有检查点。",
 			);
 		} finally {
-			if (saved === undefined) delete process.env.MU_LANG;
-			else process.env.MU_LANG = saved;
+			if (saved === undefined) delete process.env.SPEC_AI_JEV_LANG;
+			else process.env.SPEC_AI_JEV_LANG = saved;
 		}
 		expect(offNotice("too_slow", limits).line).toBe(
 			"mu: checkpoints are off in this session, because listing this folder's files took longer than 30 s. Start mu in a project folder to get them.",

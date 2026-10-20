@@ -6,7 +6,7 @@
  *
  * The old shell handed the process to `RpcClient`, which restarted nothing and wrote the child's stderr into the
  * app's own log, so a wedged agent looked like a quiet app. Here every exit is a state the window can render, and a
- * failure carries where mu should have been, which is the only part of the message a user can act on.
+ * failure carries where spec.ai.jev should have been, which is the only part of the message a user can act on.
  */
 
 import type {
@@ -39,10 +39,10 @@ export class NotRunningError extends Error {
 }
 
 export interface SupervisorOptions {
-	/** Where mu is, if it is anywhere. Called on every attempt, so fixing the path and pressing retry works. */
+	/** Where spec.ai.jev is, if it is anywhere. Called on every attempt, so fixing the path and pressing retry works. */
 	readonly locate: () => Harness | undefined;
 	readonly launchOf: (harness: Harness) => AgentLaunch;
-	/** Where mu should have been, for the failure screen. */
+	/** Where spec.ai.jev should have been, for the failure screen. */
 	readonly expected: () => { readonly root: string; readonly layout: "repo" | "package" };
 	readonly spawn: SpawnAgent;
 	readonly sleep?: (ms: number) => Promise<void>;
@@ -228,7 +228,7 @@ export class AgentSupervisor {
 	private async attemptStart(generation: number): Promise<HarnessStatus> {
 		if (this.stopped || generation !== this.generation) return this.status;
 		const harness = this.options.locate();
-		if (harness === undefined) return this.fail("mu was not found where this build looks for it");
+		if (harness === undefined) return this.fail("spec.ai.jev was not found where this build looks for it");
 
 		this.setStatus({ state: "starting" });
 		let process: ReturnType<SpawnAgent>;

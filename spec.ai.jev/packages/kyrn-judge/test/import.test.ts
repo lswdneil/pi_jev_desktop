@@ -854,7 +854,7 @@ describe("mu import on the command line", () => {
 		expect(parseArgs(["--list", "a.jsonl"])).toEqual({ error: "--list takes no files" });
 	});
 
-	it("puts sessions where MU_CODING_AGENT_DIR and the settings say", async () => {
+	it("puts sessions where SPEC_CODING_AGENT_DIR and the settings say", async () => {
 		const dir = temp();
 		const agentDir = join(dir, "agent");
 		const file = writeLines(join(dir, "t.jsonl"), sidechainSession());
@@ -864,7 +864,7 @@ describe("mu import on the command line", () => {
 		const code = await importCommand(["--json", file], {
 			out: (line) => out.push(line),
 			err: (line) => out.push(line),
-			env: { MU_CODING_AGENT_DIR: agentDir },
+			env: { SPEC_CODING_AGENT_DIR: agentDir },
 			cwd: dir,
 			home: dir,
 		});

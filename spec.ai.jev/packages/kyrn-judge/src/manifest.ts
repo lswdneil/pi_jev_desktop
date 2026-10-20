@@ -21,7 +21,7 @@ export interface Localized {
 export type DecisionGroup = "input" | "context" | "tools" | "turn" | "team";
 
 export interface DecisionInfo {
-	/** The spec id, which is also the key under `modes` in mu.json. */
+	/** The spec id, which is also the key under `modes` in agent.json. */
 	readonly id: string;
 	readonly group: DecisionGroup;
 	/** The feature that asks it: switching that feature off silences the decision. */
@@ -31,7 +31,7 @@ export interface DecisionInfo {
 }
 
 interface OptionBase {
-	/** The key under `features.<name>` in mu.json. */
+	/** The key under `features.<name>` in agent.json. */
 	readonly key: string;
 	readonly label: Localized;
 	readonly help?: Localized;
@@ -56,7 +56,7 @@ export type OptionInfo =
 	  });
 
 export interface FeatureInfo {
-	/** The key under `features` in mu.json. `false` there switches the feature off. */
+	/** The key under `features` in agent.json. `false` there switches the feature off. */
 	readonly name: string;
 	readonly title: Localized;
 	readonly summary: Localized;
@@ -1210,7 +1210,7 @@ export const MANIFEST: HarnessManifest = {
 					label: { zh: "使用内置的常见服务器表", en: "Use the built-in table of well-known servers" },
 					help: {
 						zh: "TypeScript、Python、Go、Rust、C/C++ 的常见服务器，只在 PATH 上查找。自定义的服务器在设置文件里添加。",
-						en: "Well-known servers for TypeScript, Python, Go, Rust and C/C++, looked up on PATH only. Your own go under features.lsp.servers in mu.json.",
+						en: "Well-known servers for TypeScript, Python, Go, Rust and C/C++, looked up on PATH only. Your own go under features.lsp.servers in agent.json.",
 					},
 				},
 				{
@@ -1949,8 +1949,8 @@ export const MANIFEST: HarnessManifest = {
 					default: "",
 					label: { zh: "日志目录", en: "Log directory" },
 					help: {
-						zh: "留空为 ~/.mu/jobs/<会话 id>，7 天后清理。",
-						en: "Empty means ~/.mu/jobs/<session id>, cleared after 7 days.",
+						zh: "留空为 ~/.spec.ai.jev/jobs/<会话 id>，7 天后清理。",
+						en: "Empty means ~/.spec.ai.jev/jobs/<session id>, cleared after 7 days.",
 					},
 				},
 				{
@@ -2091,7 +2091,7 @@ export const MANIFEST: HarnessManifest = {
 					label: { zh: "沿用 MCP 服务器", en: "Inherit MCP servers" },
 					help: {
 						zh: "关掉后只用你自己在设置文件里定义的服务器。",
-						en: "When off, only the servers under mcp.servers in mu.json are used.",
+						en: "When off, only the servers under mcp.servers in agent.json are used.",
 					},
 				},
 				{
@@ -2126,8 +2126,8 @@ export const MANIFEST: HarnessManifest = {
 			name: "mcp",
 			title: { zh: "MCP 服务器", en: "MCP servers" },
 			summary: {
-				zh: "MCP 服务器由 pi 自带的客户端连接（stdio 与 Streamable HTTP，支持 OAuth 登录，用 /mcp 管理）。从 Claude Code、Cursor、Codex 和 mu.json 沿用的服务器，每个是能力目录里的一项，默认隐藏：Jev 认定任务需要，或模型主动申请，才启动它并把工具交给模型。工具清单会缓存，服务器没跑过 Jev 也有描述可判。项目里定义的服务器第一次启动前要你点头，定义变了会再问。在 mu.json 里可以把某个服务器设为常开。用 mu mcp add 加的服务器归 pi 管：随会话连接，工具由 tool_search 按需加载。",
-				en: 'MCP servers are connected by pi\'s own client (stdio and Streamable HTTP, OAuth sign-in, managed with /mcp). Each server mu takes over from Claude Code, Cursor, Codex and mu.json is a catalog entry that stays hidden: it starts and its tools are handed to the model only when the judge finds the task needs it or the model asks through find_capability. Tool lists are cached, so the judge has a description before a server ever ran. A server defined by a project asks before its first start, and again when its definition changes. "exposure": "always" under mcp.servers in mu.json keeps a server open. Servers added with mu mcp add are pi\'s: they connect with the session, and tool_search loads their tools when needed.',
+				zh: "MCP 服务器由 pi 自带的客户端连接（stdio 与 Streamable HTTP，支持 OAuth 登录，用 /mcp 管理）。从 Claude Code、Cursor、Codex 和 agent.json 沿用的服务器，每个是能力目录里的一项，默认隐藏：Jev 认定任务需要，或模型主动申请，才启动它并把工具交给模型。工具清单会缓存，服务器没跑过 Jev 也有描述可判。项目里定义的服务器第一次启动前要你点头，定义变了会再问。在 agent.json 里可以把某个服务器设为常开。用 mu mcp add 加的服务器归 pi 管：随会话连接，工具由 tool_search 按需加载。",
+				en: 'MCP servers are connected by pi\'s own client (stdio and Streamable HTTP, OAuth sign-in, managed with /mcp). Each server mu takes over from Claude Code, Cursor, Codex and agent.json is a catalog entry that stays hidden: it starts and its tools are handed to the model only when the judge finds the task needs it or the model asks through find_capability. Tool lists are cached, so the judge has a description before a server ever ran. A server defined by a project asks before its first start, and again when its definition changes. "exposure": "always" under mcp.servers in agent.json keeps a server open. Servers added with mu mcp add are pi\'s: they connect with the session, and tool_search loads their tools when needed.',
 			},
 			defaultEnabled: true,
 			options: [
@@ -2284,7 +2284,7 @@ export const MANIFEST: HarnessManifest = {
 					label: { zh: "调试器（断点、单步、变量）", en: "Debugger: breakpoints, stepping, variables" },
 					help: {
 						zh: "在调试器里运行程序，停在断点或未捕获的异常处，看调用栈和变量。Python 用 debugpy，Go 用 delve，编译型程序用 lldb-dap，都要本机已装；也可以在设置文件里加自己的。一次只跑一个，随会话结束。",
-						en: "Runs a program under a debugger, stopped at breakpoints or an uncaught exception, with the call stack and variables. debugpy for Python, delve for Go, lldb-dap for compiled programs, each if installed; add your own under debugAdapters in mu.json. One run at a time, ended with the session.",
+						en: "Runs a program under a debugger, stopped at breakpoints or an uncaught exception, with the call stack and variables. debugpy for Python, delve for Go, lldb-dap for compiled programs, each if installed; add your own under debugAdapters in agent.json. One run at a time, ended with the session.",
 					},
 				},
 				{

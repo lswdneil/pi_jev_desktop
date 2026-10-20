@@ -10,12 +10,12 @@ name: Desktop app
 # changed. Both macOS builds write latest-mac.yml and both Windows builds latest.yml, each listing only its own
 # architecture; the release job merges each pair into one file (scripts/merge-update-info.mjs).
 #
-# The app carries mu inside it: the harness job packs mu-agent from the same commit (as npm.yml does), and
-# every build puts it into the app (desktop/scripts/kyrn/bundle-harness.mjs, through MU_HARNESS_TARBALL).
+# The app carries mu inside it: the harness job packs spec-ai-agent from the same commit (as npm.yml does), and
+# every build puts it into the app (desktop/scripts/kyrn/bundle-harness.mjs, through SPEC_AI_JEV_HARNESS_TARBALL).
 #
 # The app each build made is then started as a person starts it: its own mu alone first, then the whole app holding a
 # conversation (desktop/tests/e2e/mu-conversation) twice, on the native host the app uses by default (mu in a process
-# of the app's own) and on AionCore (MU_NATIVE_HOST=0), on every system but the Intel Mac: its app, built on an arm64
+# of the app's own) and on AionCore (SPEC_AI_JEV_NATIVE_HOST=0), on every system but the Intel Mac: its app, built on an arm64
 # runner, sees an arm64 Mac there and asks for the arm64 app instead. On windows-x64 the app its installer puts in
 # C:\Program Files\mu holds them too: a path with a space.
 #
@@ -61,14 +61,14 @@ jobs:
       - name: Build pi
         run: npm run build
 
-      - name: Build and pack mu-agent
+      - name: Build and pack spec-ai-agent
         run: node kyrn/npm/build.mjs --pack
 
       - name: Upload the tarball
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: mu-agent-tarball
-          path: .artifacts/npm/mu-agent-*.tgz
+          name: spec-ai-agent-tarball
+          path: .artifacts/npm/spec-ai-agent-*.tgz
           if-no-files-found: error
           retention-days: 14
 
@@ -109,12 +109,12 @@ jobs:
       - name: Download mu
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: mu-agent-tarball
-          path: ${{ runner.temp }}/mu-agent
+          name: spec-ai-agent-tarball
+          path: ${{ runner.temp }}/spec-ai-agent
 
       - name: Use this commit's mu
         shell: bash
-        run: echo "MU_HARNESS_TARBALL=$(ls "$RUNNER_TEMP"/mu-agent/mu-agent-*.tgz)" >> "$GITHUB_ENV"
+        run: echo "SPEC_AI_JEV_HARNESS_TARBALL=$(ls "$RUNNER_TEMP"/spec-ai-agent/spec-ai-agent-*.tgz)" >> "$GITHUB_ENV"
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -362,14 +362,14 @@ jobs:
       # app data, mu's agent folder, a project). No key, no real model, nothing downloaded. On Windows this is the only
       # place the app is ever run. Linux has no display here: Xvfb is one, a 1280 x 800 screen (xvfb-run's own, 640 x 480
       # at 8 bits, is smaller than the app's narrowest window). This one is held on AionCore, the way the app talked to
-      # mu before its native host (the test turns the host off with MU_NATIVE_HOST=0); the next one on the native host.
+      # mu before its native host (the test turns the host off with SPEC_AI_JEV_NATIVE_HOST=0); the next one on the native host.
       - name: Hold a conversation in the app
         id: conversation
         if: matrix.conversation
         shell: bash
         timeout-minutes: 25
         env:
-          MU_E2E_ROOT: ${{ runner.temp }}/mu-e2e
+          SPEC_AI_JEV_E2E_ROOT: ${{ runner.temp }}/mu-e2e
         run: |
           if [ "$RUNNER_OS" = "Linux" ]; then
             xvfb-run -a -s "-screen 0 1280x800x24" node scripts/kyrn/e2e-conversation.mjs --app out --arch ${{ matrix.arch }}
@@ -392,7 +392,7 @@ jobs:
             ${{ runner.temp }}/mu-e2e/logs
             ${{ runner.temp }}/mu-e2e/userData/logs
             ${{ runner.temp }}/mu-e2e/home/Library/Logs
-            ${{ runner.temp }}/mu-e2e/home/.mu
+            ${{ runner.temp }}/mu-e2e/home/.spec.ai.jev
             ${{ runner.temp }}/mu-e2e/agent
             !${{ runner.temp }}/mu-e2e/**/.env
             !${{ runner.temp }}/mu-e2e/**/auth.json
@@ -433,7 +433,7 @@ jobs:
             ${{ runner.temp }}/mu-e2e-native/*/logs
             ${{ runner.temp }}/mu-e2e-native/*/userData/logs
             ${{ runner.temp }}/mu-e2e-native/*/home/Library/Logs
-            ${{ runner.temp }}/mu-e2e-native/*/home/.mu
+            ${{ runner.temp }}/mu-e2e-native/*/home/.spec.ai.jev
             ${{ runner.temp }}/mu-e2e-native/*/agent
             !${{ runner.temp }}/mu-e2e-native/**/.env
             !${{ runner.temp }}/mu-e2e-native/**/auth.json
@@ -453,7 +453,7 @@ jobs:
         shell: pwsh
         timeout-minutes: 25
         env:
-          MU_E2E_ROOT: ${{ runner.temp }}/mu-e2e-installed
+          SPEC_AI_JEV_E2E_ROOT: ${{ runner.temp }}/mu-e2e-installed
         run: |
           $installer = Get-ChildItem out -File | Where-Object { $_.Name -match '^mu-.+-win-x64\.exe$' } |
             Select-Object -First 1
@@ -465,7 +465,7 @@ jobs:
           node scripts/kyrn/e2e-conversation.mjs --app $app
           $status = $LASTEXITCODE
           # What the app registered for its launcher, from its log.
-          Get-ChildItem $env:MU_E2E_ROOT -Recurse -File -Filter *.log |
+          Get-ChildItem $env:SPEC_AI_JEV_E2E_ROOT -Recurse -File -Filter *.log |
             Select-String -Pattern '\[mu\] launcher: ' | Select-Object -First 1 | ForEach-Object { $_.Line }
           exit $status
 
@@ -479,7 +479,7 @@ jobs:
             desktop/tests/e2e/results/mu-conversation
             ${{ runner.temp }}/mu-e2e-installed/logs
             ${{ runner.temp }}/mu-e2e-installed/userData/logs
-            ${{ runner.temp }}/mu-e2e-installed/home/.mu
+            ${{ runner.temp }}/mu-e2e-installed/home/.spec.ai.jev
             ${{ runner.temp }}/mu-e2e-installed/agent
             !${{ runner.temp }}/mu-e2e-installed/**/.env
             !${{ runner.temp }}/mu-e2e-installed/**/auth.json
@@ -496,7 +496,7 @@ jobs:
         shell: pwsh
         timeout-minutes: 25
         env:
-          MU_E2E_ROOT: ${{ runner.temp }}/mu-e2e-installed-native
+          SPEC_AI_JEV_E2E_ROOT: ${{ runner.temp }}/mu-e2e-installed-native
         run: |
           $app = Join-Path $env:ProgramFiles 'mu'
           node scripts/kyrn/e2e-conversation.mjs --native --app $app '--' native.spec
@@ -512,7 +512,7 @@ jobs:
             desktop/tests/e2e/results/mu-native
             ${{ runner.temp }}/mu-e2e-installed-native/logs
             ${{ runner.temp }}/mu-e2e-installed-native/userData/logs
-            ${{ runner.temp }}/mu-e2e-installed-native/home/.mu
+            ${{ runner.temp }}/mu-e2e-installed-native/home/.spec.ai.jev
             ${{ runner.temp }}/mu-e2e-installed-native/agent
             !${{ runner.temp }}/mu-e2e-installed-native/**/.env
             !${{ runner.temp }}/mu-e2e-installed-native/**/auth.json
@@ -722,7 +722,7 @@ jobs:
               echo "- Not code-signed yet: macOS asks you to confirm the first start in System Settings → Privacy & Security; Windows SmartScreen shows a warning."
             fi
             echo "- The app carries mu inside it: nothing else to install, no Node.js, no download at the first start."
-            echo "- The \`mu\` command line: \`npm i -g mu-agent\` (Node.js 22.19 or newer), or from source (the archive below, or a clone)."
+            echo "- The \`mu\` command line: \`npm i -g spec-ai-agent\` (Node.js 22.19 or newer), or from source (the archive below, or a clone)."
             echo "- \`SHA256SUMS\` covers every installer, the source archive and \`sbom.cdx.json\`; it is signed with a keyless Sigstore certificate (\`SHA256SUMS.sigstore.json\`) and each covered file is attested by GitHub as built from this tag. What is inside the build is listed in \`sbom.cdx.json\` (CycloneDX)."
             echo "- The update feed files (\`latest*.yml\` and their blockmaps) are attached beside them and are not covered by \`SHA256SUMS\`: the app reads them to find its next installer. Run the verifier without \`--strict\` on a folder that holds them."
             echo "  Verify it yourself: \`node scripts/verify-release.mjs <this release's folder> --repo $GITHUB_REPOSITORY --require-proof\`."

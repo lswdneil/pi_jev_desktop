@@ -122,7 +122,7 @@ describe("TypeSafeJudgeProvider", () => {
 	it("reaches Jev on OpenRouter with a key of its own, and names that service when something is wrong", async () => {
 		const seen: { url?: string; init?: RequestInit } = {};
 		const built = buildJudge(parseConfig({ tiers: ["jev-openrouter"] }), {
-			env: { MU_JUDGE_OPENROUTER_API_KEY: "or-key", TYPESAFE_API_KEY: "ts-key" },
+			env: { SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY: "or-key", TYPESAFE_API_KEY: "ts-key" },
 			fetch: fakeFetch(
 				200,
 				{ answers: { edit: { noul: 0.5 }, kind: { choice: "other" }, size: { score: 1 } } },
@@ -138,7 +138,7 @@ describe("TypeSafeJudgeProvider", () => {
 
 		const keyless = new TypeSafeJudgeProvider({
 			apiKey: () => undefined,
-			keyName: "MU_JUDGE_OPENROUTER_API_KEY",
+			keyName: "SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY",
 			baseUrl: "https://openrouter.ai/api/v1/systemone",
 			fetch: fakeFetch(200, {}),
 		});
@@ -150,7 +150,7 @@ describe("TypeSafeJudgeProvider", () => {
 			}) as typeof fetch,
 		});
 		for (const [provider, message] of [
-			[keyless, "No API key is configured for Jev at openrouter.ai (MU_JUDGE_OPENROUTER_API_KEY)"],
+			[keyless, "No API key is configured for Jev at openrouter.ai (SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY)"],
 			[unreachable, "Could not reach openrouter.ai"],
 		] as const) {
 			const error = await provider.evaluate({ state: "s", questions }).catch((caught: unknown) => caught);
@@ -159,12 +159,12 @@ describe("TypeSafeJudgeProvider", () => {
 	});
 
 	it("never sends a key set up for another service to TypeSafe: such a judge needs its own address", () => {
-		const relay = { type: "typesafe", apiKeyEnv: "MU_JUDGE_CUSTOM_API_KEY" };
+		const relay = { type: "typesafe", apiKeyEnv: "SPEC_AI_JEV_JUDGE_CUSTOM_API_KEY" };
 		const without = buildJudge(parseConfig({ tiers: ["relay"], judges: { relay } }), {
-			env: { MU_JUDGE_CUSTOM_API_KEY: "c" },
+			env: { SPEC_AI_JEV_JUDGE_CUSTOM_API_KEY: "c" },
 		});
 		expect(without.problems[0]).toBe(
-			'Judge "relay" needs a baseUrl: its key MU_JUDGE_CUSTOM_API_KEY is not sent to TypeSafe',
+			'Judge "relay" needs a baseUrl: its key SPEC_AI_JEV_JUDGE_CUSTOM_API_KEY is not sent to TypeSafe',
 		);
 		expect(without.judge.id).not.toContain("typesafe");
 
@@ -173,7 +173,7 @@ describe("TypeSafeJudgeProvider", () => {
 				tiers: ["relay"],
 				judges: { relay: { ...relay, baseUrl: "http://10.0.0.5:8000/v1/systemone" } },
 			}),
-			{ env: { MU_JUDGE_CUSTOM_API_KEY: "c" } },
+			{ env: { SPEC_AI_JEV_JUDGE_CUSTOM_API_KEY: "c" } },
 		);
 		expect(withAddress.problems).toEqual([]);
 		expect(withAddress.judge.id).toBe("10.0.0.5:8000:jev-latest");
@@ -184,10 +184,10 @@ describe("TypeSafeJudgeProvider", () => {
 		const openRouter = {
 			type: "typesafe",
 			baseUrl: "https://openrouter.ai/api/v1/systemone",
-			apiKeyEnv: "MU_JUDGE_OPENROUTER_API_KEY",
+			apiKeyEnv: "SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY",
 		};
 		const written = parseConfig({ tiers: ["jev-openrouter"], judges: { "jev-openrouter": openRouter } });
-		expect(buildJudge(written, { env: { MU_JUDGE_OPENROUTER_API_KEY: "o" } }).judge.id).toBe(
+		expect(buildJudge(written, { env: { SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY: "o" } }).judge.id).toBe(
 			"openrouter.ai:~typesafe/jev-latest",
 		);
 
@@ -202,10 +202,10 @@ describe("TypeSafeJudgeProvider", () => {
 	it("makes the jev tier TypeSafe with a TypeSafe key, OpenRouter with a key for Jev there, and the gateway otherwise", () => {
 		const config = parseConfig({ tiers: ["jev"] });
 
-		expect(buildJudge(config, { env: { TYPESAFE_API_KEY: "k", MU_JUDGE_OPENROUTER_API_KEY: "o" } }).judge.id).toBe(
+		expect(buildJudge(config, { env: { TYPESAFE_API_KEY: "k", SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY: "o" } }).judge.id).toBe(
 			"typesafe:jev-latest",
 		);
-		expect(buildJudge(config, { env: { MU_JUDGE_OPENROUTER_API_KEY: "o" } }).judge.id).toBe(
+		expect(buildJudge(config, { env: { SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY: "o" } }).judge.id).toBe(
 			"openrouter.ai:~typesafe/jev-latest",
 		);
 		expect(buildJudge(config, { env: {} }).judge.id).toBe("gateway:typesafe-ai/jev");
@@ -264,11 +264,11 @@ describe("CLM", () => {
 		expect(clmEndpoint("https://example.com/clm/v1/systemone")).toBe("https://example.com/clm/v1/systemone");
 	});
 
-	it("sends MU_JUDGE_CLM_API_KEY when it is set, and names it when a server asks for a key", async () => {
+	it("sends SPEC_AI_JEV_JUDGE_CLM_API_KEY when it is set, and names it when a server asks for a key", async () => {
 		const seen: { init?: RequestInit } = {};
 		const config = parseConfig({ tiers: ["gpu"], judges: { gpu: { type: "clm", baseUrl: "http://10.0.0.7:8700" } } });
 		const keyed = buildJudge(config, {
-			env: { MU_JUDGE_CLM_API_KEY: "clm-key" },
+			env: { SPEC_AI_JEV_JUDGE_CLM_API_KEY: "clm-key" },
 			fetch: fakeFetch(200, clmAnswers, seen),
 		});
 		await keyed.judge.evaluate({ state: "s", questions });
@@ -277,7 +277,7 @@ describe("CLM", () => {
 		const clm = (fetchImpl: typeof fetch, apiKey?: string) =>
 			new TypeSafeJudgeProvider({
 				apiKey: () => apiKey,
-				keyName: "MU_JUDGE_CLM_API_KEY",
+				keyName: "SPEC_AI_JEV_JUDGE_CLM_API_KEY",
 				keyOptional: true,
 				judgeName: "CLM",
 				model: "clm-latest",
@@ -288,7 +288,7 @@ describe("CLM", () => {
 			[
 				clm(fakeFetch(401, { detail: "invalid API key" })),
 				"auth",
-				"CLM at 10.0.0.7:8700 asks for a key (MU_JUDGE_CLM_API_KEY)",
+				"CLM at 10.0.0.7:8700 asks for a key (SPEC_AI_JEV_JUDGE_CLM_API_KEY)",
 			],
 			[clm(fakeFetch(401, { detail: "invalid API key" }), "wrong"), "auth", "invalid API key"],
 			[
@@ -318,12 +318,12 @@ describe("CLM", () => {
 	});
 
 	it("never sends the CLM key to TypeSafe", () => {
-		const judge = { type: "typesafe", apiKeyEnv: "MU_JUDGE_CLM_API_KEY" };
+		const judge = { type: "typesafe", apiKeyEnv: "SPEC_AI_JEV_JUDGE_CLM_API_KEY" };
 		const built = buildJudge(parseConfig({ tiers: ["odd"], judges: { odd: judge } }), {
-			env: { MU_JUDGE_CLM_API_KEY: "c" },
+			env: { SPEC_AI_JEV_JUDGE_CLM_API_KEY: "c" },
 		});
 		expect(built.problems[0]).toBe(
-			'Judge "odd" needs a baseUrl: its key MU_JUDGE_CLM_API_KEY is not sent to TypeSafe',
+			'Judge "odd" needs a baseUrl: its key SPEC_AI_JEV_JUDGE_CLM_API_KEY is not sent to TypeSafe',
 		);
 	});
 });

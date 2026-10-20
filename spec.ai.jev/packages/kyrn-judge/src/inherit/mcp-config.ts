@@ -17,7 +17,7 @@ import type {
 /**
  * MCP server definitions from every place a user may already have them:
  *
- *   mu.json                        `mcp.servers`                       wins on a name clash
+ *   agent.json                        `mcp.servers`                       wins on a name clash
  *   ~/.claude.json                 `projects.<dir>.mcpServers`         the user's own servers for one project
  *   ~/.claude.json                 `mcpServers`
  *   ~/.cursor/mcp.json             `mcpServers`
@@ -125,7 +125,7 @@ export function normalizeServer(
 	return { skipped: "has neither a command nor a url" };
 }
 
-/** What the user set for a server in mu.json without redefining it: `{ "exposure": "always" }`, `{ "enabled": false }`. */
+/** What the user set for a server in agent.json without redefining it: `{ "exposure": "always" }`, `{ "enabled": false }`. */
 interface Overlay {
 	readonly exposure?: "always" | "judged";
 	readonly enabled?: boolean;
@@ -170,7 +170,7 @@ export interface McpDiscovery {
 export interface McpDiscoveryOptions {
 	readonly roots: InheritRoots;
 	readonly switches: InheritSwitches;
-	/** The `mcp` section of mu.json, as parsed JSON. Read even when every inherited source is switched off. */
+	/** The `mcp` section of agent.json, as parsed JSON. Read even when every inherited source is switched off. */
 	readonly own?: unknown;
 	/** Where `own` came from, for display. */
 	readonly ownSource?: string;
@@ -216,7 +216,7 @@ export function discoverMcpServers(options: McpDiscoveryOptions, problems: Inher
 	};
 
 	const own = isRecord(options.own) ? options.own : undefined;
-	add(own?.servers, { source: options.ownSource ?? "mu.json", tool: "mu", scope: "user" });
+	add(own?.servers, { source: options.ownSource ?? "agent.json", tool: "mu", scope: "user" });
 
 	const chain = projectChain(roots.projectDir, roots.home);
 	const inherit = switches.mcp;
@@ -295,7 +295,7 @@ export function discoverMcpServers(options: McpDiscoveryOptions, problems: Inher
 	for (const server of servers.values()) {
 		const overlay = overlays.get(server.name);
 		if (overlay?.enabled === false) {
-			skipped.push({ name: server.name, source: server.source, reason: "switched off in mu.json" });
+			skipped.push({ name: server.name, source: server.source, reason: "switched off in agent.json" });
 			continue;
 		}
 		result.push({

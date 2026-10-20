@@ -1,17 +1,17 @@
 <p align="center">
-  <img src="../../desktop/resources/app.png" width="96" alt="mu">
+  <img src="../../desktop/resources/app.png" width="96" alt="spec.ai.jev">
 </p>
-<h1 align="center">mu</h1>
+<h1 align="center">spec.ai.jev</h1>
 <p align="center">μ · Only what's needed.</p>
 <p align="center">판정 커널을 갖춘 코딩 에이전트. <a href="https://github.com/earendil-works/pi">pi</a> 기반.</p>
 
 <p align="center">
-  <a href="https://github.com/qybaihe/mu/actions/workflows/ci.yml"><img src="https://github.com/qybaihe/mu/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/qybaihe/mu/actions/workflows/desktop.yml"><img src="https://github.com/qybaihe/mu/actions/workflows/desktop.yml/badge.svg" alt="Desktop app"></a>
-  <a href="https://www.npmjs.com/package/mu-agent"><img src="https://img.shields.io/npm/v/mu-agent?label=mu-agent" alt="npm"></a>
-  <a href="https://github.com/qybaihe/mu/releases"><img src="https://img.shields.io/github/v/release/qybaihe/mu?include_prereleases&label=desktop" alt="Desktop release"></a>
+  <a href="https://github.com/qybaihe/spec/actions/workflows/ci.yml"><img src="https://github.com/qybaihe/spec/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/qybaihe/spec/actions/workflows/desktop.yml"><img src="https://github.com/qybaihe/spec/actions/workflows/desktop.yml/badge.svg" alt="Desktop app"></a>
+  <a href="https://www.npmjs.com/package/spec-ai-agent"><img src="https://img.shields.io/npm/v/spec-ai-agent?label=spec-ai-agent" alt="npm"></a>
+  <a href="https://github.com/qybaihe/spec/releases"><img src="https://img.shields.io/github/v/release/qybaihe/spec?include_prereleases&label=desktop" alt="Desktop release"></a>
   <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-MIT%20%2B%20Apache--2.0-blue" alt="License"></a>
-  <a href="https://github.com/qybaihe/mu/discussions"><img src="https://img.shields.io/github/discussions/qybaihe/mu?label=discussions" alt="Discussions"></a>
+  <a href="https://github.com/qybaihe/spec/discussions"><img src="https://img.shields.io/github/discussions/qybaihe/spec?label=discussions" alt="Discussions"></a>
 </p>
 
 <p align="center">
@@ -20,27 +20,27 @@
 
 코딩 에이전트는 세션 하나에서 코드와 상관없는 결정을 수백 번 내려요. 무엇을 컨텍스트에 남길지, 이 명령이 안전한지, 이 발견을 다른 에이전트에게 알릴 만한지, 일이 끝났는지. 큰 모델에 맡기면 토큰과 지연 시간, 주의력이 들어요. 고정된 규칙에 맡기면 너무 자주 틀려요. mu는 이런 결정을 **판정기**에 맡겨요. 판정기는 작고 빠른 모델로, 답의 범위가 정해진 질문에 한 번에 하나씩 답해요. 판정 지점은 턴마다 38개예요. 큰 모델은 주의력을 본래의 일에 쓸 수 있어요.
 
-- **mu**: 명령줄 버전이에요. pi가 하는 모든 것에 판정 커널을 더했어요.
-- **mu 데스크톱**: mu와 런타임이 들어 있는 네이티브 앱이에요. 내려받고, 모델을 연결하고, 시작하면 돼요.
+- **spec.ai.jev**: 명령줄 버전이에요. pi가 하는 모든 것에 판정 커널을 더했어요.
+- **spec.ai.jev 데스크톱**: mu와 런타임이 들어 있는 네이티브 앱이에요. 내려받고, 모델을 연결하고, 시작하면 돼요.
 - **Jev**: 판정기예요. 예/아니요, 선택, 점수 질문에 답하고, 답마다 확률을 붙이고, 모든 판정을 판정 장부에 남겨요. 로컬 판정기(Laya)나 어떤 LLM이든 Jev 대신 판정 지점을 맡을 수 있어요.
 
-> 아직 초기 개발 단계예요. 프리릴리스(0.1.x)를 npm과 [Releases](https://github.com/qybaihe/mu/releases)에 올려 두었고, 만든 사람들은 매일 쓰고 있어요. 이름, 설정, 형식은 앞으로 바뀔 수 있어요.
+> 아직 초기 개발 단계예요. 프리릴리스(0.1.x)를 npm과 [Releases](https://github.com/qybaihe/spec/releases)에 올려 두었고, 만든 사람들은 매일 쓰고 있어요. 이름, 설정, 형식은 앞으로 바뀔 수 있어요.
 
 **목차:** [빠른 시작](#빠른-시작) · [한 턴의 흐름](#한-턴의-흐름) · [판정 지점](#판정-지점) · [판정기](#판정기) · [실측](#실측) · [하이브](#하이브) · [쉬운 말 보드](#쉬운-말-보드) · [데스크톱 앱](#데스크톱-앱) · [명령줄](#명령줄) · [문서](#문서) · [기여하기](#기여하기)
 
 ## 빠른 시작
 
-**데스크톱 앱.** [Releases](https://github.com/qybaihe/mu/releases/latest)에서 macOS, Windows, Linux용 설치 파일을 내려받아 열고, API 키를 붙여 넣거나 ChatGPT, Claude, Grok, Google 구독으로 로그인하세요. 따로 설치할 것은 없어요.
+**데스크톱 앱.** [Releases](https://github.com/qybaihe/spec/releases/latest)에서 macOS, Windows, Linux용 설치 파일을 내려받아 열고, API 키를 붙여 넣거나 ChatGPT, Claude, Grok, Google 구독으로 로그인하세요. 따로 설치할 것은 없어요.
 
 **명령줄.**
 
 ```bash
-npm i -g mu-agent   # Node.js 22.19 이상
-mu setup            # 모델 연결
-mu                  # 현재 디렉터리에서 세션 시작
+npm i -g spec-ai-agent   # Node.js 22.19 이상
+spec setup            # 모델 연결
+spec.ai.jev                  # 현재 디렉터리에서 세션 시작
 ```
 
-시작할 때 판정기 키는 필요 없어요. 키를 설정하기 전까지는 OpenCode Zen의 무료 Jev가 답해요. 모든 판정 지점은 처음부터 판정을 반영하고, 판정은 모두 기록돼요(`/status`, `mu ledger`, 데스크톱 앱의 판정 탭). 판정기가 어떻게 할지 기록만 하고 싶다면 `~/.mu/agent/mu.json`에 `{"modes": {"default": "shadow"}}`를 적으세요. 자세한 내용은 [Getting started](../getting-started.md)(영어).
+시작할 때 판정기 키는 필요 없어요. 키를 설정하기 전까지는 OpenCode Zen의 무료 Jev가 답해요. 모든 판정 지점은 처음부터 판정을 반영하고, 판정은 모두 기록돼요(`/status`, `spec ledger`, 데스크톱 앱의 판정 탭). 판정기가 어떻게 할지 기록만 하고 싶다면 `~/.spec.ai.jev/agent/agent.json`에 `{"modes": {"default": "shadow"}}`를 적으세요. 자세한 내용은 [Getting started](../getting-started.md)(영어).
 
 ## 한 턴의 흐름
 
@@ -131,7 +131,7 @@ mu                  # 현재 디렉터리에서 세션 시작
 
 ## 판정기
 
-- **Jev**(클라우드). 답의 범위가 정해진 질문에 확률과 함께 답해요. TypeSafe, OpenRouter, Vercel AI Gateway, OpenCode Zen, Cloudflare Workers AI, 또는 같은 프로토콜을 쓰는 어떤 서비스로든 부를 수 있고, 서비스마다 키가 따로 있어요(`TYPESAFE_API_KEY`, `MU_JUDGE_OPENROUTER_API_KEY`, `AI_GATEWAY_API_KEY`, `OPENCODE_API_KEY`, `CLOUDFLARE_API_KEY`와 `CLOUDFLARE_ACCOUNT_ID`). 데스크톱 앱의 '판정기' 페이지에서 고를 수 있고, 기본값은 키가 설정된 첫 번째 서비스예요. 키가 하나도 없으면 OpenCode Zen의 기간 한정 무료 Jev 1.13이 답해요. 판정에 필요한 내용은 OpenCode로 가지만 모델 학습에는 쓰이지 않고, mu가 하루에 한 번 알려 줘요. 키를 설정하면(`mu setup`이나 '판정기' 페이지) 다음 질문부터 그 키를 써요. 만든 사람들의 실제 세션에서 잰 값으로, HTTP/2 웜 연결에서 질문 하나에 약 0.3초, 도구 출력 16청크를 요청 하나로 판정하는 데 0.44초가 걸렸고, 상태는 한 번만 과금됐어요. 판정, 확률, 소요 시간은 판정 장부에 남아요. `mu ledger`나 데스크톱 앱의 '판정' 탭에서 볼 수 있어요.
+- **Jev**(클라우드). 답의 범위가 정해진 질문에 확률과 함께 답해요. TypeSafe, OpenRouter, Vercel AI Gateway, OpenCode Zen, Cloudflare Workers AI, 또는 같은 프로토콜을 쓰는 어떤 서비스로든 부를 수 있고, 서비스마다 키가 따로 있어요(`TYPESAFE_API_KEY`, `SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY`, `AI_GATEWAY_API_KEY`, `OPENCODE_API_KEY`, `CLOUDFLARE_API_KEY`와 `CLOUDFLARE_ACCOUNT_ID`). 데스크톱 앱의 '판정기' 페이지에서 고를 수 있고, 기본값은 키가 설정된 첫 번째 서비스예요. 키가 하나도 없으면 OpenCode Zen의 기간 한정 무료 Jev 1.13이 답해요. 판정에 필요한 내용은 OpenCode로 가지만 모델 학습에는 쓰이지 않고, mu가 하루에 한 번 알려 줘요. 키를 설정하면(`spec setup`이나 '판정기' 페이지) 다음 질문부터 그 키를 써요. 만든 사람들의 실제 세션에서 잰 값으로, HTTP/2 웜 연결에서 질문 하나에 약 0.3초, 도구 출력 16청크를 요청 하나로 판정하는 데 0.44초가 걸렸고, 상태는 한 번만 과금됐어요. 판정, 확률, 소요 시간은 판정 장부에 남아요. `spec ledger`나 데스크톱 앱의 '판정' 탭에서 볼 수 있어요.
 - **Laya**(로컬). 여러분의 컴퓨터에서 돌아가고 네트워크에는 전혀 닿지 않는 322M 파라미터 판정기예요. 여러분이 동의하지 않으면 아무것도 내려받지 않아요. 단순한 술어에는 믿을 만하지만 메타 판단에는 약한 편이에요. 판정 지점을 맡기기 전에 섀도 모드로 Jev와 나란히 돌려 보고 판정 장부를 읽어 보세요.
 - **pi 모델 카탈로그의 어떤 분류 모델이든** 계층 하나로 쓸 수 있어요: `classifier:<provider>/<model>`. Cloudflare의 Clef(`clef`, `clef-flash`), OpenRouter와 Vercel AI Gateway의 System One 모델, llama.cpp 분류 모델 등.
 - **어떤 LLM이든** 계층 하나로 쓸 수 있어요: `llm:<provider>/<model>`.
@@ -164,7 +164,7 @@ mu                  # 현재 디렉터리에서 세션 시작
 
 *Perfect judge*(완벽한 판정기)는 레이블을 직접 읽어요. 올바른 판정기가 줄일 수 있는 최대치예요. *Keep failures only*(실패만 남기기)는 늘 "빼라"고 답하는 판정기로, 목표를 보지 않는 필터가 하는 일과 같아요. 이 조사에서 실제로 보낸 Jev 요청은 모두 282건이고, 정가로 약 $0.017이었어요. 기본 질문 방식에서 요청 하나의 소요 시간 중앙값은 345ms예요.
 
-둘 다 기본값은 꺼짐이에요. `~/.mu/agent/mu.json`에 `"features": { "admission": { "testLog": "rules" } }`를 쓰거나 데스크톱 앱 설정에서 '테스트 로그 정리'를 켜면 반복이 접혀요. `"jev"`로 하면 남은 부분 중 지금 목표에 필요한 것을 판정기가 골라요. `/mu mode tool.admission.test-log shadow`를 실행하면 선별 결과는 기록만 돼요.
+둘 다 기본값은 꺼짐이에요. `~/.spec.ai.jev/agent/agent.json`에 `"features": { "admission": { "testLog": "rules" } }`를 쓰거나 데스크톱 앱 설정에서 '테스트 로그 정리'를 켜면 반복이 접혀요. `"jev"`로 하면 남은 부분 중 지금 목표에 필요한 것을 판정기가 골라요. `/spec mode tool.admission.test-log shadow`를 실행하면 선별 결과는 기록만 돼요.
 
 이 숫자가 말해 주지 않는 것:
 
@@ -180,7 +180,7 @@ mu                  # 현재 디렉터리에서 세션 시작
 
 | 목표에 따른 선별 | 조정에 쓴 목표(29): 줄인 비율 | 잃은 필요한 줄 | 조정에 쓰지 않은 목표(9): 줄인 비율 | 잃은 필요한 줄 |
 | --- | --- | --- | --- | --- |
-| mu · Jev | 40.2% | 72개 중 0개 | 46.4% | 19개 중 0개 |
+| spec.ai.jev · Jev | 40.2% | 72개 중 0개 | 46.4% | 19개 중 0개 |
 | 완벽한 판정기 | 52.5% | 72개 중 0개 | 46.5% | 19개 중 0개 |
 | 실패만 남기기 | 61.9% | 72개 중 9개 | 59.4% | 19개 중 6개 |
 
@@ -229,24 +229,24 @@ mu와 런타임이 들어 있는 네이티브 앱이에요. Node를 설치할 �
 
 권한 모드와 목표는 입력창에 있고, `⌘K`로 명령어 팔레트를 열어요. 모델 로그인은 앱 안에서 해요. ChatGPT, Claude, Grok, Google(Gemini CLI / Antigravity) 구독이나, pi가 지원하는 어떤 프로바이더의 API 키든 쓸 수 있어요. Claude Code와 Codex CLI의 대화는 가져와서 이어 갈 수 있어요.
 
-macOS(Apple 실리콘 / Intel), Windows(x64 / Arm), Linux(x64 / Arm)용 빌드는 GitHub Actions에서 만들어 [Releases](https://github.com/qybaihe/mu/releases)에 올려요.
+macOS(Apple 실리콘 / Intel), Windows(x64 / Arm), Linux(x64 / Arm)용 빌드는 GitHub Actions에서 만들어 [Releases](https://github.com/qybaihe/spec/releases)에 올려요.
 
 ## 명령줄
 
 ```bash
-npm i -g mu-agent
-mu            # 현재 디렉터리에서 대화형 세션 시작
-mu doctor     # 설치, 판정기, 연결 상태 점검
+npm i -g spec-ai-agent
+spec.ai.jev            # 현재 디렉터리에서 대화형 세션 시작
+spec doctor     # 설치, 판정기, 연결 상태 점검
 ```
 
-Node 22.19 이상이 필요해요. `mu -p "prompt"`는 한 번 실행하고 결과를 출력하고, `mu -c`는 마지막 세션을 이어 가요. `mu import --list`는 Claude Code와 Codex 대화를 찾아 주고, `mu import <file>`은 그 대화를 가져와요. `mu ledger [n]`은 최근 n개 세션에서 판정기가 내린 판정을 출력해요. 명령줄과 데스크톱 앱은 계정, 설정, 교훈을 함께 써요.
+Node 22.19 이상이 필요해요. `spec.ai.jev -p "prompt"`는 한 번 실행하고 결과를 출력하고, `spec.ai.jev -c`는 마지막 세션을 이어 가요. `spec import --list`는 Claude Code와 Codex 대화를 찾아 주고, `spec import <file>`은 그 대화를 가져와요. `spec ledger [n]`은 최근 n개 세션에서 판정기가 내린 판정을 출력해요. 명령줄과 데스크톱 앱은 계정, 설정, 교훈을 함께 써요.
 
 | 명령어 | 하는 일 |
 | --- | --- |
 | `/status` | 판정기, 판정 지점별 모드, 컨텍스트에서 뺀 것, 최근 판정 |
-| `/mu judge <judges>` | 어떤 판정기가 어떤 순서로 답할지: `laya`, `laya,jev`, `jev-opencode-free`, `classifier:<provider>/<model>`, `llm:<provider>/<model>` |
-| `/mu route <point> <judge>` | 판정 지점 하나에 따로 판정기를 지정하기 |
-| `/mu mode <point> <off\|shadow\|active>` | 판정 지점 하나를 전환하기 |
+| `/spec judge <judges>` | 어떤 판정기가 어떤 순서로 답할지: `laya`, `laya,jev`, `jev-opencode-free`, `classifier:<provider>/<model>`, `llm:<provider>/<model>` |
+| `/spec route <point> <judge>` | 판정 지점 하나에 따로 판정기를 지정하기 |
+| `/spec mode <point> <off\|shadow\|active>` | 판정 지점 하나를 전환하기 |
 | `/frame` | 작업 프레임: 목표, 여러분의 제약과 그 출처, 인수 조건 |
 | `/goal <condition>` | 조건이 충족될 때까지 계속 작업하기, `/goal clear`로 끝내기 |
 | `/permissions` | 전체 접근 / Jev 승인 / 최소 권한 |
@@ -260,11 +260,11 @@ Node 22.19 이상이 필요해요. `mu -p "prompt"`는 한 번 실행하고 결�
 | `/import-chat` | Claude Code 또는 Codex 대화 가져오기 |
 | `/doctor` | 설정과 연결 점검하기 |
 
-pi의 자체 명령(`/model`, `/thinking`, `/login`, `/resume`, `/tree`, `/fork`, `/compact`, `/export` 등)은 그대로예요. `MU_JUDGE=laya,jev mu`로 실행하면 그 실행에서만 판정기를 바꿀 수 있어요.
+pi의 자체 명령(`/model`, `/thinking`, `/login`, `/resume`, `/tree`, `/fork`, `/compact`, `/export` 등)은 그대로예요. `SPEC_AI_JEV_JUDGE=laya,jev spec.ai.jev`로 실행하면 그 실행에서만 판정기를 바꿀 수 있어요.
 
 ## 프라이버시
 
-키는 이 컴퓨터를 떠나지 않아요. mu는 모델이나 런타임을 스스로 내려받지 않고, 내려받아야 하는 것은 모두 먼저 물어봐요. 판정기는 질문에 필요한 필드만 봐요(키가 없으면 그 필드는 OpenCode Zen의 무료 Jev로 가요. `MU_JUDGE=off`나 Laya를 쓰면 전부 이 컴퓨터에 남아요). 모든 판정은 로컬에 기록되고, 전부 읽어 볼 수 있어요.
+키는 이 컴퓨터를 떠나지 않아요. mu는 모델이나 런타임을 스스로 내려받지 않고, 내려받아야 하는 것은 모두 먼저 물어봐요. 판정기는 질문에 필요한 필드만 봐요(키가 없으면 그 필드는 OpenCode Zen의 무료 Jev로 가요. `SPEC_AI_JEV_JUDGE=off`나 Laya를 쓰면 전부 이 컴퓨터에 남아요). 모든 판정은 로컬에 기록되고, 전부 읽어 볼 수 있어요.
 
 ## 문서
 
@@ -274,16 +274,16 @@ pi의 자체 명령(`/model`, `/thinking`, `/login`, `/resume`, `/tree`, `/fork`
 
 ## 기여하기
 
-버그 제보, 수정, 새 판정 지점, 판정기 측정, 번역을 환영해요. 영어나 중국어로 써 주세요. 먼저 [CONTRIBUTING.md](../../CONTRIBUTING.md)를 읽어 주세요. [`good first issue`](https://github.com/qybaihe/mu/labels/good%20first%20issue) 라벨이 붙은 이슈부터 시작하기 좋아요.
+버그 제보, 수정, 새 판정 지점, 판정기 측정, 번역을 환영해요. 영어나 중국어로 써 주세요. 먼저 [CONTRIBUTING.md](../../CONTRIBUTING.md)를 읽어 주세요. [`good first issue`](https://github.com/qybaihe/spec/labels/good%20first%20issue) 라벨이 붙은 이슈부터 시작하기 좋아요.
 
 ```bash
 npm install --ignore-scripts   # 의존성 설치, 라이프사이클 스크립트는 실행하지 않음
-node kyrn/bin/mu.mjs           # 이 체크아웃에서 mu 실행
+node kyrn/bin/agent.mjs           # 이 체크아웃에서 spec.ai.jev 실행
 npm run check                  # 포맷, 린트, 타입 검사
 ./test.sh                      # 테스트 (모델이 필요한 테스트는 키가 없으면 건너뜀)
 ```
 
-데스크톱 앱은 `desktop/`에 있어요. `bun install` 다음에 `KYRN_ROOT="$(cd .. && pwd)" bun run start`를 실행하면 이 저장소의 mu를 쓰는 개발 빌드가 시작돼요(먼저 루트에서 `npm install`을 실행하세요).
+데스크톱 앱은 `desktop/`에 있어요. `bun install` 다음에 `SPEC_AI_JEV_ROOT="$(cd .. && pwd)" bun run start`를 실행하면 이 저장소의 mu를 쓰는 개발 빌드가 시작돼요(먼저 루트에서 `npm install`을 실행하세요).
 
 참여하는 모든 사람은 [행동 강령](../../CODE_OF_CONDUCT.md)을 따라요. 보안 문제는 [SECURITY.md](../../SECURITY.md)에 적힌 대로 비공개로 제보해 주세요.
 
@@ -293,8 +293,8 @@ mu는 [pi](https://github.com/earendil-works/pi)(코딩 에이전트, MIT; 루�
 
 ## 커뮤니티
 
-- 질문과 아이디어: [Discussions](https://github.com/qybaihe/mu/discussions). 중국어 토론은 [linux.do](https://linux.do)에서도.
-- 버그 제보와 요청: [Issues](https://github.com/qybaihe/mu/issues/new/choose).
+- 질문과 아이디어: [Discussions](https://github.com/qybaihe/spec/discussions). 중국어 토론은 [linux.do](https://linux.do)에서도.
+- 버그 제보와 요청: [Issues](https://github.com/qybaihe/spec/issues/new/choose).
 - 그 밖에: [SUPPORT.md](../../SUPPORT.md).
 
 mu가 쓸모 있었다면 스타를 눌러 주세요. 다른 사람들이 찾기 쉬워져요.

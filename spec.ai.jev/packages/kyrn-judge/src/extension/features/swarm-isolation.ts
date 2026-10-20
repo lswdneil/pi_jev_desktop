@@ -109,7 +109,7 @@ export class Isolation {
 
 	/** Whether a checkout can be made from `cwd`, checked once per delegate call. */
 	async repo(cwd: string): Promise<{ repo?: Repo; problem?: string }> {
-		if (this.options.isolation === "none") return { problem: "isolation is switched off in mu.json" };
+		if (this.options.isolation === "none") return { problem: "isolation is switched off in agent.json" };
 		const check = await checkRepo(this.git, cwd);
 		return check.ok ? { repo: check.repo } : { problem: check.message };
 	}

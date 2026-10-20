@@ -167,7 +167,7 @@ export function registerPreflight(runtime: KyrnRuntime): void {
 	});
 	if (!options.enabled) return;
 	const { pi } = runtime;
-	if (process.env.KYRN_SWARM_DEPTH) {
+	if (process.env.SPEC_AI_JEV_SWARM_DEPTH) {
 		// A sub-agent's turn was routed by its parent: role, model and thinking level are set. A second opinion
 		// here would undo that choice, and it costs every sub-agent seconds before it starts.
 		pi.on(

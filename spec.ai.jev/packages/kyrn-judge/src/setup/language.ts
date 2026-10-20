@@ -1,5 +1,5 @@
 /**
- * The language `mu setup` speaks: Chinese when the person's locale is Chinese, English otherwise. MU_LANG (the
+ * The language `mu setup` speaks: Chinese when the person's locale is Chinese, English otherwise. SPEC_AI_JEV_LANG (the
  * desktop app's language, see ../language.ts) decides first; then the POSIX variables in their order of precedence,
  * LC_ALL, LC_MESSAGES and LANG; then what the system tells Node (Intl), which is the only answer on Windows.
  */
@@ -15,7 +15,7 @@ function languageOf(value: string | undefined): SetupLanguage | undefined {
 }
 
 export function setupLanguage(env: Env, systemLocale: string | undefined): SetupLanguage {
-	for (const name of ["MU_LANG", "KYRN_LANG", "LC_ALL", "LC_MESSAGES", "LANG"]) {
+	for (const name of ["SPEC_AI_JEV_LANG", "LC_ALL", "LC_MESSAGES", "LANG"]) {
 		const found = languageOf(env[name]);
 		if (found) return found;
 	}

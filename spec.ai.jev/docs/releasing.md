@@ -1,9 +1,9 @@
 # Releasing
 
-For maintainers. mu ships two things that are versioned separately:
+For maintainers. spec.ai.jev ships two things that are versioned separately:
 
 - **The desktop app**, `vX.Y.Z` tags on this repository, published as GitHub pre-releases with installers for six platforms.
-- **The `mu-agent` npm package**, the command line, which the app also carries inside it. Its version is in `kyrn/npm/package.template.json` and its changelog in [kyrn/npm/CHANGELOG.md](../kyrn/npm/CHANGELOG.md).
+- **The `spec-ai-agent` npm package**, the command line, which the app also carries inside it. Its version is in `kyrn/npm/package.template.json` and its changelog in [kyrn/npm/CHANGELOG.md](../kyrn/npm/CHANGELOG.md).
 
 ## What CI does
 
@@ -11,23 +11,23 @@ For maintainers. mu ships two things that are versioned separately:
 | --- | --- | --- |
 | `ci.yml` | every push to `main` and every pull request | `npm run check` and the tests; the app's lint, format, i18n, types and unit tests; MCP conformance |
 | `windows-tests.yml`, `windows-permission.yml` | pushes and pull requests | the kernel's and the app's unit tests on Windows; the start chain and a permission round trip |
-| `npm.yml` | pushes to `main` that touch the harness | builds and packs `mu-agent`, installs the tarball and runs it on Linux (Node 22.19), macOS and Windows; the tarball is kept as an artifact |
-| `desktop.yml` | pushes to `main` that touch `desktop/`, and `v*` tags | packs this commit's mu, builds the app for macOS, Windows and Linux (x64 and arm64), signs and notarizes the macOS builds, holds a real conversation in each built app; on a tag, publishes the release |
+| `npm.yml` | pushes to `main` that touch the harness | builds and packs `spec-ai-agent`, installs the tarball and runs it on Linux (Node 22.19), macOS and Windows; the tarball is kept as an artifact |
+| `desktop.yml` | pushes to `main` that touch `desktop/`, and `v*` tags | packs this commit's spec.ai.jev, builds the app for macOS, Windows and Linux (x64 and arm64), signs and notarizes the macOS builds, holds a real conversation in each built app; on a tag, publishes the release |
 | `npm-audit.yml` | daily | audits the dependencies |
 
 ## Releasing the npm package
 
-1. Add the release's section to `kyrn/npm/CHANGELOG.md` (move `[Unreleased]` under a version and date) and set the same version everywhere: `npm run version:mu-agent -- 0.1.9`. The check refuses a version the changelog does not list, and notes with no version.
+1. Add the release's section to `kyrn/npm/CHANGELOG.md` (move `[Unreleased]` under a version and date) and set the same version everywhere: `npm run version:spec-ai-agent -- 0.1.9`. The check refuses a version the changelog does not list, and notes with no version.
 2. Push to `main` and wait for `npm.yml` to pass on all three systems.
-3. Tag that commit: `git tag mu-agent-v0.1.9 && git push origin mu-agent-v0.1.9`. The tag run reuses the tarball the three systems installed and ran, and publishes **that** file — never a fresh build.
+3. Tag that commit: `git tag spec-ai-agent-v0.1.9 && git push origin spec-ai-agent-v0.1.9`. The tag run reuses the tarball the three systems installed and ran, and publishes **that** file — never a fresh build.
 4. Publishing goes through npm trusted publishing (OIDC): the job holds `id-token: write` and no token is stored in this repository, so there is no long-lived secret to leak or rotate. `--provenance` makes the registry publish an attestation naming the commit and the workflow; the job then reads that attestation back and fails if it is missing.
-5. What gets published is `mu-agent` only. The harness packages carry pi's scope (`@earendil-works/pi-*`) and are `private: true`: `npm publish` refuses them, and `scripts/publish.mjs` refuses them again with a reason before it would even try. `MU_ALLOW_FOREIGN_SCOPE=1` exists for the maintainers of that scope and for nobody else.
+5. What gets published is `spec-ai-agent` only. The harness packages carry pi's scope (`@earendil-works/pi-*`) and are `private: true`: `npm publish` refuses them, and `scripts/publish.mjs` refuses them again with a reason before it would even try. `SPEC_AI_JEV_ALLOW_FOREIGN_SCOPE=1` exists for the maintainers of that scope and for nobody else.
 
 CI needs no `NPM_TOKEN`. If trusted publishing is not configured for the package yet, add this repository and workflow on npm's package settings page once; after that the tag job publishes unattended.
 
 ## Releasing the desktop app
 
-1. Make sure the app carries the intended `mu-agent` (the build packs the mu of the same commit) and that `desktop.yml` passed on `main`, including the conversations held in the built apps.
+1. Make sure the app carries the intended `spec-ai-agent` (the build packs the spec.ai.jev of the same commit) and that `desktop.yml` passed on `main`, including the conversations held in the built apps.
 2. Update [CHANGELOG.md](../CHANGELOG.md): move `[Unreleased]` under the new version.
 3. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`. The tag run builds every platform again, writes the SBOM, `SHA256SUMS`, the signature and the build attestations, verifies them, and creates the pre-release.
 4. Read the release page: every installer, `sbom.cdx.json`, `SHA256SUMS`, `SHA256SUMS.sigstore.json`, the four `latest*.yml` update feeds. Edit the notes so they say what changed for users.
@@ -68,10 +68,10 @@ verifier — can be rehearsed locally. It was, on Windows with Node 24.13, from 
 
 ```bash
 node scripts/sbom.mjs --lock package-lock.json --out dist/sbom.cdx.json \
-  --name mu --version 0.1.8 --commit 0123456789abcdef0123456789abcdef01234567
+  --name spec --version 0.1.8 --commit 0123456789abcdef0123456789abcdef01234567
 # 403 components written to dist/sbom.cdx.json
 
-tar -czf dist/mu-0.1.8-source.tar.gz --exclude=node_modules --exclude=.git .   # git archive needs a clone
+tar -czf dist/spec-0.1.8-source.tar.gz --exclude=node_modules --exclude=.git .   # git archive needs a clone
 cd dist && sha256sum -- * > SHA256SUMS                                          # or Get-FileHash on Windows
 node ../scripts/verify-release.mjs . --repo lswdneil/pi_jev_desktop
 ```
@@ -93,7 +93,7 @@ checkout) and the attestations (they exist only for a tag run). Those three need
 the honest statement is that the SBOM, checksum and verifier plumbing is proven, and the signing chain is
 written but unexercised.
 
-Releases stay pre-releases while mu is 0.x.
+Releases stay pre-releases while spec.ai.jev is 0.x.
 
 ## Releasing the new shell (`desktop-next`)
 
@@ -105,8 +105,8 @@ extra asset per installer that the old app did not need:
    devDependency, so the release is built by the version that was reviewed), checks `electron-builder.yml` against
    electron-builder's own schema, stages the harness, runs `scripts/check-package.mjs` on the output, and on Windows
    launches the packaged app to see the agent running before anything is uploaded.
-2. **The harness inside the app.** `node kyrn/npm/build.mjs` writes `.artifacts/npm/mu-agent`; it is moved to
-   `.artifacts/desktop-harness/mu-agent` and its own production dependencies are installed **into that folder**
+2. **The harness inside the app.** `node kyrn/npm/build.mjs` writes `.artifacts/npm/spec-ai-agent`; it is moved to
+   `.artifacts/desktop-harness/spec-ai-agent` and its own production dependencies are installed **into that folder**
    (`npm install --omit=dev --ignore-scripts`), because the app carries a folder and does not run npm. Two details that
    fail silently otherwise: `extraResources` copies `.artifacts/desktop-harness` (the folder that *holds* the package),
    because electron-builder never copies the root `node_modules` of a source folder; and a harness without `jiti`
@@ -114,7 +114,7 @@ extra asset per installer that the old app did not need:
    `scripts/check-package.mjs --require-harness` checks in the built artifact.
 3. **Carry the update feed.** Every release must carry `latest.yml`, `latest-mac.yml` and `latest-linux.yml` beside the
    installers — the app reads the feed for its platform. The feed names each artifact's `sha512`, and the app compares
-   the download against it before it looks at any signature. **The URL matters while mu is 0.x:** the shell's
+   the download against it before it looks at any signature. **The URL matters while spec.ai.jev is 0.x:** the shell's
    `DEFAULT_FEED` is `https://github.com/lswdneil/pi_jev_desktop/releases/latest/download/latest.yml`, and GitHub's `latest` only
    resolves to a release that is *not* a pre-release. Every release so far is a pre-release, so that URL answers 404 and
    the update check cannot succeed (it reports the 404 rather than offering anything, which is the safe outcome). Until
@@ -127,13 +127,13 @@ extra asset per installer that the old app did not need:
    workflow runs it when the `UPDATE_SIGNING_KEY` secret is set, and uploads the `.sig` files with the installers.
    ```bash
    # one key for the project, kept wherever the release secrets live; never commit the private half
-   openssl genpkey -algorithm ed25519 -out mu-update-private.pem
-   openssl pkey -in mu-update-private.pem -pubout -out mu-update-public.pem
+   openssl genpkey -algorithm ed25519 -out spec.ai.jev-update-private.pem
+   openssl pkey -in spec.ai.jev-update-private.pem -pubout -out spec.ai.jev-update-public.pem
 
    # sign every installer in the folder, then verify the signatures it just wrote
-   node scripts/sign-installers.mjs desktop-next/dist --key mu-update-private.pem
+   node scripts/sign-installers.mjs desktop-next/dist --key spec.ai.jev-update-private.pem
    # verify the ones that are already there (no key file, no writing)
-   node scripts/sign-installers.mjs desktop-next/dist --key mu-update-private.pem --check
+   node scripts/sign-installers.mjs desktop-next/dist --key spec.ai.jev-update-private.pem --check
    ```
    A signature made with a key the build does not carry is correct and useless, so the public half has to be the one
    in `desktop-next/src/main/update-verify.ts` (next step). `scripts/sign-installers.test.mjs` hands a signature the
@@ -146,10 +146,10 @@ extra asset per installer that the old app did not need:
 
 To build one locally: `cd desktop-next && npm run package -- --win --x64` (one architecture; the arch is a command-line
 choice because a target that lists two builds one combined installer). `--dir` instead of the platform flag produces an
-unpacked folder and no installer. A local `--dir` build without a staged harness produces an app that reports "mu was not
+unpacked folder and no installer. A local `--dir` build without a staged harness produces an app that reports "spec.ai.jev was not
 found" — that is the error screen working, not a packaging bug.
 
-**What the first real installer measured** (Windows x64, unsigned): `mu-0.1.8-x64.exe` **116.7 MiB**
+**What the first real installer measured** (Windows x64, unsigned): `spec.ai.jev-0.1.8-x64.exe` **116.7 MiB**
 (122,392,598 bytes), installing to **402 MB** on disk in 494 files; installing silently, launching the installed app,
 walking the first run and reaching `running · package`, then uninstalling left the folder gone. `app.asar` inside it is
 729 KB and the harness folder 419 files with its `node_modules`. The `latest.yml` the build wrote parses through the
@@ -169,10 +169,10 @@ were built (0.1.8, then the package version bumped to 0.1.9 and built again) and
 
 | Step | Result |
 | --- | --- |
-| install 0.1.8, first launch | first-run wizard, header `v0.1.8`, agent `running · package`, a session created under `~/.mu/agent` |
-| install 0.1.9 over it (same folder) | exit 0, `mu.exe` `FileVersion` 0.1.8 → **0.1.9**, one uninstaller (`Uninstall mu.exe`), no second install folder |
+| install 0.1.8, first launch | first-run wizard, header `v0.1.8`, agent `running · package`, a session created under `~/.spec.ai.jev/agent` |
+| install 0.1.9 over it (same folder) | exit 0, `spec.ai.jev.exe` `FileVersion` 0.1.8 → **0.1.9**, one uninstaller (`Uninstall spec.ai.jev.exe`), no second install folder |
 | launch the upgraded app | header `v0.1.9`, **no first-run wizard** (the profile was kept), agent `running · package`, the same session still there |
-| uninstall | exit 0, the folder is gone, no `mu` processes left |
+| uninstall | exit 0, the folder is gone, no `spec.ai.jev` processes left |
 
 Two things that rehearsal made concrete: the installer carries the version in the executable (`FileVersion`), so
 "which build is installed" is answerable without launching it; and a `.sig` is bound to the exact bytes of the installer
@@ -196,7 +196,7 @@ unnoticed:
 - **A train is one or two releases**: a patch when only fixes are waiting, a minor when features are. Both
   are cut from `main` after CI, the Windows suites and `desktop.yml` are green on the same commit.
 - **A release that breaks a file format is not a patch.** It needs its migration (see
-  [compatibility.md](compatibility.md)), a `mu-agent` minor, and the note "upgrade to this or later" in the
+  [compatibility.md](compatibility.md)), a `spec-ai-agent` minor, and the note "upgrade to this or later" in the
   release notes.
 - **What waits for the next train**: anything that needs a migration written after the tag, or a change to
   the release pipeline itself. Both go in right after the tag, not just before it.
@@ -211,8 +211,8 @@ installing the previous one — no rebuild, no hotfix tag:
 1. Desktop app: install the previous release from its page. The update feed only moves forward, so the next
    check offers the newer release again; that is intended, and a user who wants to stay put can turn updates
    off.
-2. `mu-agent`: `npm install -g mu-agent@<previous-version>`.
-3. Settings: a migration keeps the file it replaced at `mu.json.bak`; restoring it returns the settings, and
+2. `spec-ai-agent`: `npm install -g spec-ai-agent@<previous-version>`.
+3. Settings: a migration keeps the file it replaced at `agent.json.bak`; restoring it returns the settings, and
    the older schema is migrated again on the next start.
 4. Say what happened in the release notes of the next release, including which commit introduced the fault.
    A rollback nobody writes down is a rollback that happens twice.

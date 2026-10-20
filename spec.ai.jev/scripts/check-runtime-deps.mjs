@@ -80,7 +80,7 @@ function checkSource(source, manifest) {
 	visit(source);
 }
 
-// Every workspace package except the two that are not bundled into mu-agent and keep their own build: the
+// Every workspace package except the two that are not bundled into spec-ai-agent and keep their own build: the
 // harness packages are private now, but a missing dependency here still breaks the package that ships.
 const NOT_BUNDLED = new Set(["@earendil-works/pi-evals", "@kyrn/judge"]);
 const packages = getWorkspacePackages()

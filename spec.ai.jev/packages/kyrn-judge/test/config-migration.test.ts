@@ -6,7 +6,7 @@ import { CONFIG_SCHEMA_VERSION, configSchemaVersion, migrateConfig } from "../sr
 import { loadConfig, parseConfig, validateConfig } from "../src/config.ts";
 
 /**
- * `mu.json` is the file a user edits by hand, so the tests here are about what they see afterwards: a moved
+ * `agent.json` is the file a user edits by hand, so the tests here are about what they see afterwards: a moved
  * setting is reported, a typo is named, and nothing is rewritten without a copy of the old file beside it.
  */
 
@@ -21,12 +21,12 @@ afterEach(() => {
 });
 
 function write(dir: string, value: unknown): string {
-	const path = join(dir, "mu.json");
+	const path = join(dir, "agent.json");
 	writeFileSync(path, typeof value === "string" ? value : JSON.stringify(value));
 	return path;
 }
 
-describe("migrating mu.json", () => {
+describe("migrating agent.json", () => {
 	it("reads a file with no schemaVersion as version 0 and stamps the current version", () => {
 		expect(configSchemaVersion({})).toBe(0);
 		expect(configSchemaVersion({ schemaVersion: 1 })).toBe(1);
@@ -80,15 +80,14 @@ describe("migrating mu.json", () => {
 	});
 });
 
-describe("a mu.json that cannot be used", () => {
+describe("a agent.json that cannot be used", () => {
 	it("reports broken JSON, keeps the original, and starts on defaults", () => {
 		const dir = temp();
 		const path = write(dir, "{ not json");
-		writeFileSync(join(dir, "kyrn.json"), JSON.stringify({ tiers: ["old"] }));
 
 		const loaded = loadConfig({ dir, env: {} });
 
-		expect(loaded.problem).toMatch(/^mu\.json could not be read/);
+		expect(loaded.problem).toMatch(/^agent\.json could not be read/);
 		expect(loaded.problems.join("\n")).toMatch(new RegExp(`${path.replaceAll("\\", "\\\\")}\\.bak`));
 		expect(readFileSync(`${path}.bak`, "utf8")).toBe("{ not json");
 		expect(loaded.config.tiers).toEqual(["jev"]);
@@ -101,14 +100,14 @@ describe("a mu.json that cannot be used", () => {
 
 		const loaded = loadConfig({ dir, env: {} });
 
-		expect(loaded.problems.join("\n")).toMatch(/newer mu \(schemaVersion 99/);
+		expect(loaded.problems.join("\n")).toMatch(/newer spec\.ai\.jev \(schemaVersion 99/);
 		expect(loaded.config.tiers).toEqual(["jev"]);
 		expect(readFileSync(path, "utf8")).toBe(before);
 		expect(existsSync(`${path}.bak`)).toBe(false);
 	});
 });
 
-describe("a mu.json that half makes sense", () => {
+describe("a agent.json that half makes sense", () => {
 	it("names every setting it could not read instead of applying half of it in silence", () => {
 		const warnings = validateConfig({
 			schemaVersion: 1,

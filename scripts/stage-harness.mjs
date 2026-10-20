@@ -3,18 +3,18 @@
 // Copyright (c) 2025-2026 the spec.ai.jev authors
 
 /**
- * Put the mu harness where electron-builder expects it.
+ * Put the spec.ai.jev harness where electron-builder expects it.
  *
  * Packaging copies `resources/harness` beside the asar, and the resolver in `src/main/harness.ts` looks for
- * `harness/mu-agent/kyrn/bin/mu.mjs` there. That folder is a built runtime package (~34 MB with its dependencies),
+ * `harness/spec-ai-agent/kyrn/bin/agent.mjs` there. That folder is a built runtime package (~34 MB with its dependencies),
  * not source, so it is staged on demand and stays out of git.
  *
- *   node scripts/stage-harness.mjs                       # from MU_HARNESS_ROOT
- *   node scripts/stage-harness.mjs --from <mu-work>      # explicit checkout
+ *   node scripts/stage-harness.mjs                       # from SPEC_AI_JEV_HARNESS_ROOT
+ *   node scripts/stage-harness.mjs --from <spec-work>      # explicit checkout
  *   node scripts/stage-harness.mjs --from <dir> --force  # restage even when the marker matches
  *
- * `--from` and `MU_HARNESS_ROOT` accept either the folder that holds `mu-agent` or the `mu-agent` folder itself.
- * Candidates, in order: `--from`, `MU_HARNESS_ROOT`, `$MU_ROOT` / `$KYRN_ROOT` / `$PI_JEV_HARNESS` plus
+ * `--from` and `SPEC_AI_JEV_HARNESS_ROOT` accept either the folder that holds `spec-ai-agent` or the `spec-ai-agent` folder itself.
+ * Candidates, in order: `--from`, `SPEC_AI_JEV_HARNESS_ROOT`, `$SPEC_AI_JEV_ROOT` / `$SPEC_AI_JEV_HARNESS` plus
  * `.artifacts/desktop-harness`, then the repository's own `spec.ai.jev/.artifacts/desktop-harness`. The last one is why a
  * clone needs no path outside itself: the runtime source lives beside this script, and a build of it lands in that folder.
  *
@@ -27,9 +27,9 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const TARGET = join(REPO_ROOT, "resources", "harness", "mu-agent");
+const TARGET = join(REPO_ROOT, "resources", "harness", "spec-ai-agent");
 const MARKER = join(REPO_ROOT, "node_modules", ".cache", "spec-ai-jev", "harness-stage.json");
-const LAUNCHER = join("kyrn", "bin", "mu.mjs");
+const LAUNCHER = join("kyrn", "bin", "agent.mjs");
 
 function fail(message) {
 	console.error(`stage-harness: ${message}`);
@@ -54,10 +54,10 @@ function parseArgs(argv) {
 	return options;
 }
 
-/** The folder that holds `mu-agent`, from a path that may be either it or its parent. */
+/** The folder that holds `spec-ai-agent`, from a path that may be either it or its parent. */
 function packageRoot(path) {
 	const absolute = resolve(path);
-	if (existsSync(join(absolute, "mu-agent", LAUNCHER))) return join(absolute, "mu-agent");
+	if (existsSync(join(absolute, "spec-ai-agent", LAUNCHER))) return join(absolute, "spec-ai-agent");
 	if (existsSync(join(absolute, LAUNCHER))) return absolute;
 	return undefined;
 }
@@ -65,8 +65,8 @@ function packageRoot(path) {
 function candidateSources(options) {
 	const candidates = [];
 	if (options.from) candidates.push(options.from);
-	if (process.env.MU_HARNESS_ROOT) candidates.push(process.env.MU_HARNESS_ROOT);
-	for (const name of ["MU_ROOT", "KYRN_ROOT", "PI_JEV_HARNESS"]) {
+	if (process.env.SPEC_AI_JEV_HARNESS_ROOT) candidates.push(process.env.SPEC_AI_JEV_HARNESS_ROOT);
+	for (const name of ["SPEC_AI_JEV_ROOT", "SPEC_AI_JEV_HARNESS"]) {
 		const root = process.env[name];
 		if (root) candidates.push(join(root, ".artifacts", "desktop-harness"));
 	}
@@ -83,7 +83,7 @@ function locate(options) {
 	}
 	fail(
 		[
-			"no agent harness found. Pass --from <folder>, set MU_HARNESS_ROOT, or build spec.ai.jev/.artifacts/desktop-harness.",
+			"no agent harness found. Pass --from <folder>, set SPEC_AI_JEV_HARNESS_ROOT, or build spec.ai.jev/.artifacts/desktop-harness.",
 			tried.length ? `looked in:\n${tried.join("\n")}` : "nothing was named to look in.",
 		].join("\n"),
 	);
@@ -99,7 +99,7 @@ function readJson(file) {
 
 function check(source) {
 	const manifest = readJson(join(source, "package.json"));
-	if (manifest?.name !== "mu-agent") fail(`${source} is not the mu-agent package (package.json name: ${manifest?.name})`);
+	if (manifest?.name !== "spec-ai-agent") fail(`${source} is not the spec-ai-agent package (package.json name: ${manifest?.name})`);
 	// The judge extension is loaded through jiti at runtime; without it the harness starts and cannot judge.
 	if (!existsSync(join(source, "node_modules", "jiti"))) {
 		fail(
@@ -152,11 +152,11 @@ const manifest = check(source);
 const now = fingerprint(source);
 
 if (!options.force && upToDate(now)) {
-	console.log(`stage-harness: up to date (mu-agent ${manifest.version}) at ${TARGET}`);
+	console.log(`stage-harness: up to date (spec-ai-agent ${manifest.version}) at ${TARGET}`);
 	process.exit(0);
 }
 
-console.log(`stage-harness: copying mu-agent ${manifest.version} from ${source}`);
+console.log(`stage-harness: copying spec-ai-agent ${manifest.version} from ${source}`);
 rmSync(TARGET, { recursive: true, force: true });
 mkdirSync(dirname(TARGET), { recursive: true });
 cpSync(source, TARGET, { recursive: true, force: true, dereference: false });
@@ -164,4 +164,4 @@ cpSync(source, TARGET, { recursive: true, force: true, dereference: false });
 const { files, bytes } = count(TARGET);
 mkdirSync(dirname(MARKER), { recursive: true });
 writeFileSync(MARKER, `${JSON.stringify(now, null, 2)}\n`);
-console.log(`stage-harness: staged ${files} files, ${(bytes / 1024 / 1024).toFixed(1)} MiB into resources/harness/mu-agent`);
+console.log(`stage-harness: staged ${files} files, ${(bytes / 1024 / 1024).toFixed(1)} MiB into resources/harness/spec-ai-agent`);

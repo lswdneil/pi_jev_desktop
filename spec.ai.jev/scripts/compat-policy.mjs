@@ -3,7 +3,7 @@
 /**
  * The documented compatibility promises, checked against the code that has to keep them.
  *
- * `docs/compatibility.md` says which `mu.json` schema a build reads, where each version lives, and what a
+ * `docs/compatibility.md` says which `agent.json` schema a build reads, where each version lives, and what a
  * rollback looks like. Documentation that drifts from the constant it describes is worse than none: this
  * fails the build when the schema version in the doc and in `migrations/index.ts` disagree, when a section
  * the release process relies on is missing, or when the changelog has no `[Unreleased]` section to release

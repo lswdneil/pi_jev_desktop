@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type { AuthInteraction, ModelsStore, Provider } from "@earendil-works/pi-ai";
 import * as pi from "@earendil-works/pi-coding-agent";
 import { afterEach, describe, expect, it } from "vitest";
-import { AUTH_COMMANDS as LAUNCHER_COMMANDS } from "../../../kyrn/bin/mu.mjs";
+import { AUTH_COMMANDS as LAUNCHER_COMMANDS } from "../../../kyrn/bin/agent.mjs";
 import { exitWhenUnlocked, holdLocksUntilExit } from "../src/auth/exit.ts";
 import {
 	AUTH_COMMANDS,

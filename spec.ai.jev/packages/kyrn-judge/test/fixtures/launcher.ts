@@ -19,8 +19,8 @@ export function searchPath(...first: string[]): string {
 	return [...first, dirname(process.execPath), ...SYSTEM_PATH].join(delimiter);
 }
 
-/** The launcher as a person runs it: the bash script elsewhere, mu.cmd on Windows. */
-export const MU = join(BIN, windows ? "mu.cmd" : "mu");
+/** The launcher as a person runs it: the bash script elsewhere, spec.cmd on Windows. */
+export const SPEC = join(BIN, windows ? "spec.cmd" : "spec");
 
 /** Windows PowerShell 5.1, which every Windows has. */
 export const WINDOWS_POWERSHELL = join(systemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
@@ -28,7 +28,7 @@ export const WINDOWS_POWERSHELL = join(systemRoot, "System32", "WindowsPowerShel
 /**
  * Runs a script of kyrn/bin, or a link or shim to one, the way a shell does: a bash script directly, a `.cmd` through
  * cmd.exe, which is the only way a batch file starts. `args` are plain words. Nothing of the developer's own setup leaks
- * in: no real home, no MU_* or KYRN_* variables. `HOME` is the home on every platform (USERPROFILE on Windows), and
+ * in: no real home, no SPEC_AI_JEV_* variables. `HOME` is the home on every platform (USERPROFILE on Windows), and
  * Windows also gets the few variables its programs expect to find.
  */
 export function runScript(script: string, args: readonly string[], env: Record<string, string>, timeout = 60_000) {
@@ -75,7 +75,7 @@ export function runScriptAsync(
 }
 
 /**
- * Runs mu.ps1 as a person does at a PowerShell prompt, `& mu.ps1 'one argument' 'another'`: each argument is a string
+ * Runs spec.ps1 as a person does at a PowerShell prompt, `& spec.ps1 'one argument' 'another'`: each argument is a string
  * of its own, which reaches the script whole. They travel in variables of their own, so neither Node's quoting nor
  * PowerShell's reading of a command line (`-File` takes `-name:value` apart) comes in between. `shell` is Windows
  * PowerShell 5.1 (powershell.exe, on every Windows) or PowerShell 7 (pwsh.exe). The execution policy is set aside for
@@ -90,15 +90,15 @@ export function runPowerShell(
 	env: Record<string, string>,
 	{ legacy = false, timeout = 60_000 } = {},
 ) {
-	const named = Object.fromEntries(args.map((arg, index) => [`MU_TEST_ARG${index}`, arg]));
-	const words = args.map((_arg, index) => `$env:MU_TEST_ARG${index}`).join(" ");
+	const named = Object.fromEntries(args.map((arg, index) => [`SPEC_AI_JEV_TEST_ARG${index}`, arg]));
+	const words = args.map((_arg, index) => `$env:SPEC_AI_JEV_TEST_ARG${index}`).join(" ");
 	const passing = legacy ? "$PSNativeCommandArgumentPassing = 'Legacy'; " : "";
-	const command = `${passing}& $env:MU_TEST_SCRIPT ${words}; exit $LASTEXITCODE`;
+	const command = `${passing}& $env:SPEC_AI_JEV_TEST_SCRIPT ${words}; exit $LASTEXITCODE`;
 	const flags = ["-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", command];
 	const result = spawnSync(shell, flags, {
 		encoding: "utf8",
 		input: "",
-		env: scriptEnv({ ...env, ...named, MU_TEST_SCRIPT: join(BIN, "mu.ps1") }),
+		env: scriptEnv({ ...env, ...named, SPEC_AI_JEV_TEST_SCRIPT: join(BIN, "spec.ps1") }),
 		timeout,
 		windowsHide: true,
 	});
@@ -127,7 +127,7 @@ function scriptEnv(env: Record<string, string>): Record<string, string | undefin
  * junctions on Windows): its links go first, one by one, so that removing the rest can never reach the sources.
  */
 export function removeHome(home: string): void {
-	for (const app of [join(home, ".mu", "app"), join(home, ".kyrn", "app")]) {
+	for (const app of [join(home, ".spec.ai.jev", "app")]) {
 		for (const name of ["src", "docs", "examples", "README.md", "CHANGELOG.md"]) {
 			try {
 				if (lstatSync(join(app, name)).isSymbolicLink()) unlinkSync(join(app, name));

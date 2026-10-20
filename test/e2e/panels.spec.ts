@@ -9,7 +9,7 @@ import { completeFirstRun, launchApp } from "./helpers/app.ts";
 
 /**
  * The three panels, each from its own source: the board and the files from the conversation's events, the judgments
- * from `mu ledger --json`. None of them shares a context with the conversation, which is the point — the old shell's
+ * from `spec ledger --json`. None of them shares a context with the conversation, which is the point — the old shell's
  * shared preview context reached 1,396 lines.
  */
 
@@ -60,11 +60,11 @@ test.describe("panels", () => {
 	});
 
 	test("the files panel edits a file, and refuses to overwrite one that changed", async () => {
-		const workspace = mkdtempSync(join(tmpdir(), "mu-e2e-workspace-"));
+		const workspace = mkdtempSync(join(tmpdir(), "spec-e2e-workspace-"));
 		mkdirSync(join(workspace, "src"), { recursive: true });
 		const file = join(workspace, "src", "app.ts");
 		writeFileSync(file, "export const value = 1;\n");
-		const profile = await launchApp({ env: { MU_WORKSPACE: workspace } });
+		const profile = await launchApp({ env: { SPEC_AI_JEV_WORKSPACE: workspace } });
 		const { page } = profile;
 		try {
 			await completeFirstRun(page);

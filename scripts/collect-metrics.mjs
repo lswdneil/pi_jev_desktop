@@ -20,7 +20,7 @@
  * - **ready**: launch → the header says the agent is running, which is when the composer becomes usable. Reported, not
  *   gated: it includes starting the harness, which is asynchronous by design.
  * - **idle RSS**: a launch walked to the conversation, then the whole process tree's working set after the requested
- *   idle time. On Windows this is every process of the app's executable (`mu.exe`), renderers and the harness included;
+ *   idle time. On Windows this is every process of the app's executable (`spec.ai.jev.exe`), renderers and the harness included;
  *   elsewhere it falls back to the main process alone and says so in `idleRssSource`.
  * - **installer size**: the largest installer in the dist folder, which is what a download costs.
  *
@@ -72,7 +72,7 @@ function median(values) {
  * One process tree, by PID: working set and private bytes, summed over the main process and everything below it.
  *
  * By tree rather than by executable name on purpose. The first version of this script summed every process called
- * `mu.exe`, and the number it produced (847 MB) was mostly **four leftovers from an earlier session** that had never
+ * `spec.ai.jev.exe`, and the number it produced (847 MB) was mostly **four leftovers from an earlier session** that had never
  * exited: an app that is force-closed does not get its `before-quit` hook, so its harness survives. Measuring the tree
  * of the launch under test keeps other instances out of the number; the leftovers are a separate problem, recorded in
  * the validation log.
@@ -134,7 +134,7 @@ export function roleOf(command) {
 	const type = /--type=([a-z-]+)/.exec(command)?.[1];
 	if (type !== undefined) return type;
 	if (command.includes("harness") || command.includes("cli.js") || command.includes("cli-runtime")) {
-		return command.includes("mu.mjs") ? "harness-launcher" : "harness";
+		return command.includes("agent.mjs") ? "harness-launcher" : "harness";
 	}
 	return "main";
 }
@@ -178,8 +178,8 @@ const EMPTY_WORKING_SET =
 	"Add-Type -Name Psapi -Namespace Win32 -MemberDefinition '[DllImport(\"psapi.dll\")] public static extern bool EmptyWorkingSet(IntPtr hProcess);'";
 
 async function launchAndMeasure(executable, { idleSeconds = 0, extraArgs = [] } = {}) {
-	const home = mkdtempSync(join(tmpdir(), "mu-metrics-home-"));
-	const profile = mkdtempSync(join(tmpdir(), "mu-metrics-profile-"));
+	const home = mkdtempSync(join(tmpdir(), "spec-metrics-home-"));
+	const profile = mkdtempSync(join(tmpdir(), "spec-metrics-profile-"));
 	const started = Date.now();
 	const app = await electron.launch({
 		executablePath: executable,
@@ -342,7 +342,7 @@ async function main() {
 	}
 	console.log(`collect-metrics: installer ${measures.installerMb ?? "n/a"} MB (${measures.installer ?? "none"})`);
 	console.log(`collect-metrics: wrote ${out}`);
-	console.log("collect-metrics: judge it with: node scripts/perf-budget.mjs --judge --result <that file> --render desktop-next/render-probes.json");
+	console.log("collect-metrics: judge it with: node scripts/perf-budget.mjs --judge --result <that file> --render render-probes.json");
 	return 0;
 }
 

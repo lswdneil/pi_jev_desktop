@@ -24,8 +24,8 @@ export interface SwarmBrief {
 	readonly lessons?: readonly string[];
 }
 
-export const BRIEF_ENV = "KYRN_SWARM_BRIEF";
-export const FRAME_OUT_ENV = "KYRN_SWARM_FRAME_OUT";
+export const BRIEF_ENV = "SPEC_AI_JEV_SWARM_BRIEF";
+export const FRAME_OUT_ENV = "SPEC_AI_JEV_SWARM_FRAME_OUT";
 
 const GOAL_CHARS = 600;
 const ITEM_CHARS = 300;
@@ -105,7 +105,7 @@ export function briefFor(
  * nothing speaks for the user. Undefined outside a sub-agent, where the user's own message does.
  */
 export function subAgentUserGoal(env: NodeJS.ProcessEnv = process.env): string | undefined {
-	if (!env.KYRN_SWARM_DEPTH) return undefined;
+	if (!env.SPEC_AI_JEV_SWARM_DEPTH) return undefined;
 	return parseBrief(env[BRIEF_ENV])?.parentGoal ?? "";
 }
 

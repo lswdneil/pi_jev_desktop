@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// mu command line: everything the launcher does, in plain Node so that it runs on macOS, Linux, WSL and Windows.
-// (`mu help` prints the commands: see USAGE below.)
+// spec command line: everything the launcher does, in plain Node so that it runs on macOS, Linux, WSL and Windows.
+// (`spec help` prints the commands: see USAGE below.)
 //
 // Who starts this file:
-// - kyrn/bin/mu      (bash) on macOS, Linux and WSL. It only finds a Node >= 22.19, from PATH or from nvm: a
+// - kyrn/bin/spec    (bash) on macOS, Linux and WSL. It only finds a Node >= 22.19, from PATH or from nvm: a
 //                    machine whose default Node is older cannot be trusted to run this file at all.
-// - kyrn/bin/mu.cmd  on Windows, with whatever `node` is on PATH (mu.ps1 is the same for PowerShell).
-// - npm's own `mu` command, in the npm package mu-agent (kyrn/npm/build.mjs). The package is laid out like the
-//   repository, so this file is at kyrn/bin/mu.mjs there too, and the root is two folders up in both.
+// - kyrn/bin/spec.cmd on Windows, with whatever `node` is on PATH (spec.ps1 is the same for PowerShell).
+// - npm's own `spec` command, in the npm package spec-ai-agent (kyrn/npm/build.mjs). The package is laid out like the
+//   repository, so this file is at kyrn/bin/agent.mjs there too, and the root is two folders up in both.
 //
 // No dependency and no TypeScript here: this runs before anything that could run TypeScript has been found.
 //
@@ -17,15 +17,13 @@
 // (packages/kyrn-judge/test/launcher-platforms.test.ts); `main` only carries the plans out.
 //
 // What the launcher sets up:
-// - mu's own home, ~/.mu/agent (auth, sessions, settings), apart from a stock pi in ~/.pi.
-//   A machine that still has ~/.kyrn and no ~/.mu keeps using ~/.kyrn until that folder is moved (`mu migrate`).
-// - mu's name on the agent: PI_PACKAGE_DIR points at ~/.mu/app, a view of packages/coding-agent whose
-//   package.json carries piConfig {name: mu, configDir: .mu}. No upstream file is edited.
-// - the judgment layer (packages/kyrn-judge), with judges from ~/.mu/agent/mu.json or MU_JUDGE
+// - spec's own home, ~/.spec.ai.jev/agent (auth, sessions, settings), apart from a stock pi in ~/.pi.
+// - spec's name on the agent: PI_PACKAGE_DIR points at ~/.spec.ai.jev/app, a view of packages/coding-agent whose
+//   package.json carries piConfig {name: spec, configDir: .spec.ai.jev}. No upstream file is edited.
+// - the judgment layer (packages/kyrn-judge), with judges from ~/.spec.ai.jev/agent/agent.json or SPEC_AI_JEV_JUDGE
 //   (e.g. "laya", "laya,luna", "laya,jev", "off"). When "laya" is among them the sidecar is started (macOS only).
-//   kyrn.json and every KYRN_* variable are still read when the mu spelling is absent.
 // - the repo-root .env (the Jev key), read as data and handed to the agent without ever being printed.
-//   The npm package reads ~/.mu/.env instead: there is no repository around it.
+//   The npm package reads ~/.spec.ai.jev/.env instead: there is no repository around it.
 import { spawn, spawnSync } from "node:child_process";
 import {
 	accessSync,
@@ -63,22 +61,18 @@ export function pathFor(platform) {
 	return platform === "win32" ? nodePath.win32 : nodePath.posix;
 }
 
-/** `MU_<name>`, or the `KYRN_<name>` spelling from before the rename when the new one is unset or empty. */
-export function muEnv(name, env) {
-	return env[`MU_${name}`] || env[`KYRN_${name}`] || undefined;
+/** `SPEC_AI_JEV_<name>`; no earlier spelling is read. */
+export function specEnv(name, env) {
+	const value = env[`SPEC_AI_JEV_${name}`];
+	return value === undefined || value === "" ? undefined : value;
 }
 
-/**
- * ~/.mu, or ~/.kyrn on a machine whose home has not been moved yet. Nothing here ever creates ~/.mu beside
- * ~/.kyrn: two homes would mean two logins and two session lists.
- */
-export function muHome({ home, platform, isDir }) {
-	const path = pathFor(platform);
-	const current = path.join(home, ".mu");
-	return isDir(current) || !isDir(path.join(home, ".kyrn")) ? current : path.join(home, ".kyrn");
+/** This product's home. The old homes are never read or created beside it. */
+export function specHome({ home, platform }) {
+	return pathFor(platform).join(home, ".spec.ai.jev");
 }
 
-/** WSL is Linux to the launcher. It matters to the browser and to what `mu doctor` reports. */
+/** WSL is Linux to the launcher. It matters to the browser and to what `spec doctor` reports. */
 export function detectWsl({ platform, env, procVersion }) {
 	if (platform !== "linux") return false;
 	return Boolean(env.WSL_DISTRO_NAME) || /microsoft/i.test(procVersion ?? "");
@@ -94,27 +88,26 @@ export function platformName({ platform, wsl }) {
 export function usage(platform) {
 	const linkDir = platform === "win32" ? "%USERPROFILE%\\.local\\bin" : "~/.local/bin";
 	return [
-		"mu command line. (The project was called KYRN until 2026-09-21; the old spellings below still work.)",
+		"spec command line.",
 		"",
-		"  mu                       interactive session in the current directory",
-		'  mu "prompt"              interactive, starting with this prompt',
-		'  mu -p "prompt"           one-shot: print the answer and exit',
-		"  mu -c | -r               continue the last session | pick one to resume",
-		"  mu setup                 connect a model (an API key, or a service from a list) and choose the judge",
-		"                           (mu setup --help: scripts, a key from stdin, the services it knows)",
-		"  mu judge <cmd>           the local judge (Laya): setup | start | stop | status | run",
-		"  mu ledger [n] [--json]   what the judge decided in the last n sessions",
-		"  mu import --list | <file>...   bring Claude Code and Codex conversations into mu (mu import --help)",
-		"  mu doctor                check the installation",
-		"  mu auth <cmd>            subscription sign-in for the desktop app, as JSON lines:",
+		"  spec                       interactive session in the current directory",
+		'  spec "prompt"              interactive, starting with this prompt',
+		'  spec -p "prompt"           one-shot: print the answer and exit',
+		"  spec -c | -r               continue the last session | pick one to resume",
+		"  spec setup                 connect a model (an API key, or a service from a list) and choose the judge",
+		"                           (spec setup --help: scripts, a key from stdin, the services it knows)",
+		"  spec judge <cmd>           the local judge (Laya): setup | start | stop | status | run",
+		"  spec ledger [n] [--json]   what the judge decided in the last n sessions",
+		"  spec import --list | <file>...   bring Claude Code and Codex conversations into spec (spec import --help)",
+		"  spec doctor                check the installation",
+		"  spec auth <cmd>            subscription sign-in for the desktop app, as JSON lines:",
 		"                           status | login <provider> | logout <provider>",
-		`  mu link | unlink         put the \`mu\` command on your PATH (${linkDir}) | remove it`,
-		"  mu migrate [--dry-run]   once: move the home from before the rename, ~/.kyrn, to ~/.mu",
-		"  mu migrate --credentials move the keys in .env into the credential store (--dry-run, --rewrite-env)",
-		"  mu help | version",
+		`  spec link | unlink         put the \`spec\` command on your PATH (${linkDir}) | remove it`,
+		"  spec migrate --credentials move the keys in .env into the credential store (--dry-run, --rewrite-env)",
+		"  spec help | version",
 		"",
-		"Everything else goes to the agent unchanged: `mu --help` lists every flag,",
-		"and `mu install|remove|update|list|config` manage pi packages.",
+		"Everything else goes to the agent unchanged: `spec --help` lists every flag,",
+		"and `spec install|remove|update|list|config` manage pi packages.",
 	].join("\n");
 }
 
@@ -178,7 +171,7 @@ function closingQuote(text, quote) {
 
 /**
  * What the file adds to the environment: only the variables that are not already there. The real environment
- * wins, also with an empty value (`AI_GATEWAY_API_KEY= mu` is how one run goes without the key).
+ * wins, also with an empty value (`AI_GATEWAY_API_KEY= spec` is how one run goes without the key).
  * Windows treats variable names without regard to case.
  */
 /**
@@ -274,10 +267,10 @@ export function appViewPlan(platform) {
 	];
 }
 
-/** Its package name stays pi's: pi updates itself by that name, and `mu` on npm is someone else's package. */
+/** Its package name stays pi's: pi updates itself by that name. */
 export function appPackageJson(upstreamText) {
 	const pkg = JSON.parse(upstreamText);
-	pkg.piConfig = { name: "mu", configDir: ".mu" };
+	pkg.piConfig = { name: "spec", configDir: ".spec.ai.jev" };
 	return `${JSON.stringify(pkg, null, "\t")}\n`;
 }
 
@@ -354,7 +347,7 @@ export function ensureAppView({ platform, app, upstream, fs = realFs }) {
 	const rebuild =
 		!current ||
 		fs.statSync(upstreamManifest).mtimeMs > current.mtimeMs ||
-		!fs.readFileSync(manifest, "utf8").includes('"name": "mu"');
+		!fs.readFileSync(manifest, "utf8").includes('"name": "spec"');
 	if (rebuild) {
 		fs.writeFileSync(manifest, appPackageJson(fs.readFileSync(upstreamManifest, "utf8")));
 		done.push("package.json");
@@ -367,8 +360,8 @@ export function ensureAppView({ platform, app, upstream, fs = realFs }) {
 // ---------------------------------------------------------------------------------------------------------
 
 /**
- * Where this mu comes from: "repo", a checkout that runs the TypeScript sources (sourceRuntime), or "package", the
- * npm package mu-agent, which carries pi's bundle (dist/bundle/cli.js) and the judgment layer built to
+ * Where this spec comes from: "repo", a checkout that runs the TypeScript sources (sourceRuntime), or "package", the
+ * npm package spec-ai-agent, which carries pi's bundle (dist/bundle/cli.js) and the judgment layer built to
  * JavaScript (judge/dist/kyrn-judge.js). A checkout without its dependencies is still a checkout.
  */
 export function layoutOf({ root, platform, exists }) {
@@ -378,8 +371,8 @@ export function layoutOf({ root, platform, exists }) {
 }
 
 /**
- * The files the npm package runs: pi, the judgment layer, the sign-in of `mu auth`, the importer of `mu import` and the
- * wizard of `mu setup`.
+ * The files the npm package runs: pi, the judgment layer, the sign-in of `spec auth`, the importer of `spec import` and the
+ * wizard of `spec setup`.
  */
 export function packageEntries({ root, platform }) {
 	const path = pathFor(platform);
@@ -392,9 +385,9 @@ export function packageEntries({ root, platform }) {
 	};
 }
 
-/** The .env the launcher reads: the checkout's, or for the npm package the one in mu's home. */
-export function envFilePath({ layout, root, muDir, platform }) {
-	return pathFor(platform).join(layout === "package" ? muDir : root, ".env");
+/** The .env the launcher reads: the checkout's, or for the npm package the one in spec's home. */
+export function envFilePath({ layout, root, specDir, platform }) {
+	return pathFor(platform).join(layout === "package" ? specDir : root, ".env");
 }
 
 /**
@@ -415,17 +408,17 @@ export function installHint({ root, platform }) {
 	const steps = [`cd ${root}`, "npm ci --ignore-scripts", "npm run hydrate:model-data"];
 	// Windows PowerShell 5 has no `&&`.
 	return platform === "win32"
-		? `mu's dependencies are not installed. Run:\n${steps.map((step) => `  ${step}`).join("\n")}`
-		: `mu's dependencies are not installed. Run:  ${steps.join(" && ")}`;
+		? `spec's dependencies are not installed. Run:\n${steps.map((step) => `  ${step}`).join("\n")}`
+		: `spec's dependencies are not installed. Run:  ${steps.join(" && ")}`;
 }
 
-/** What mu says on a Node that does not strip TypeScript types, which a checkout cannot run on. */
+/** What spec says on a Node that does not strip TypeScript types, which a checkout cannot run on. */
 const NO_TYPE_STRIPPING =
-	"mu runs a checkout's TypeScript with Node's own type stripping (on by default from Node 22.18), and this Node does not strip types";
+	"spec runs a checkout's TypeScript with Node's own type stripping (on by default from Node 22.18), and this Node does not strip types";
 
 /**
  * Node's arguments for running a checkout's TypeScript, up to the entry file. Node strips the types itself (on by
- * default from 22.18, in both Electrons the desktop app runs mu with too) and runs the sources as they are, with
+ * default from 22.18, in both Electrons the desktop app runs spec with too) and runs the sources as they are, with
  * pi's own source resolver (packages/coding-agent/src/experimental/source-resolver.ts: each workspace package
  * resolves to its sources, as tsconfig.json's paths say) and Node's compile cache (compile-cache.mjs), the way pi
  * runs its own checkout (pi-test.sh). A runtime that does not strip types, a checkout whose dependencies are not
@@ -451,54 +444,51 @@ export function sourceRuntime({ root, platform, stripsTypes, exists }) {
 }
 
 /**
- * pi reads <APP NAME>_CODING_AGENT_DIR and nothing else, so with the app named mu that export decides the
- * home. The pi and KYRN spellings are exported too, for scripts that still read them.
+ * pi reads <APP NAME>_CODING_AGENT_DIR, so with the app named spec that export decides the home. The app's own
+ * folder variable wins for tools that run outside pi.
  */
-export function agentDirFor({ env, muDir, platform }) {
-	return (
-		muEnv("AGENT_DIR", env) || muEnv("CODING_AGENT_DIR", env) || pathFor(platform).join(muDir, "agent")
-	);
+export function agentDirFor({ env, specDir, platform }) {
+	return env.SPEC_AI_JEV_AGENT_DIR || env.SPEC_CODING_AGENT_DIR || pathFor(platform).join(specDir, "agent");
 }
 
 /** Whether the configuration asks for the local judge. */
 export function wantsLaya({ env, agentDir, platform, readFile }) {
-	const judges = muEnv("JUDGE", env);
+	const judges = specEnv("JUDGE", env);
 	if (judges) return `,${judges},`.includes(",laya");
 	const path = pathFor(platform);
-	for (const name of ["mu.json", "kyrn.json"]) {
+	for (const name of ["agent.json"]) {
 		let text;
 		try {
 			text = readFile(path.join(agentDir, name));
 		} catch {
 			continue;
 		}
-		// Like the file itself: kyrn.json is only looked at when there is no mu.json.
 		return text.includes('"laya');
 	}
 	return false;
 }
 
-/** The Core ML sidecar exists for macOS only. Anything else needs a server of its own behind MU_LOCAL_JUDGE_URL. */
+/** The Core ML sidecar exists for macOS only. Anything else needs a server of its own behind SPEC_AI_JEV_LOCAL_JUDGE_URL. */
 export function localJudgeSupport({ platform, env, wsl = false }) {
 	if (platform === "darwin") return { runs: true };
-	const url = muEnv("LOCAL_JUDGE_URL", env);
+	const url = specEnv("LOCAL_JUDGE_URL", env);
 	const where = platformName({ platform, wsl });
 	return {
 		runs: false,
 		url,
 		message: [
 			`The local judge (Laya) is a Core ML sidecar: it runs on macOS with Apple Silicon only, not on ${where}.`,
-			"mu works without it: use Jev (TYPESAFE_API_KEY or AI_GATEWAY_API_KEY) or an llm judge in mu.json;",
+			"spec works without it: use Jev (TYPESAFE_API_KEY or AI_GATEWAY_API_KEY) or an llm judge in agent.json;",
 			"the desktop app's own local judge is being built. Decisions without a judge fall back to pi's behaviour.",
 			"A server that speaks the same contract (GET /health, POST /evaluate) can be used from here:",
-			"  MU_LOCAL_JUDGE_URL=http://host:port",
+			"  SPEC_AI_JEV_LOCAL_JUDGE_URL=http://host:port",
 		].join("\n"),
 	};
 }
 
-/** exec replaces this process, as the bash launcher did; spawn is what Windows has. MU_LAUNCH forces either. */
+/** exec replaces this process, as the bash launcher did; spawn is what Windows has. SPEC_AI_JEV_LAUNCH forces either. */
 export function launchStrategy({ platform, env, canExec }) {
-	const forced = muEnv("LAUNCH", env);
+	const forced = specEnv("LAUNCH", env);
 	if (platform === "win32" || !canExec || forced === "spawn") return "spawn";
 	return "exec";
 }
@@ -538,7 +528,7 @@ export function planLaunch({
 	if (layout === "package") {
 		const files = packageEntries({ root, platform });
 		if (!fs.exists(files.extension)) {
-			return { error: `This mu-agent package is incomplete (${files.extension} is missing). Reinstall it: npm i -g mu-agent` };
+			return { error: `This spec-ai-agent package is incomplete (${files.extension} is missing). Reinstall it: npm i -g spec-ai-agent` };
 		}
 		entry = [files.cli];
 	} else {
@@ -547,22 +537,22 @@ export function planLaunch({
 		entry = [...runtime.args, path.join(root, "packages", "coding-agent", "src", "experimental", "cli.ts")];
 	}
 
-	const muDir = muHome({ home, platform, isDir: fs.isDir });
-	// The package names itself mu in its own package.json; a checkout needs the view at <home>/app for that.
-	const appDir = layout === "package" ? root : muEnv("APP_DIR", env) || path.join(muDir, "app");
-	const agentDir = agentDirFor({ env, muDir, platform });
+	const specDir = specHome({ home, platform });
+	// The package names itself spec in its own package.json; a checkout needs the view at <home>/app for that.
+	const appDir = layout === "package" ? root : specEnv("APP_DIR", env) || path.join(specDir, "app");
+	const agentDir = agentDirFor({ env, specDir, platform });
 
 	const notes = [];
 	let fromFile = {};
 	let envText;
 	try {
-		envText = fs.readFile(envFilePath({ layout, root, muDir, platform }));
+		envText = fs.readFile(envFilePath({ layout, root, specDir, platform }));
 	} catch {}
 	if (envText !== undefined) {
 		const parsed = parseEnvFile(envText);
 		fromFile = envFileAdditions({ env, entries: parsed.entries, platform });
 		// Line numbers only: the text of a line that did not parse may well be a secret.
-		if (parsed.problems.length > 0) notes.push(`mu: .env: skipped line ${parsed.problems.join(", ")} (not KEY=VALUE)`);
+		if (parsed.problems.length > 0) notes.push(`spec: .env: skipped line ${parsed.problems.join(", ")} (not KEY=VALUE)`);
 	}
 
 	const childEnv = {};
@@ -570,13 +560,12 @@ export function planLaunch({
 		if (typeof value === "string") childEnv[key] = value;
 	}
 	childEnv.PI_PACKAGE_DIR = appDir;
-	childEnv.MU_CODING_AGENT_DIR = agentDir;
-	childEnv.KYRN_CODING_AGENT_DIR = agentDir;
+	childEnv.SPEC_CODING_AGENT_DIR = agentDir;
 	childEnv.PI_CODING_AGENT_DIR = agentDir;
-	// pi's release check asks pi.dev about pi's versions, which say nothing about mu's: a checkout follows
+	// pi's release check asks pi.dev about pi's versions, which say nothing about spec's: a checkout follows
 	// upstream through git, and the package through npm.
 	childEnv.PI_SKIP_VERSION_CHECK = childEnv.PI_SKIP_VERSION_CHECK || "1";
-	// pi reports a fresh install to pi.dev with its version. mu-agent is not a pi install; asked for, it still can be.
+	// pi reports a fresh install to pi.dev with its version. spec-ai-agent is not a pi install; asked for, it still can be.
 	if (layout === "package" && childEnv.PI_TELEMETRY === undefined) childEnv.PI_TELEMETRY = "0";
 
 	let startJudge = false;
@@ -585,7 +574,7 @@ export function planLaunch({
 		if (support.runs) startJudge = true;
 		else if (!support.url) {
 			notes.push(
-				`mu: the configuration asks for the local judge (laya), which runs on macOS only; on ${platformName({ platform, wsl })} its decisions fall back to the next judge or to pi's behaviour (mu judge status)`,
+				`spec: the configuration asks for the local judge (laya), which runs on macOS only; on ${platformName({ platform, wsl })} its decisions fall back to the next judge or to pi's behaviour (spec judge status)`,
 			);
 		}
 	}
@@ -596,7 +585,7 @@ export function planLaunch({
 		env: childEnv,
 		strategy: launchStrategy({ platform, env, canExec }),
 		layout,
-		muDir,
+		specDir,
 		appDir,
 		agentDir,
 		startJudge,
@@ -620,7 +609,7 @@ export function planHost({ platform, env, argv, root, home, fs, wsl = false, str
 	const common = {
 		env: launch.env,
 		layout: launch.layout,
-		muDir: launch.muDir,
+		specDir: launch.specDir,
 		appDir: launch.appDir,
 		agentDir: launch.agentDir,
 		startJudge: launch.startJudge,
@@ -644,11 +633,11 @@ export function planHost({ platform, env, argv, root, home, fs, wsl = false, str
 	};
 }
 
-/** What mu says when the local judge does not come up. */
+/** What spec says when the local judge does not come up. */
 const LOCAL_JUDGE_NOT_STARTED =
-	"mu: the local judge did not start (mu judge status); decisions fall back to pi's behaviour";
+	"spec: the local judge did not start (spec judge status); decisions fall back to pi's behaviour";
 
-/** The part of the preparation that is files: the app view of a checkout, mu's agent folder, the configuration's notes. */
+/** The part of the preparation that is files: the app view of a checkout, spec's agent folder, the configuration's notes. */
 function prepareFiles({ plan, platform, root, err }) {
 	const path = pathFor(platform);
 	if (plan.layout === "repo") {
@@ -660,7 +649,7 @@ function prepareFiles({ plan, platform, root, err }) {
 
 /**
  * What is done before pi starts, for the command line and the desktop app's runtime host alike: the app view that
- * names a checkout mu, mu's agent folder, the configuration's notes (to `err`), and the local judge when the
+ * names a checkout spec, spec's agent folder, the configuration's notes (to `err`), and the local judge when the
  * configuration asks for it. `bin` is this launcher's folder. The local judge is one shared sidecar: starting it is
  * idempotent and never blocks pi.
  */
@@ -694,14 +683,14 @@ export async function prepareLaunchAsync({ plan, platform, root, bin, err }) {
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// mu auth
+// spec auth
 // ---------------------------------------------------------------------------------------------------------
 
-/** What `mu auth` answers itself. Every other `auth` command (check, print-api-key, ...) is pi's own. */
+/** What `spec auth` answers itself. Every other `auth` command (check, print-api-key, ...) is pi's own. */
 export const AUTH_COMMANDS = ["status", "login", "logout"];
 
 /**
- * `mu auth status | login <provider> | logout <provider>`: the sign-in the desktop app runs, with pi's own OAuth
+ * `spec auth status | login <provider> | logout <provider>`: the sign-in the desktop app runs, with pi's own OAuth
  * flows and credential store (packages/kyrn-judge/src/auth). It is pi's code, so it runs the way pi does here:
  * from its sources in a checkout (sourceRuntime), built in the package. It reads no key, so no .env is read for it.
  */
@@ -711,7 +700,7 @@ export function planAuth({ platform, env, argv, root, home, execPath, fs, canExe
 	if (layoutOf({ root, platform, exists: fs.exists }) === "package") {
 		const { auth } = packageEntries({ root, platform });
 		if (!fs.exists(auth)) {
-			return { error: `This mu-agent package is incomplete (${auth} is missing). Reinstall it: npm i -g mu-agent` };
+			return { error: `This spec-ai-agent package is incomplete (${auth} is missing). Reinstall it: npm i -g spec-ai-agent` };
 		}
 		entry = [auth];
 	} else {
@@ -719,21 +708,21 @@ export function planAuth({ platform, env, argv, root, home, execPath, fs, canExe
 		if (runtime.error) return { error: runtime.error };
 		entry = [...runtime.args, path.join(root, "packages", "kyrn-judge", "src", "auth", "main.ts")];
 	}
-	const agentDir = agentDirFor({ env, muDir: muHome({ home, platform, isDir: fs.isDir }), platform });
+	const agentDir = agentDirFor({ env, specDir: specHome({ home, platform, isDir: fs.isDir }), platform });
 	const childEnv = {};
 	for (const [key, value] of Object.entries(env)) {
 		if (typeof value === "string") childEnv[key] = value;
 	}
-	childEnv.MU_AGENT_DIR = agentDir;
+	childEnv.SPEC_AI_JEV_AGENT_DIR = agentDir;
 	const strategy = launchStrategy({ platform, env, canExec });
 	return { command: execPath, args: [...entry, ...argv], env: childEnv, strategy, agentDir };
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// mu judge
+// spec judge
 // ---------------------------------------------------------------------------------------------------------
 
-/** What `mu judge <cmd>` does here: the macOS script, a look at a server of one's own, or a plain explanation. */
+/** What `spec judge <cmd>` does here: the macOS script, a look at a server of one's own, or a plain explanation. */
 export function planJudge({ platform, env, argv, bin, wsl = false }) {
 	const args = argv.length > 0 ? argv : ["status"];
 	const support = localJudgeSupport({ platform, env, wsl });
@@ -743,7 +732,7 @@ export function planJudge({ platform, env, argv, bin, wsl = false }) {
 }
 
 /**
- * `mu judge consent [accept|revoke|status]`: the file `packages/kyrn-judge/src/consent.ts` reads.
+ * `spec judge consent [accept|revoke|status]`: the file `packages/kyrn-judge/src/consent.ts` reads.
  *
  * The judge is remote by default, so this is the command that lets it run at all. It is a plain file operation on
  * purpose: no session, no model, nothing that could need the very consent it is asking for.
@@ -757,7 +746,7 @@ export function judgeConsentCommand({
 	writeError = (text) => process.stderr.write(`${text}\n`),
 }) {
 	const file = pathFor(process.platform).join(agentDir, "consent.json");
-	const envGrant = (env?.MU_JUDGE_CONSENT ?? "").trim() === "1";
+	const envGrant = (env?.SPEC_AI_JEV_JUDGE_CONSENT ?? "").trim() === "1";
 	let stored;
 	try {
 		stored = JSON.parse(readFileSync(file, "utf8"));
@@ -778,7 +767,7 @@ export function judgeConsentCommand({
 			{ mode: 0o600 },
 		);
 		write(`the default judge may now send its questions to the shared endpoint: ${file}`);
-		write("revoke any time: mu judge consent revoke");
+		write("revoke any time: spec judge consent revoke");
 		return 0;
 	}
 	if (action === "revoke") {
@@ -792,8 +781,8 @@ export function judgeConsentCommand({
 	}
 	if (action === "status" || action === "show") {
 		if (valid) write(`the default judge: agreed ${stored.agreedAt} (${file})`);
-		else if (envGrant) write("the default judge: agreed for this run by MU_JUDGE_CONSENT=1 (no file)");
-		else write("the default judge: waiting for consent. Grant it: mu judge consent accept, or MU_JUDGE_CONSENT=1 for one run.");
+		else if (envGrant) write("the default judge: agreed for this run by SPEC_AI_JEV_JUDGE_CONSENT=1 (no file)");
+		else write("the default judge: waiting for consent. Grant it: spec judge consent accept, or SPEC_AI_JEV_JUDGE_CONSENT=1 for one run.");
 		return 0;
 	}
 	writeError(`unknown consent action: ${action}. Use accept, revoke or status.`);
@@ -801,11 +790,11 @@ export function judgeConsentCommand({
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// mu import
+// spec import
 // ---------------------------------------------------------------------------------------------------------
 
 /**
- * `mu import`: Claude Code and Codex conversations into mu's sessions (packages/kyrn-judge/src/import). The importer
+ * `spec import`: Claude Code and Codex conversations into spec's sessions (packages/kyrn-judge/src/import). The importer
  * needs nothing but Node: the npm package runs its build, judge/dist/import.js, and a checkout its TypeScript with
  * Node's own type stripping (on by default from 22.18).
  */
@@ -815,38 +804,38 @@ export function planImport({ platform, env, argv, root, home, execPath, fs, stri
 	if (layoutOf({ root, platform, exists: fs.exists }) === "package") {
 		const built = packageEntries({ root, platform }).import;
 		if (!fs.exists(built)) {
-			return { error: `This mu-agent package has no mu import (${built} is missing). Update it: npm i -g mu-agent` };
+			return { error: `This spec-ai-agent package has no spec import (${built} is missing). Update it: npm i -g spec-ai-agent` };
 		}
 		entry = [built];
 	} else {
 		const source = path.join(root, "packages", "kyrn-judge", "src", "import", "cli.ts");
-		if (!fs.exists(source)) return { error: `mu import is missing from this checkout (${source})` };
+		if (!fs.exists(source)) return { error: `spec import is missing from this checkout (${source})` };
 		if (!stripsTypes) return { error: NO_TYPE_STRIPPING };
 		entry = ["--disable-warning=ExperimentalWarning", source];
 	}
-	const agentDir = agentDirFor({ env, muDir: muHome({ home, platform, isDir: fs.isDir }), platform });
+	const agentDir = agentDirFor({ env, specDir: specHome({ home, platform, isDir: fs.isDir }), platform });
 	const childEnv = {};
 	for (const [key, value] of Object.entries(env)) if (typeof value === "string") childEnv[key] = value;
-	childEnv.MU_CODING_AGENT_DIR = agentDir;
-	childEnv.KYRN_CODING_AGENT_DIR = agentDir;
+	childEnv.SPEC_CODING_AGENT_DIR = agentDir;
+	childEnv.SPEC_CODING_AGENT_DIR = agentDir;
 	childEnv.PI_CODING_AGENT_DIR = agentDir;
 	return { command: execPath, args: [...entry, ...argv], env: childEnv, agentDir };
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// mu setup
+// spec setup
 // ---------------------------------------------------------------------------------------------------------
 
 /** What a "no" to the first-start question leaves in the agent folder (packages/kyrn-judge/src/setup/wizard.ts). */
 export const SETUP_DECLINED_FILE = "setup-declined";
 
-/** How `mu setup` says: set up, and start a session now. */
+/** How `spec setup` says: set up, and start a session now. */
 export const SETUP_EXIT_START = 3;
 
-/** How `mu setup` says it was cancelled (ctrl+c): a first start then goes no further. */
+/** How `spec setup` says it was cancelled (ctrl+c): a first start then goes no further. */
 export const SETUP_EXIT_CANCELLED = 130;
 
-/** The options of `mu setup` that take a value (wizard.ts keeps the same list): the word after one is not a key. */
+/** The options of `spec setup` that take a value (wizard.ts keeps the same list): the word after one is not a key. */
 export const SETUP_VALUE_FLAGS = ["--service", "--model", "--base-url", "--api", "--name", "--judge"];
 
 /**
@@ -899,9 +888,9 @@ export const MODEL_KEY_VARIABLES = [
 ];
 
 /**
- * `mu setup`: the wizard that connects a model and chooses the judge (packages/kyrn-judge/src/setup). It is pi's code,
- * so it runs the way `mu auth` runs: from the sources in a checkout, built in the package. A key on the command line
- * (`mu setup <key>`) goes to the wizard in the environment, MU_SETUP_KEY, never in its argv, which every process on
+ * `spec setup`: the wizard that connects a model and chooses the judge (packages/kyrn-judge/src/setup). It is pi's code,
+ * so it runs the way `spec auth` runs: from the sources in a checkout, built in the package. A key on the command line
+ * (`spec setup <key>`) goes to the wizard in the environment, SPEC_AI_JEV_SETUP_KEY, never in its argv, which every process on
  * the machine can read. The launcher waits for the wizard, since a finished setup may go on into a session.
  */
 export function planSetup({ platform, env, argv, root, home, execPath, fs, stripsTypes = true }) {
@@ -911,7 +900,7 @@ export function planSetup({ platform, env, argv, root, home, execPath, fs, strip
 	if (layout === "package") {
 		const { setup } = packageEntries({ root, platform });
 		if (!fs.exists(setup)) {
-			return { error: `This mu-agent package has no mu setup (${setup} is missing). Update it: npm i -g mu-agent` };
+			return { error: `This spec-ai-agent package has no spec setup (${setup} is missing). Update it: npm i -g spec-ai-agent` };
 		}
 		entry = [setup];
 	} else {
@@ -928,20 +917,20 @@ export function planSetup({ platform, env, argv, root, home, execPath, fs, strip
 			if (index + 1 < argv.length) args.push(argv[++index]);
 		} else if (arg.startsWith("-") || arg === "help") args.push(arg);
 		else if (key === undefined) key = arg;
-		else return { error: "mu setup takes one key at most (mu setup --help)", code: 2 };
+		else return { error: "spec setup takes one key at most (spec setup --help)", code: 2 };
 	}
-	const muDir = muHome({ home, platform, isDir: fs.isDir });
-	const agentDir = agentDirFor({ env, muDir, platform });
+	const specDir = specHome({ home, platform, isDir: fs.isDir });
+	const agentDir = agentDirFor({ env, specDir, platform });
 	const childEnv = {};
 	for (const [name, value] of Object.entries(env)) if (typeof value === "string") childEnv[name] = value;
-	if (key !== undefined) childEnv.MU_SETUP_KEY = key;
-	childEnv.MU_AGENT_DIR = agentDir;
-	childEnv.MU_CODING_AGENT_DIR = agentDir;
-	childEnv.KYRN_CODING_AGENT_DIR = agentDir;
+	if (key !== undefined) childEnv.SPEC_AI_JEV_SETUP_KEY = key;
+	childEnv.SPEC_AI_JEV_AGENT_DIR = agentDir;
+	childEnv.SPEC_CODING_AGENT_DIR = agentDir;
+	childEnv.SPEC_CODING_AGENT_DIR = agentDir;
 	childEnv.PI_CODING_AGENT_DIR = agentDir;
-	childEnv.MU_SETUP_HOME = muDir;
+	childEnv.SPEC_AI_JEV_SETUP_HOME = specDir;
 	// The .env a session gets: the wizard writes the Jev key there, and reads a proxy from it.
-	childEnv.MU_SETUP_ENV_FILE = envFilePath({ layout, root, muDir, platform });
+	childEnv.SPEC_AI_JEV_SETUP_ENV_FILE = envFilePath({ layout, root, specDir, platform });
 	return { command: execPath, args: [...entry, ...args], env: childEnv, strategy: "spawn", agentDir, keyGiven: key !== undefined };
 }
 
@@ -964,7 +953,7 @@ const MCP_ADD_VALUES = new Set([
 ]);
 
 /**
- * `mu mcp add` without `--exposure`: the server's tools are `deferred`, loaded by tool_search when a task needs them,
+ * `spec mcp add` without `--exposure`: the server's tools are `deferred`, loaded by tool_search when a task needs them,
  * instead of pi's default `codemode`, which reaches them only from scripts. Like pi, the options end at `--` or at the
  * second positional argument; what follows belongs to the server's command.
  */
@@ -998,9 +987,9 @@ const NO_SETUP_FLAGS = new Set([
 ]);
 
 /**
- * Whether `mu` offers to set up a model before a session: only to a person at a terminal (stdin and stdout) who starts
- * a session, on a machine where nothing gives mu a model yet, and who has not answered no before (SETUP_DECLINED_FILE)
- * or turned the question off (MU_NO_SETUP=1). Nothing gives a model: no credential in auth.json, no provider in
+ * Whether `spec` offers to set up a model before a session: only to a person at a terminal (stdin and stdout) who starts
+ * a session, on a machine where nothing gives spec a model yet, and who has not answered no before (SETUP_DECLINED_FILE)
+ * or turned the question off (SPEC_AI_JEV_NO_SETUP=1). Nothing gives a model: no credential in auth.json, no provider in
  * models.json, no default provider in settings.json, no key of MODEL_KEY_VARIABLES in the environment or the .env.
  * A file that cannot be read counts as set up: the question is for an empty home, never for a broken one.
  *
@@ -1008,7 +997,7 @@ const NO_SETUP_FLAGS = new Set([
  */
 export function planFirstRun({ platform, env, argv, interactive, agentDir, envText, fs }) {
 	if (!interactive) return false;
-	const off = muEnv("NO_SETUP", env);
+	const off = specEnv("NO_SETUP", env);
 	if (off && off !== "0" && off.toLowerCase() !== "false") return false;
 	if (argv[0] !== undefined && PI_COMMANDS.has(argv[0])) return false;
 	if (argv.some((arg) => NO_SETUP_FLAGS.has(arg.split("=")[0]))) return false;
@@ -1041,25 +1030,25 @@ export function planFirstRun({ platform, env, argv, interactive, agentDir, envTe
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// mu link | unlink
+// spec link | unlink
 // ---------------------------------------------------------------------------------------------------------
 
 export function linkPath({ platform, env, home }) {
 	const path = pathFor(platform);
-	const dir = muEnv("LINK_DIR", env) || path.join(home, ".local", "bin");
-	return path.join(dir, platform === "win32" ? "mu.cmd" : "mu");
+	const dir = specEnv("LINK_DIR", env) || path.join(home, ".local", "bin");
+	return path.join(dir, platform === "win32" ? "spec.cmd" : "spec");
 }
 
-const SHIM_MARK = "rem mu-link-shim: written by `mu link`, removed by `mu unlink`.";
+const SHIM_MARK = "rem spec-link-shim: written by `spec link`, removed by `spec unlink`.";
 
 /**
- * The file `mu link` writes on Windows, where a link to a script cannot be run. It names mu.cmd relative to
+ * The file `spec link` writes on Windows, where a link to a script cannot be run. It names spec.cmd relative to
  * itself when both are on one drive: cmd reads a batch file in the console's code page, so a path written
  * out in full breaks under a non-ASCII user name, while %~dp0 is filled in by cmd itself.
  */
 export function shimContent({ linkDir, bin }) {
 	const path = nodePath.win32;
-	const target = path.join(bin, "mu.cmd");
+	const target = path.join(bin, "spec.cmd");
 	const relative = path.relative(linkDir, target);
 	const named = path.isAbsolute(relative) ? target : `%~dp0${relative}`;
 	return ["@echo off", SHIM_MARK, `"${named}" %*`, ""].join("\r\n");
@@ -1094,7 +1083,7 @@ export function onPath({ dir, platform, env }) {
 }
 
 /**
- * Homebrew's maildir-utils is also called `mu`. A command that is not this one is never replaced, and never
+ * Homebrew's maildir-utils is also called `spec`. A command that is not this one is never replaced, and never
  * shadowed silently. `fs` is { realPath, exists, isFile, readFile }: realPath follows links the way a shell
  * does, also through a link whose target is gone.
  */
@@ -1103,7 +1092,7 @@ export function planLink({ platform, env, home, bin, argv, fs }) {
 	const link = linkPath({ platform, env, home });
 	const linkDir = path.dirname(link);
 	const windows = platform === "win32";
-	const mine = path.join(bin, windows ? "mu.cmd" : "mu");
+	const mine = path.join(bin, windows ? "spec.cmd" : "spec");
 	const content = windows ? shimContent({ linkDir, bin }) : undefined;
 	const same = (a, b) => (windows ? a.toLowerCase() === b.toLowerCase() : a === b);
 	const isThisMu = (candidate) => {
@@ -1120,17 +1109,17 @@ export function planLink({ platform, env, home, bin, argv, fs }) {
 		return {
 			action: "refuse",
 			errors: [
-				`${link} already exists and is not this mu; it was left alone. Choose another folder: MU_LINK_DIR=<dir> mu link`,
+				`${link} already exists and is not this spec; it was left alone. Choose another folder: SPEC_AI_JEV_LINK_DIR=<dir> spec link`,
 			],
 		};
 	}
-	const other = findOnPath({ name: "mu", platform, env, isFile: fs.isFile });
+	const other = findOnPath({ name: "spec", platform, env, isFile: fs.isFile });
 	if (other && !isThisMu(other) && argv[0] !== "--force") {
 		return {
 			action: "refuse",
 			errors: [
-				`Another mu is already on your PATH: ${other}`,
-				"Nothing was linked. To put this one first anyway: mu link --force (or MU_LINK_DIR=<dir> mu link)",
+				`Another spec is already on your PATH: ${other}`,
+				"Nothing was linked. To put this one first anyway: spec link --force (or SPEC_AI_JEV_LINK_DIR=<dir> spec link)",
 			],
 		};
 	}
@@ -1148,11 +1137,11 @@ export function planLink({ platform, env, home, bin, argv, fs }) {
 	if (windows && /[^\x00-\x7f]/.test(content)) {
 		notes.push(
 			"Note: the path from that folder to this repository has non-ASCII characters in it, and cmd reads a batch file in the",
-			"console's code page. If `mu` then cannot find its target, choose a folder on the same drive (MU_LINK_DIR), or put",
+			"console's code page. If `spec` then cannot find its target, choose a folder on the same drive (SPEC_AI_JEV_LINK_DIR), or put",
 			`${bin} on your PATH instead.`,
 		);
 	}
-	return { action: "link", link, target: mine, content, message: `mu -> ${mine}`, notes };
+	return { action: "link", link, target: mine, content, message: `spec -> ${mine}`, notes };
 }
 
 export function planUnlink({ platform, env, home, fs }) {
@@ -1164,18 +1153,18 @@ export function planUnlink({ platform, env, home, fs }) {
 		} catch {}
 		return text?.includes(SHIM_MARK)
 			? { remove: link, message: `removed ${link}` }
-			: { message: `${link} is not a shim written by mu link; nothing removed` };
+			: { message: `${link} is not a shim written by spec link; nothing removed` };
 	}
 	return fs.isLink(link)
 		? { remove: link, message: `removed ${link}` }
 		: { message: `${link} is not a link; nothing removed` };
 }
 
-/** What `mu doctor` says about the command. */
+/** What `spec doctor` says about the command. */
 export function linkState({ platform, link, bin, fs }) {
 	if (platform === "win32") {
 		try {
-			return fs.readFile(link).includes(SHIM_MARK) ? `${link} -> ${pathFor(platform).join(bin, "mu.cmd")}` : undefined;
+			return fs.readFile(link).includes(SHIM_MARK) ? `${link} -> ${pathFor(platform).join(bin, "spec.cmd")}` : undefined;
 		} catch {
 			return undefined;
 		}
@@ -1188,185 +1177,10 @@ export function linkState({ platform, link, bin, fs }) {
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// mu migrate
+// spec migrate
 // ---------------------------------------------------------------------------------------------------------
 
-/** Minimal CSV, as `tasklist /FO CSV` and PowerShell's ConvertTo-Csv write it: quoted fields, "" for a quote. */
-export function parseCsv(text) {
-	const rows = [];
-	let row = [];
-	let field = "";
-	let quoted = false;
-	const source = String(text).replace(/^\uFEFF/, "");
-	for (let index = 0; index < source.length; index++) {
-		const char = source[index];
-		if (quoted) {
-			if (char === '"' && source[index + 1] === '"') {
-				field += '"';
-				index++;
-			} else if (char === '"') quoted = false;
-			else field += char;
-		} else if (char === '"') quoted = true;
-		else if (char === ",") {
-			row.push(field);
-			field = "";
-		} else if (char === "\n" || char === "\r") {
-			if (char === "\r" && source[index + 1] === "\n") index++;
-			row.push(field);
-			field = "";
-			if (row.some((cell) => cell !== "")) rows.push(row);
-			row = [];
-		} else field += char;
-	}
-	row.push(field);
-	if (row.some((cell) => cell !== "")) rows.push(row);
-	return rows;
-}
-
-/** `tasklist /FO CSV /NH`: "Image Name","PID","Session Name","Session#","Mem Usage". */
-export function parseTasklist(text) {
-	return parseCsv(text)
-		.map(([name, pid]) => ({ name: name ?? "", pid: Number(pid), command: "" }))
-		.filter((entry) => Number.isInteger(entry.pid) && entry.pid > 0);
-}
-
-/** `Get-CimInstance Win32_Process | Select-Object ProcessId,Name,CommandLine | ConvertTo-Csv -NoTypeInformation`. */
-export function parseWindowsProcesses(text) {
-	const [header, ...rows] = parseCsv(text);
-	if (!header) return [];
-	const column = (title) => header.findIndex((cell) => cell.toLowerCase() === title);
-	const [pid, name, command] = [column("processid"), column("name"), column("commandline")];
-	if (pid < 0) return [];
-	return rows
-		.map((row) => ({ pid: Number(row[pid]), name: row[name] ?? "", command: row[command] ?? "" }))
-		.filter((entry) => Number.isInteger(entry.pid) && entry.pid > 0);
-}
-
-const SESSION_MARK = "kyrn-judge/src/extension/kyrn-judge.ts";
-
-/**
- * Who is still using the old home, from a process list ({ pid, name, command }). Windows paths are compared
- * with forward slashes and without regard to case.
- */
-export function busyFromProcesses({ processes, old, platform, self }) {
-	const fold = (value) => (platform === "win32" ? value.replaceAll("\\", "/").toLowerCase() : value);
-	const others = processes.filter((entry) => entry.pid !== self);
-	const pids = (match) => others.filter(match).map((entry) => entry.pid);
-	const profile = fold(pathFor(platform).join(old, "browser-profile"));
-	return {
-		sessions: pids((entry) => fold(entry.command).includes(SESSION_MARK)),
-		browser: pids((entry) => fold(entry.command).includes(profile)),
-		desktop: pids((entry) => /^aioncore(\.exe)?$/i.test(entry.name)),
-	};
-}
-
-/**
- * Looks at what is running. POSIX asks pgrep, exactly as the bash launcher did. Windows has no pgrep:
- * tasklist gives the names and one PowerShell call gives the command lines. `run(command, args)` returns
- * stdout, or undefined when the command could not be run.
- */
-export function findBusy({ platform, old, run, self }) {
-	if (platform !== "win32") {
-		const pgrep = (args) =>
-			(run("pgrep", args) ?? "")
-				.split(/\s+/)
-				.filter(Boolean)
-				.map(Number)
-				.filter((pid) => pid !== self);
-		return {
-			sessions: pgrep(["-f", SESSION_MARK]),
-			browser: pgrep(["-f", pathFor(platform).join(old, "browser-profile")]),
-			desktop: pgrep(["-x", "aioncore"]),
-		};
-	}
-	const names = run("tasklist", ["/FO", "CSV", "/NH"]);
-	const commands = run("powershell.exe", [
-		"-NoProfile",
-		"-NonInteractive",
-		"-Command",
-		"[Console]::OutputEncoding=[Text.Encoding]::UTF8; Get-CimInstance Win32_Process | Select-Object ProcessId,Name,CommandLine | ConvertTo-Csv -NoTypeInformation",
-	]);
-	// Without a process list nothing can be ruled out, and then nothing is moved.
-	if (names === undefined || commands === undefined) return undefined;
-	return busyFromProcesses({
-		processes: [...parseTasklist(names), ...parseWindowsProcesses(commands)],
-		old,
-		platform,
-		self,
-	});
-}
-
-/**
- * ~/.kyrn becomes ~/.mu: one rename of the whole folder, so nothing inside is opened, copied or rewritten,
- * and the login files keep their permissions. The old path stays behind as a link (a junction on Windows),
- * because the desktop app's session mappings store absolute paths into it.
- *
- * `fs` is { isLink, isDir, exists, readlink, readFile, rename, link(target, at, kind) }. Returns the exit code.
- */
-export function migrate({ platform, home, argv, fs, run, alive, self, out, err }) {
-	const path = pathFor(platform);
-	const old = path.join(home, ".kyrn");
-	const next = path.join(home, ".mu");
-	const dry = argv[0] === "--dry-run";
-	if (fs.isLink(old)) {
-		out(`Already moved: ${old} is a link to ${fs.readlink(old)}.`);
-		return 0;
-	}
-	if (!fs.isDir(old)) {
-		out(`Nothing to move: there is no ${old}.`);
-		return 0;
-	}
-	if (fs.exists(next) || fs.isLink(next)) {
-		err(`${next} already exists, so nothing was moved. Two homes are never merged or overwritten here:`);
-		err("look at both folders and decide which one is the real one.");
-		return 1;
-	}
-	// Whatever is running would write into the gap between the rename and the link, and split the home in two.
-	const busy = [];
-	let pid = 0;
-	try {
-		pid = Number.parseInt(fs.readFile(path.join(old, "local-judge", "judge.pid")).trim(), 10);
-	} catch {}
-	if (pid > 0 && alive(pid)) busy.push(`  the local judge (pid ${pid}). Stop it: mu judge stop`);
-	const found = findBusy({ platform, old, run, self });
-	if (!found) {
-		err("Nothing was moved: the list of running processes could not be read (tasklist, powershell), so it is not known whether mu is still running.");
-		return 1;
-	}
-	const list = (pids) => pids.join(" ");
-	if (found.sessions.length > 0) {
-		busy.push(`  mu sessions, in a terminal or behind the desktop app (pid ${list(found.sessions)}). Close them.`);
-	}
-	if (found.browser.length > 0) busy.push(`  the mu browser (pid ${list(found.browser)}). Close it.`);
-	if (found.desktop.length > 0) {
-		busy.push(`  the desktop app's backend (pid ${list(found.desktop)}). Quit the desktop app.`);
-	}
-	if (busy.length > 0) {
-		err(`Nothing was moved, because these are still using ${old}:`);
-		for (const line of busy) err(line);
-		return 1;
-	}
-	const config = path.join("agent", "kyrn.json");
-	const renameConfig = fs.exists(path.join(old, config)) && !fs.exists(path.join(old, "agent", "mu.json"));
-	if (dry) {
-		out(`Would move   ${old} -> ${next}`);
-		if (renameConfig) out(`Would rename ${path.join(next, config)} -> mu.json`);
-		out(`Would link   ${old} -> ${next}`);
-		out("Nothing was changed.");
-		return 0;
-	}
-	fs.rename(old, next);
-	// A junction needs no privilege on Windows; elsewhere the kind of link is ignored.
-	fs.link(next, old, platform === "win32" ? "junction" : "dir");
-	out(`moved    ${old} -> ${next}`);
-	if (renameConfig) {
-		fs.rename(path.join(next, config), path.join(next, "agent", "mu.json"));
-		out(`renamed  ${path.join(next, config)} -> mu.json`);
-	}
-	out(`linked   ${old} -> ${next} (paths stored from before the rename keep working)`);
-	out("Check it: mu doctor");
-	return 0;
-}
+// `spec migrate --credentials` is handled in main: it moves plaintext keys from .env into the credential store.
 
 // ---------------------------------------------------------------------------------------------------------
 // Carrying the plans out
@@ -1446,7 +1260,7 @@ function handOver({ command, args, env, strategy }) {
 		for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(signal, () => relay(signal));
 		if (process.platform === "win32") process.on("SIGBREAK", () => {});
 		child.on("error", (error) => {
-			err(`mu: could not start ${command}: ${error.message}`);
+			err(`spec: could not start ${command}: ${error.message}`);
 			resolve(1);
 		});
 		child.on("exit", (code, signal) => resolve(code ?? 128 + (osConstants.signals[signal] ?? 0)));
@@ -1471,7 +1285,7 @@ export async function main(argv = process.argv.slice(2)) {
 	const layout = layoutOf({ root, platform, exists: existsSync });
 
 	if (!nodeVersionOk(process.versions.node)) {
-		err(`mu needs Node >= ${MIN_NODE.join(".")} (found ${process.version}). Try: nvm install 24`);
+		err(`spec needs Node >= ${MIN_NODE.join(".")} (found ${process.version}). Try: nvm install 24`);
 		return 1;
 	}
 
@@ -1504,71 +1318,45 @@ export async function main(argv = process.argv.slice(2)) {
 	if (command === "migrate") {
 		// Credentials are the kernel's: it owns the store and the env parser this has to agree with. A checkout
 		// runs the TypeScript through pi's source resolver; the package runs its built entry.
-		if (rest.includes("--credentials")) {
-			const muRoot = path.join(import.meta.dirname, "..", "..");
-			const resolverPath = path.join(muRoot, "packages", "coding-agent", "src", "experimental", "source-resolver.ts");
-			const candidates = [
-				[path.join(muRoot, "packages", "kyrn-judge", "src", "setup", "credentials-cli.ts"), ["--experimental-strip-types"]],
-				// The bundle `kyrn/npm/build.mjs` makes for this command, next to the other entries of the package.
-				[path.join(muRoot, "judge", "dist", "credentials-cli.js"), []],
-				// The tsc layout of an older build: `judge/dist/setup/credentials-cli.js`, and pi's own bundle folder.
-				[path.join(muRoot, "judge", "dist", "setup", "credentials-cli.js"), []],
-				[path.join(muRoot, "dist", "setup", "credentials-cli.js"), []],
-			];
-			const found = candidates.find(([candidate]) => existsSync(candidate));
-			if (!found) {
-				err("mu migrate --credentials needs the kernel build that ships with this mu; this one does not have it.");
-				return 1;
-			}
-			const useResolver = found[0].endsWith(".ts") && existsSync(resolverPath);
-			const args = useResolver
-				? [...found[1], "--disable-warning=ExperimentalWarning", "--import", pathToFileURL(resolverPath).href]
-				: [...found[1]];
-			const forwarded = rest.filter((argument) => argument !== "--credentials");
-			const credentialsAgentDir = agentDirFor({ env, muDir: muHome({ home, platform, isDir }), platform });
-			const migrated = spawnSync(
-				process.execPath,
-				[...args, found[0], "--agent-dir", credentialsAgentDir, ...forwarded],
-				{ stdio: "inherit" },
-			);
-			return migrated.status ?? 1;
+		if (!rest.includes("--credentials")) {
+			err("spec migrate only moves plaintext keys into the credential store: pass --credentials");
+			return 2;
 		}
-		return migrate({
-			platform,
-			home,
-			argv: rest,
-			self: process.pid,
-			out,
-			err,
-			alive: (pid) => {
-				try {
-					return process.kill(pid, 0);
-				} catch {
-					return false;
-				}
-			},
-			run: (file, args) => {
-				const result = spawnSync(file, args, { encoding: "utf8", windowsHide: true });
-				return result.error ? undefined : result.stdout;
-			},
-			fs: {
-				isLink,
-				isDir,
-				exists: existsSync,
-				readlink: readlinkSync,
-				readFile: readText,
-				rename: renameSync,
-				link: (target, at, kind) => symlinkSync(target, at, kind),
-			},
-		});
+		const specRoot = path.join(import.meta.dirname, "..", "..");
+		const resolverPath = path.join(specRoot, "packages", "coding-agent", "src", "experimental", "source-resolver.ts");
+		const candidates = [
+			[path.join(specRoot, "packages", "kyrn-judge", "src", "setup", "credentials-cli.ts"), ["--experimental-strip-types"]],
+			// The bundle `kyrn/npm/build.mjs` makes for this command, next to the other entries of the package.
+			[path.join(specRoot, "judge", "dist", "credentials-cli.js"), []],
+			// The tsc layout of an older build: `judge/dist/setup/credentials-cli.js`, and pi's own bundle folder.
+			[path.join(specRoot, "judge", "dist", "setup", "credentials-cli.js"), []],
+			[path.join(specRoot, "dist", "setup", "credentials-cli.js"), []],
+		];
+		const found = candidates.find(([candidate]) => existsSync(candidate));
+		if (!found) {
+			err("spec migrate --credentials needs the kernel build that ships with this spec; this one does not have it.");
+			return 1;
+		}
+		const useResolver = found[0].endsWith(".ts") && existsSync(resolverPath);
+		const args = useResolver
+			? [...found[1], "--disable-warning=ExperimentalWarning", "--import", pathToFileURL(resolverPath).href]
+			: [...found[1]];
+		const forwarded = rest.filter((argument) => argument !== "--credentials");
+		const credentialsAgentDir = agentDirFor({ env, specDir: specHome({ home, platform }), platform });
+		const migrated = spawnSync(
+			process.execPath,
+			[...args, found[0], "--agent-dir", credentialsAgentDir, ...forwarded],
+			{ stdio: "inherit" },
+		);
+		return migrated.status ?? 1;
 	}
 	if (command === "judge") {
 		// Consent is a file this machine owns, not something the local judge's script knows about: handle it here,
-		// before any platform dispatch, so it works everywhere mu runs (packages/kyrn-judge/src/consent.ts).
+		// before any platform dispatch, so it works everywhere spec runs (packages/kyrn-judge/src/consent.ts).
 		if (rest[0] === "consent") {
 			return judgeConsentCommand({
 				action: rest[1] ?? "status",
-				agentDir: agentDirFor({ env, muDir: muHome({ home, platform, isDir }), platform }),
+				agentDir: agentDirFor({ env, specDir: specHome({ home, platform, isDir }), platform }),
 				env,
 			});
 		}
@@ -1607,7 +1395,7 @@ export async function main(argv = process.argv.slice(2)) {
 		}
 		return handOver({ command: plan.command, args: plan.args, env: plan.env, strategy });
 	}
-	// What the session gets, when there is one: after a `mu setup` that ends in "start mu now", a plain session.
+	// What the session gets, when there is one: after a `spec setup` that ends in "start spec now", a plain session.
 	let sessionArgv = mcpAddDefaults(argv);
 	if (command === "setup") {
 		const plan = planSetup({
@@ -1625,7 +1413,7 @@ export async function main(argv = process.argv.slice(2)) {
 			return plan.code ?? 1;
 		}
 		// The key leaves this process's own command line too, as far as the platform lets a process rewrite it.
-		if (plan.keyGiven) process.title = "mu setup";
+		if (plan.keyGiven) process.title = "spec setup";
 		mkdirSync(plan.agentDir, { recursive: true });
 		const code = await handOver(plan);
 		if (code !== SETUP_EXIT_START) return code;
@@ -1641,7 +1429,7 @@ export async function main(argv = process.argv.slice(2)) {
 		});
 	}
 	if ((command === "link" || command === "unlink") && layout === "package") {
-		out("This mu was installed with npm, which already put `mu` on your PATH (npm i -g mu-agent); nothing to link.");
+		out("This spec was installed with npm, which already put `spec` on your PATH (npm i -g spec-ai-agent); nothing to link.");
 		return 0;
 	}
 	if (command === "link") {
@@ -1676,7 +1464,7 @@ export async function main(argv = process.argv.slice(2)) {
 
 	if (layout === "package" && command === "version") {
 		const pkg = JSON.parse(readText(path.join(root, "package.json")));
-		out(`mu ${pkg.version} (pi ${pkg.muBuild?.pi ?? "?"}, npm package ${pkg.name})`);
+		out(`spec ${pkg.version} (pi ${pkg.specBuild?.pi ?? "?"}, npm package ${pkg.name})`);
 		return 0;
 	}
 	// Asked before `version` too, as it always was: a checkout without its dependencies says so at the first command.
@@ -1685,25 +1473,25 @@ export async function main(argv = process.argv.slice(2)) {
 		return 1;
 	}
 	if (command === "version") {
-		// mu's version is the one this tree is released as; the judgment layer's own package.json is never released.
+		// spec's version is the one this tree is released as; the judgment layer's own package.json is never released.
 		const version = (file) => JSON.parse(readText(path.join(root, ...file.split("/")))).version;
-		out(`mu ${version("kyrn/npm/package.template.json")} (pi ${version("packages/coding-agent/package.json")})`);
+		out(`spec ${version("kyrn/npm/package.template.json")} (pi ${version("packages/coding-agent/package.json")})`);
 		return 0;
 	}
 
-	// A first start with nothing to work with: one question, and the wizard, before the session (`mu setup`). Never
-	// right after `mu setup` itself: its subscription route leaves nothing written, and the person was just asked.
-	const muDir = muHome({ home, platform, isDir });
+	// A first start with nothing to work with: one question, and the wizard, before the session (`spec setup`). Never
+	// right after `spec setup` itself: its subscription route leaves nothing written, and the person was just asked.
+	const specDir = specHome({ home, platform, isDir });
 	let envText;
 	try {
-		envText = readText(envFilePath({ layout, root, muDir, platform }));
+		envText = readText(envFilePath({ layout, root, specDir, platform }));
 	} catch {}
 	const firstRun = command !== "setup" && planFirstRun({
 		platform,
 		env,
 		argv: sessionArgv,
 		interactive: Boolean(process.stdin.isTTY && process.stdout.isTTY),
-		agentDir: agentDirFor({ env, muDir, platform }),
+		agentDir: agentDirFor({ env, specDir, platform }),
 		envText,
 		fs: { exists: existsSync, readFile: readText },
 	});
@@ -1763,7 +1551,7 @@ if (isMain()) {
 		// Everything was written synchronously, so nothing is cut off; an idle keep-alive socket must not hold the exit up.
 		(code) => process.exit(code),
 		(error) => {
-			err(`mu: ${error instanceof Error ? error.message : String(error)}`);
+			err(`spec: ${error instanceof Error ? error.message : String(error)}`);
 			process.exitCode = 1;
 		},
 	);

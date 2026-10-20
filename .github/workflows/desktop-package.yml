@@ -38,15 +38,18 @@ jobs:
           npm run build
           npm run budget
 
-      - name: stage the mu runtime from npm
+      - name: build the runtime from source
         shell: pwsh
         run: |
-          # The runtime is a built package, not source: the `mu-agent` tarball plus its dependencies is exactly what
-          # `scripts/stage-harness.mjs` expects. The version is pinned here so a build does not move under the product.
-          npm pack mu-agent@0.1.8
-          tar -xzf mu-agent-0.1.8.tgz
-          npm install --omit=dev --prefix package
-          "MU_HARNESS_ROOT=$PWD/package" | Out-File -FilePath $env:GITHUB_ENV -Append
+          # The runtime source is vendored at spec.ai.jev/. Its build puts a package under .artifacts/npm, and the
+          # desktop stages that: no package from npm, no path outside the repository.
+          Push-Location spec.ai.jev
+          npm ci
+          npm run build
+          node kyrn/npm/build.mjs
+          Pop-Location
+          npm install --omit=dev --prefix spec.ai.jev/.artifacts/npm/spec-ai-agent
+          "SPEC_AI_JEV_HARNESS_ROOT=$PWD/spec.ai.jev/.artifacts/npm" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: package
         run: npm run package

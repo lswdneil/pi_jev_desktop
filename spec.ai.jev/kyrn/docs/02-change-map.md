@@ -1,6 +1,6 @@
 # KYRN 改动地图：决策点挂在 pi 的哪里
 
-> 已于 2026-09-21 更名为 mu（命令 `mu`，标识 μ）。本文是更名前的记录，正文保持原样；新旧名对照见 [10-rename-to-mu.md](10-rename-to-mu.md)。
+> Historical note: the kernel's internal names (`kyrn`, `kyrn.*`) predate the current product name and are kept for stored sessions. See [10-brand-history.md](10-brand-history.md).
 
 > 2026-09-20 · 基于上游 `earendil-works/pi` 提交 `d1230ea20`（v0.86.0 之后）
 > 行号来自对源码的静态阅读（两份测绘 + 我对承重结论的抽查），未逐条运行验证；上游更新后行号会漂移，以函数名为准。
@@ -32,9 +32,9 @@ KYRN/                      = pi 的分叉（git）
 
 ```bash
 kyrn/bin/kyrn-dev                      # 交互模式；自动选 Node ≥22、隔离配置到 ~/.kyrn/agent、加载判断内核扩展
-KYRN_JUDGE=mock kyrn/bin/kyrn-dev      # 不联网的假判断后端
-KYRN_JUDGE=laya kyrn/bin/kyrn-dev      # 本地 Laya（Core ML）判断后端，自动拉起 sidecar；见 03-local-judge.md
-KYRN_JUDGE_MODE=active kyrn/bin/kyrn-dev
+SPEC_AI_JEV_JUDGE=mock kyrn/bin/kyrn-dev      # 不联网的假判断后端
+SPEC_AI_JEV_JUDGE=laya kyrn/bin/kyrn-dev      # 本地 Laya（Core ML）判断后端，自动拉起 sidecar；见 03-local-judge.md
+SPEC_AI_JEV_JUDGE_MODE=active kyrn/bin/kyrn-dev
 ```
 
 ```bash
@@ -202,7 +202,7 @@ npm run check
 
 日常入口现在是 `kyrn`（见 04 文档 §10）；`kyrn/bin/kyrn-dev` 只是它的别名。当前 `~/.kyrn/agent/kyrn.json`：`tiers: ["jev"]`（直连）、`modes.default: active`、`features.compaction: true`、`features.preflight.waitMs: 2500`。
 
-0. 浏览器要一个能做 `relate` 题的判断档：现在用 `KYRN_JUDGE=laya,luna kyrn/bin/kyrn-dev …`（`luna` 已在 `~/.kyrn/agent/kyrn.json` 的 `judges` 里），绑卡后换成 `laya,jev`，每步延迟从约 4 s 降到百毫秒级。
+0. 浏览器要一个能做 `relate` 题的判断档：现在用 `SPEC_AI_JEV_JUDGE=laya,luna kyrn/bin/kyrn-dev …`（`luna` 已在 `~/.kyrn/agent/kyrn.json` 的 `judges` 里），绑卡后换成 `laya,jev`，每步延迟从约 4 s 降到百毫秒级。
 
 1. 你绑卡 → `cd kyrn/spikes/jev-smoke && npm run smoke` → 把真实应答填进 01 文档 §15.4；再把 `kyrn.json` 的 `tiers` 改成 `["laya","jev"]`，同一套决策点直接换成 Jev 兜底。
 2. 日常使用：`kyrn/bin/kyrn-dev --provider openai-codex --model gpt-5.6-sol`，默认全 shadow；`/kyrn` 看状态，`kyrn/bin/kyrn-ledger` 回看判定；想让某个点生效就 `/kyrn mode tool.admission active`。

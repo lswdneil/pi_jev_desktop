@@ -57,7 +57,7 @@ function previousItems(details: unknown): HistoryItem[] | undefined {
  */
 export function registerCompaction(runtime: KyrnRuntime): void {
 	const options = runtime.options("compaction", {
-		// Beta: opt in with `"features": { "compaction": true }` in mu.json.
+		// Beta: opt in with `"features": { "compaction": true }` in agent.json.
 		enabled: false,
 		keepThreshold: 0.5,
 		minChars: 600,

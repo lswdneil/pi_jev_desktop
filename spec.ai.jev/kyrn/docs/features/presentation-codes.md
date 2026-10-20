@@ -4,13 +4,13 @@ The harness writes its presentation events in English. For a client that shows t
 
 Model-facing text (hints, tool results), paths, URLs, commands, the user's own words and model-written text have no codes. They are data and are shown as they are.
 
-The language the person reads mu in is `MU_LANG` (see `src/language.ts`). With it set to Chinese, several user-facing strings (goal mode, /commit, the guard, permissions, the board) are already written in Chinese by the harness itself. The codes below cover the rest.
+The language the person reads mu in is `SPEC_AI_JEV_LANG` (see `src/language.ts`). With it set to Chinese, several user-facing strings (goal mode, /commit, the guard, permissions, the board) are already written in Chinese by the harness itself. The codes below cover the rest.
 
 ## The `/` menu
 
-The command list (`get_commands` in RPC) is worded by `MU_LANG` when mu starts. It has no codes, because a description is only shown in the menu.
+The command list (`get_commands` in RPC) is worded by `SPEC_AI_JEV_LANG` when mu starts. It has no codes, because a description is only shown in the menu.
 
-- **mu's own commands.** Every description is written in Chinese and in English. The Chinese is used when `MU_LANG` is Chinese, and English for every other language. `/help` follows the same rule. A test fails if a command is added without its Chinese.
+- **mu's own commands.** Every description is written in Chinese and in English. The Chinese is used when `SPEC_AI_JEV_LANG` is Chinese, and English for every other language. `/help` follows the same rule. A test fails if a command is added without its Chinese.
 - **mu's prompt templates** (`/implement`, `/scout-and-plan`, `/implement-and-review`, `/init`). Each template carries `description-zh` and `argument-hint-zh` beside its English. For Chinese, pi gets a copy of the templates with the Chinese in place. The copy is written to the system temp folder and named by its content, so an updated template is copied again. The body, which the model reads, is the same in both languages.
 - **Skills** (`skill:…`). Their descriptions are what the model reads to decide whether to load one, so they stay in English.
 - **pi's built-in commands** (`/model`, `/login`, `/new`, …). They are not in `get_commands`, which lists only extension commands, prompt templates and skills. Any menu entry the app shows for them uses the app's own wording.

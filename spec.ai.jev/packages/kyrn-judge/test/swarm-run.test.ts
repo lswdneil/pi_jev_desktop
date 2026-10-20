@@ -384,7 +384,7 @@ describe("swarm run", () => {
 						const beat = heartbeat(observer);
 						// What the child-side listener does: sees the request between steps, and reports.
 						const poll = setInterval(() => {
-							if (!existsSync(env.KYRN_SWARM_CONTROL)) return;
+							if (!existsSync(env.SPEC_AI_JEV_SWARM_CONTROL)) return;
 							clearInterval(poll);
 							clearInterval(beat);
 							observer?.event(assistant("What I have so far: the docs moved."));
@@ -438,7 +438,7 @@ describe("swarm run", () => {
 		const asked = (env: Readonly<Record<string, string>>) =>
 			new Promise<void>((resolve) => {
 				const poll = setInterval(() => {
-					if (!existsSync(env.KYRN_SWARM_CONTROL)) return;
+					if (!existsSync(env.SPEC_AI_JEV_SWARM_CONTROL)) return;
 					clearInterval(poll);
 					resolve();
 				}, 1000);

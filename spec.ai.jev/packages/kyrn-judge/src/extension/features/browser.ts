@@ -31,7 +31,7 @@ export const UNTRUSTED =
  * the configured judge, not a round trip through the main model's context.
  * That is where both the speed and the context savings come from.
  *
- * It runs in mu's own Chrome profile (~/.mu/browser-profile), so it never
+ * It runs in mu's own Chrome profile (~/.spec.ai.jev/browser-profile), so it never
  * sees the user's personal cookies or logged-in sessions. When the desktop app
  * is running it drives the app's own browser panel instead (`embedded.ts`):
  * same loop, but the user watches every step and can pause, stop or take over.
@@ -42,7 +42,7 @@ export function registerBrowser(runtime: KyrnRuntime): void {
 		headless: true,
 		maxSteps: 40,
 		textChars: 4000,
-		/** Empty means mu's own ~/.mu/browser-profile. */
+		/** Empty means mu's own ~/.spec.ai.jev/browser-profile. */
 		profileDir: "",
 		/** Use the desktop app's browser panel when the app offers one. */
 		embedded: true,
@@ -57,14 +57,14 @@ export function registerBrowser(runtime: KyrnRuntime): void {
 	// Sub-agents run side by side. Sharing one profile means sharing one Chrome, and the first of them to
 	// finish would close it under the others. Each gets a throwaway profile that goes when it goes.
 	const ownProfile =
-		!options.profileDir && process.env.KYRN_SWARM_DEPTH ? join(tmpdir(), `kyrn-browser-${process.pid}`) : undefined;
+		!options.profileDir && process.env.SPEC_AI_JEV_SWARM_DEPTH ? join(tmpdir(), `kyrn-browser-${process.pid}`) : undefined;
 
 	const connect = async (): Promise<CdpConnection> => {
 		if (cdp && !cdp.isClosed) return cdp;
 		cdp = undefined;
 		embedded = undefined;
 		// A sub-agent keeps to its own throwaway browser: several of them in the user's panel would fight over it.
-		const offered = options.embedded && !process.env.KYRN_SWARM_DEPTH ? findEmbeddedEndpoint() : undefined;
+		const offered = options.embedded && !process.env.SPEC_AI_JEV_SWARM_DEPTH ? findEmbeddedEndpoint() : undefined;
 		if (offered) {
 			try {
 				const candidate = await CdpConnection.connect(offered.url, 2000);
@@ -226,7 +226,7 @@ export function registerBrowser(runtime: KyrnRuntime): void {
 			codeParams = result.params;
 			// The usual first-run failure: a small local judge that is rightly not trusted with pages.
 			const hint = result.reason?.includes("no judge could choose")
-				? `\nThe judge for browser.step (${runtime.engine.judgeFor(browserStep.id).id}) cannot relate a goal to a page. Give this one decision a capable judge: /mu route browser.step luna (any llm judge from kyrn.json), or jev once it is available.`
+				? `\nThe judge for browser.step (${runtime.engine.judgeFor(browserStep.id).id}) cannot relate a goal to a page. Give this one decision a capable judge: /spec route browser.step luna (any llm judge from agent.json), or jev once it is available.`
 				: "";
 			const trace = result.history
 				.map(

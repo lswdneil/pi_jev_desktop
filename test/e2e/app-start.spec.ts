@@ -32,7 +32,7 @@ async function violations(page: Page): Promise<string[]> {
 test.describe("starting", () => {
 	test("starts the configured runtime and reports it", async () => {
 		test.skip(
-			(process.env.SPEC_AI_JEV_HARNESS ?? process.env.PI_JEV_HARNESS) === undefined,
+			process.env.SPEC_AI_JEV_HARNESS === undefined,
 			"set SPEC_AI_JEV_HARNESS to a runtime checkout to run this test",
 		);
 		const profile = await launchApp({ harness: "checkout" });
@@ -55,7 +55,7 @@ test.describe("starting", () => {
 			if (status.state === "running") {
 				// A checkout and a built package are both valid sources; the env names the one this run uses.
 				expect(status.layout).toMatch(/^(repo|package)$/);
-				const configured = (process.env.SPEC_AI_JEV_HARNESS ?? process.env.PI_JEV_HARNESS ?? "").replaceAll("\\", "/");
+				const configured = (process.env.SPEC_AI_JEV_HARNESS ?? "").replaceAll("\\", "/");
 				expect(status.root.replaceAll("\\", "/")).toBe(configured);
 			}
 		} finally {
@@ -85,7 +85,7 @@ test.describe("starting", () => {
 	test("shows what a crashing agent said, after the retries are spent", async () => {
 		// Not a missing harness: a harness that starts and dies. The window has to end on the error screen with the
 		// child's own words, because "it does not work" with no reason is the report nobody can act on.
-		const profile = await launchApp({ env: { MU_FIXTURE_CRASH_ON_START: "1" } });
+		const profile = await launchApp({ env: { SPEC_AI_JEV_FIXTURE_CRASH_ON_START: "1" } });
 		const { page } = profile;
 
 		try {

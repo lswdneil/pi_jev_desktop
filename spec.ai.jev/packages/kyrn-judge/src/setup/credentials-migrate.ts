@@ -13,7 +13,7 @@ import { Backups, readTextFile, writeFileAtomic } from "./files.ts";
  * A key written into `.env` in clear text is the file equivalent of a sticky note, and every rewrite used to
  * keep it readable by everyone. This moves what it safely can and says exactly what it did:
  *
- * - **A key only mu reads** (`MU_JUDGE_*`, or a custom judge's own `apiKeyEnv`) moves: the store holds it, the
+ * - **A key only mu reads** (`SPEC_AI_JEV_JUDGE_*`, or a custom judge's own `apiKeyEnv`) moves: the store holds it, the
  *   line is removed from `.env`, and the kernel picks it up at session start.
  * - **A key pi also reads** (`AI_GATEWAY_API_KEY`, `TYPESAFE_API_KEY`, `OPENCODE_API_KEY`, `CLOUDFLARE_*`) is
  *   copied into the store but **left in `.env`**, because removing it would break the model calls pi makes with
@@ -66,9 +66,9 @@ function ownerOf(name: string, config: KyrnConfig): string | undefined {
 	return undefined;
 }
 
-/** `MU_JUDGE_*` and a custom judge's own variable are mu's alone; the rest are shared with pi's model auth. */
+/** `SPEC_AI_JEV_JUDGE_*` and a custom judge's own variable are mu's alone; the rest are shared with pi's model auth. */
 function muOnly(name: string): boolean {
-	return name.startsWith("MU_JUDGE_");
+	return name.startsWith("SPEC_AI_JEV_JUDGE_");
 }
 
 /** A value that is already a reference holds no secret: there is nothing to move. */

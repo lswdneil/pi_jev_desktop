@@ -1,6 +1,6 @@
 # Performance budget
 
-What mu measures, what it refuses to guess, and the numbers that would justify replacing the desktop shell.
+What spec.ai.jev measures, what it refuses to guess, and the numbers that would justify replacing the desktop shell.
 The rule this file exists for: **measure before rewriting.** A new shell is a 3–5× UI cost, and it can only
 move the parts of the latency that belong to the shell — not the model, not the judge.
 

@@ -10,7 +10,8 @@
  *
  * A write is validated against the manifest first (the option has to exist, the value has to be the kind the manifest
  * says, within its bounds), then merged into the document, which keeps every key this shell does not understand. The
- * file is `mu.json` in mu's agent directory: what the harness reads on its next start, which is why the screen says so.
+ * file is `agent.json` in this app's agent directory: what the harness reads on its next start, which is why the screen
+ * says so.
  */
 
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
@@ -33,21 +34,20 @@ import {
 export { applyChange, SettingsChangeError };
 
 /**
- * This app's agent directory, the one the kernel reads `mu.json` from (`config.ts` `ConfigSource.dir`).
+ * This app's agent directory, the one the kernel reads `agent.json` from (`config.ts` `ConfigSource.dir`).
  *
- * `mu` (the command line) and `spec.ai.jev` (this app) are two products with their own state: the folder is
- * `~/.spec.ai.jev/agent`, not the command line's `~/.mu/agent`, and nothing migrates between them. The kernel is told
- * about it with `MU_AGENT_DIR` (see `main/index.ts`), so both sides agree on one path.
+ * The folder is `~/.spec.ai.jev/agent`, and the kernel is told about it with `SPEC_AI_JEV_AGENT_DIR` (see
+ * `main/index.ts`), so both sides agree on one path.
  */
 export function agentDirFor(home: string, platform: NodeJS.Platform): string {
 	return pathFor(platform).join(home, ".spec.ai.jev", "agent");
 }
 
 export function settingsFileFor(home: string, platform: NodeJS.Platform): string {
-	return pathFor(platform).join(agentDirFor(home, platform), "mu.json");
+	return pathFor(platform).join(agentDirFor(home, platform), "agent.json");
 }
 
-/** The consent file the kernel reads, beside `mu.json`. */
+/** The consent file the kernel reads, beside `agent.json`. */
 export function consentFileFor(home: string, platform: NodeJS.Platform): string {
 	return pathFor(platform).join(agentDirFor(home, platform), "consent.json");
 }
@@ -230,7 +230,7 @@ export interface SettingsReadResult {
 	readonly problems: string[];
 }
 
-/** `mu.json` as it is on disk. A missing file is not a problem; a broken one is reported and treated as empty. */
+/** `agent.json` as it is on disk. A missing file is not a problem; a broken one is reported and treated as empty. */
 export function readSettings(file: string): SettingsReadResult {
 	let text: string;
 	try {
@@ -249,7 +249,7 @@ export function readSettings(file: string): SettingsReadResult {
 	return { document: entry, problems: [] };
 }
 
-/** Writing is atomic and owner-only: a half-written `mu.json` would come back as "defaults are in use". */
+/** Writing is atomic and owner-only: a half-written `agent.json` would come back as "defaults are in use". */
 export function writeSettings(file: string, document: SettingsDocument): void {
 	mkdirSync(dirname(file), { recursive: true });
 	const temporary = `${file}.tmp-${process.pid}`;
@@ -257,7 +257,7 @@ export function writeSettings(file: string, document: SettingsDocument): void {
 	renameSync(temporary, file);
 }
 
-/** The home the shell reads mu's files from. Injected by the caller so a test does not need this machine's. */
+/** The home the shell reads spec.ai.jev's files from. Injected by the caller so a test does not need this machine's. */
 export function homeDirectory(): string {
 	return homedir();
 }

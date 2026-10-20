@@ -39,9 +39,9 @@ describe("headless (no TTY) paths", () => {
 	it("turns the whole judge off from the environment, whether or not consent exists", () => {
 		const dir = agentDir();
 		writeJudgeConsent(dir);
-		const loaded = loadConfig({ env: { MU_JUDGE: "off", [JUDGE_CONSENT_ENV]: "1" } });
+		const loaded = loadConfig({ env: { SPEC_AI_JEV_JUDGE: "off", [JUDGE_CONSENT_ENV]: "1" } });
 		// Off wins over both: nothing is asked, nothing is sent, no prompt is waiting on a terminal that is not there.
 		expect(loaded.disabled).toBe(true);
-		expect(judgeConsentState(dir, { MU_JUDGE: "off" }).consented).toBe(true);
+		expect(judgeConsentState(dir, { SPEC_AI_JEV_JUDGE: "off" }).consented).toBe(true);
 	});
 });

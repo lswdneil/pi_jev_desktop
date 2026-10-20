@@ -140,7 +140,7 @@ describe("checking", () => {
 
 	it("uses the packaged default unless the environment names a feed", async () => {
 		expect(configuredFeedUrl({})).toBeUndefined();
-		expect(configuredFeedUrl({ MU_UPDATE_FEED: " http://127.0.0.1:1/latest.yml " })).toBe("http://127.0.0.1:1/latest.yml");
+		expect(configuredFeedUrl({ SPEC_AI_JEV_UPDATE_FEED: " http://127.0.0.1:1/latest.yml " })).toBe("http://127.0.0.1:1/latest.yml");
 		expect(DEFAULT_FEED).toContain("github.com/lswdneil/pi_jev_desktop/releases");
 	});
 });

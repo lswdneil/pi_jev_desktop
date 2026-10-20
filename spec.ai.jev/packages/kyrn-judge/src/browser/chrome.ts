@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join, posix, win32 } from "node:path";
 import { codedError } from "../language.ts";
-import { muEnv, muHome } from "../naming.ts";
+import { specEnv, specHome } from "../naming.ts";
 import { isWsl, thisHost, wslMountRoot, wslToWindowsPath } from "../platform.ts";
 
 type Env = Readonly<Record<string, string | undefined>>;
@@ -125,11 +125,11 @@ function sideOf(executable: string, host: BrowserHost): FoundBrowser["side"] {
 }
 
 /**
- * The browser mu would start. MU_CHROME (or KYRN_CHROME) wins. From inside WSL a browser on the Windows side
+ * The browser spec would start. SPEC_AI_JEV_CHROME wins. From inside WSL a browser on the Windows side
  * only counts when it can be reached: see `windowsSideProblem`.
  */
 export function findBrowser(host: BrowserHost): FoundBrowser | undefined {
-	const chosen = muEnv("CHROME", host.env);
+	const chosen = specEnv("CHROME", host.env);
 	if (chosen && host.exists(chosen)) return { executable: chosen, side: sideOf(chosen, host) };
 	for (const candidate of browserCandidates(host)) {
 		if (!host.exists(candidate.executable)) continue;
@@ -162,13 +162,13 @@ const LINUX_INSTALL = [
 /** What to tell someone whose machine has no browser mu can use. */
 export function browserAdvice(host: BrowserHost): string {
 	if (host.platform === "darwin") {
-		return "No Chrome, Chromium, Edge or Brave found in /Applications. Install one, or set MU_CHROME to a Chromium-based browser's executable.";
+		return "No Chrome, Chromium, Edge or Brave found in /Applications. Install one, or set SPEC_AI_JEV_CHROME to a Chromium-based browser's executable.";
 	}
 	if (host.platform === "win32") {
-		return "No Chrome, Chromium, Edge or Brave found under Program Files or %LOCALAPPDATA%. Install one, or set MU_CHROME to its .exe.";
+		return "No Chrome, Chromium, Edge or Brave found under Program Files or %LOCALAPPDATA%. Install one, or set SPEC_AI_JEV_CHROME to its .exe.";
 	}
 	if (!host.wsl) {
-		return `No Chrome, Chromium, Edge or Brave found. Install one, or set MU_CHROME to its executable:\n${LINUX_INSTALL}`;
+		return `No Chrome, Chromium, Edge or Brave found. Install one, or set SPEC_AI_JEV_CHROME to its executable:\n${LINUX_INSTALL}`;
 	}
 	const windowsSide = browserCandidates(host).find(
 		(candidate) => candidate.side === "windows" && host.exists(candidate.executable),
@@ -187,7 +187,7 @@ export function browserAdvice(host: BrowserHost): string {
 }
 
 /**
- * Where a confined browser may keep a profile. A snap sees no hidden folder of the home (so not ~/.mu) and
+ * Where a confined browser may keep a profile. A snap sees no hidden folder of the home (so not ~/.spec.ai.jev) and
  * has a /tmp of its own; a flatpak sees its own data folder. Undefined for an ordinary install.
  */
 export function confinedProfileBase(executable: string, host: BrowserHost): string | undefined {
@@ -311,7 +311,7 @@ async function isAlive(endpoint: string): Promise<boolean> {
 
 export interface LaunchOptions {
 	readonly executable?: string;
-	/** Default ~/.mu/browser-profile: mu's own profile, never the user's personal one. */
+	/** Default ~/.spec.ai.jev/browser-profile: mu's own profile, never the user's personal one. */
 	readonly profileDir?: string;
 	readonly headless?: boolean;
 	/** The machine to look at. Tests pass one; everything else uses this machine. */
@@ -350,7 +350,7 @@ export async function launchChrome(options: LaunchOptions = {}): Promise<Launche
 	const plan = planBrowserLaunch({
 		host,
 		browser,
-		profileDir: options.profileDir ?? join(muHome(), "browser-profile"),
+		profileDir: options.profileDir ?? join(specHome(), "browser-profile"),
 		headless: options.headless !== false,
 	});
 	const { profileDir } = plan;

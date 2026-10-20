@@ -22,7 +22,7 @@ AI_GATEWAY_API_KEY=… node packages/judge-evals/src/cli.ts --judge jev --max-re
 | Arm | What it is | What it proves |
 | --- | --- | --- |
 | `full` | the whole log | the baseline the others are measured against |
-| `rules` | deterministic selection, no judge | what every user gets with `MU_JUDGE=off` |
+| `rules` | deterministic selection, no judge | what every user gets with `SPEC_AI_JEV_JUDGE=off` |
 | `ceiling` | a judge that omits everything | what the protections alone guarantee — it loses evidence on purpose |
 | `oracle` | a judge that reads the labels | the labels are satisfiable: a correct judge loses nothing |
 | `jev:…` | the real model | only with a key; skipped, not failed, without one |

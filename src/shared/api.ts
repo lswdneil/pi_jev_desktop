@@ -37,7 +37,7 @@ export type HarnessStatus =
 	| {
 			readonly state: "failed";
 			readonly reason: string;
-			/** Where mu should have been, so the screen can say what to do. */
+			/** Where spec.ai.jev should have been, so the screen can say what to do. */
 			readonly expected: { readonly root: string; readonly layout: "repo" | "package" };
 			/** The tail of the agent's stderr, newest last. */
 			readonly stderr: readonly string[];
@@ -131,7 +131,7 @@ export interface UiAnswer {
 	readonly cancelled?: true;
 }
 
-/** One decision from mu's ledger, as `mu ledger --json` prints it. */
+/** One decision from spec.ai.jev's ledger, as `spec ledger --json` prints it. */
 export interface JudgmentRecord {
 	readonly id: string;
 	readonly specId: string;
@@ -142,7 +142,7 @@ export interface JudgmentRecord {
 	readonly userMessage?: string;
 }
 
-/** The judge's consent, as the kernel stores it. `fromEnvironment` means `MU_JUDGE_CONSENT=1` for this run. */
+/** The judge's consent, as the kernel stores it. `fromEnvironment` means `SPEC_AI_JEV_JUDGE_CONSENT=1` for this run. */
 export interface ConsentState {
 	readonly granted: boolean;
 	readonly fromEnvironment: boolean;
@@ -208,7 +208,7 @@ export interface SpecApi {
 		rename(name: string): Promise<void>;
 	};
 	readonly judgments: {
-		/** The last decisions from mu's ledger, newest last. Its own data source: `mu ledger --json`. */
+		/** The last decisions from spec.ai.jev's ledger, newest last. Its own data source: `spec ledger --json`. */
 		recent(): Promise<readonly JudgmentRecord[]>;
 	};
 	readonly update: {

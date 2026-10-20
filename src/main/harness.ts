@@ -6,15 +6,15 @@ import { homedir } from "node:os";
 import { posix, win32 } from "node:path";
 
 /**
- * Where the mu harness is, and how to start it.
+ * Where the agent runtime is, and how to start it.
  *
- * The rules are the old shell's (`desktop/packages/desktop/src/process/agent/kyrn/harness.ts`, carried over and
- * trimmed here; this directory is Apache-2.0, see NOTICE) and they are the harness launcher's own:
+ * The rules are the old shell's (carried over and trimmed here; this directory is Apache-2.0, see NOTICE) and they are
+ * the harness launcher's own:
  *
- * - `MU_ROOT` / `KYRN_ROOT` wins, as in development.
- * - then the copy a packaged app carries in its resources folder (`<resources>/harness/mu-agent`);
- * - then a checkout beside the desktop's: `../KYRN` (two repositories side by side) or `..` (this monorepo);
- * - then a `mu` installed with npm: the `mu` on PATH, followed to its `kyrn/bin`, or a global `node_modules`
+ * - `SPEC_AI_JEV_ROOT` wins, as in development.
+ * - then the copy a packaged app carries in its resources folder (`<resources>/harness/spec-ai-agent`);
+ * - then the vendored checkout at `spec.ai.jev/`, or a sibling checkout beside this one;
+ * - then a runtime installed with npm: the `spec` on PATH, followed to its `kyrn/bin`, or a global `node_modules`
  *   folder.
  *
  * Every function takes its dependencies, so the tests need neither Electron nor this machine's folders.
@@ -22,7 +22,7 @@ import { posix, win32 } from "node:path";
 
 export type HarnessLayout = "repo" | "package";
 
-/** `env`: MU_ROOT/KYRN_ROOT. `bundled`: the copy inside the packaged app. `beside`: a checkout next to this one. `global`: an npm install. */
+/** `env`: SPEC_AI_JEV_ROOT. `bundled`: the copy inside the packaged app. `beside`: a checkout next to this one. `global`: an npm install. */
 export type HarnessSource = "env" | "bundled" | "beside" | "global";
 
 export type Harness = { readonly root: string; readonly layout: HarnessLayout; readonly source: HarnessSource };
@@ -40,7 +40,7 @@ export type HarnessDeps = {
 	readonly resourcesPath: string | undefined;
 };
 
-export const PACKAGE_NAME = "mu-agent";
+export const PACKAGE_NAME = "spec-ai-agent";
 
 /** pi's minimum, the same as the harness launcher's. */
 export const MIN_NODE: readonly [number, number] = [22, 19];
@@ -88,25 +88,23 @@ export function layoutOf(root: string, deps: Pick<HarnessDeps, "platform" | "exi
 	return deps.exists(p.join(root, "dist", "bundle", "cli.js")) ? "package" : "repo";
 }
 
-/** A folder holding mu: its Node launcher is there. */
-export function holdsMu(root: string, deps: Pick<HarnessDeps, "platform" | "exists">): boolean {
-	return deps.exists(pathFor(deps.platform).join(root, "kyrn", "bin", "mu.mjs"));
+/** A folder holding spec: its Node launcher is there. */
+export function holdsRuntime(root: string, deps: Pick<HarnessDeps, "platform" | "exists">): boolean {
+	return deps.exists(pathFor(deps.platform).join(root, "kyrn", "bin", "agent.mjs"));
 }
 
 function envValue(deps: HarnessDeps, name: string): string | undefined {
-	// The product's own name first, then the runtime's historical spellings. A person who already has MU_ROOT set
-	// keeps working; new documentation only ever teaches the first.
-	const value = deps.env[`SPEC_AI_JEV_${name}`] || deps.env[`MU_${name}`] || deps.env[`KYRN_${name}`];
+	const value = deps.env[`SPEC_AI_JEV_${name}`];
 	return value !== undefined && value !== "" ? value : undefined;
 }
 
-/** `mu` on PATH, followed to the folder it belongs to: npm links it to `<package>/kyrn/bin/mu.mjs`. */
-export function muOnPath(deps: HarnessDeps): string | undefined {
+/** `spec.ai.jev` on PATH, followed to the folder it belongs to: npm links it to `<package>/kyrn/bin/agent.mjs`. */
+export function runtimeOnPath(deps: HarnessDeps): string | undefined {
 	const p = pathFor(deps.platform);
-	// A Windows shim (`mu.cmd`) is a file that points at the launcher; following it is the global folder's job.
+	// A Windows shim (`spec.cmd`) is a file that points at the launcher; following it is the global folder's job.
 	if (deps.platform === "win32") return undefined;
 	for (const dir of (deps.env.PATH ?? "").split(p.delimiter).filter(Boolean)) {
-		const link = p.join(dir, "mu");
+		const link = p.join(dir, "spec");
 		if (!deps.exists(link)) continue;
 		const target = deps.real(link);
 		const bin = p.dirname(target);
@@ -115,7 +113,7 @@ export function muOnPath(deps: HarnessDeps): string | undefined {
 	return undefined;
 }
 
-/** Where the packaged app carries mu: the npm package with its dependencies, in its resources folder. */
+/** Where the packaged app carries spec.ai.jev: the npm package with its dependencies, in its resources folder. */
 export function bundledHarnessRoot(resourcesPath: string, platform: NodeJS.Platform): string {
 	return pathFor(platform).join(resourcesPath, "harness", PACKAGE_NAME);
 }
@@ -131,7 +129,7 @@ function byVersion(a: string, b: string): number {
 }
 
 /**
- * Global `node_modules` folders npm may have installed `mu-agent` into, most likely first. A GUI app's PATH is short,
+ * Global `node_modules` folders npm may have installed `spec-ai-agent` into, most likely first. A GUI app's PATH is short,
  * so the usual prefixes are listed too, not only what PATH points at.
  */
 export function globalModuleDirs(deps: HarnessDeps): string[] {
@@ -140,8 +138,8 @@ export function globalModuleDirs(deps: HarnessDeps): string[] {
 	const pathDirs = (env.PATH ?? "").split(p.delimiter).filter(Boolean);
 	const dirs: string[] = [];
 	if (platform === "win32") {
-		// npm's shims (mu.cmd) sit in the prefix, beside its node_modules: %APPDATA%\npm, or nvm-windows' node folder.
-		for (const dir of pathDirs) if (deps.exists(p.join(dir, "mu.cmd"))) dirs.push(p.join(dir, "node_modules"));
+		// npm's shims (spec.cmd) sit in the prefix, beside its node_modules: %APPDATA%\npm, or nvm-windows' node folder.
+		for (const dir of pathDirs) if (deps.exists(p.join(dir, "spec.cmd"))) dirs.push(p.join(dir, "node_modules"));
 		if (env.APPDATA) dirs.push(p.join(env.APPDATA, "npm", "node_modules"));
 		const prefix = env.npm_config_prefix || env.NPM_CONFIG_PREFIX;
 		if (prefix) dirs.push(p.join(prefix, "node_modules"));
@@ -169,32 +167,32 @@ export function findHarness(desktopRoot: string | undefined, patch: Partial<Harn
 	if (named) return found(p.resolve(named), "env");
 
 	const bundled = deps.resourcesPath ? bundledHarnessRoot(deps.resourcesPath, deps.platform) : undefined;
-	if (bundled && holdsMu(bundled, deps)) return found(bundled, "bundled");
+	if (bundled && holdsRuntime(bundled, deps)) return found(bundled, "bundled");
 
 	// A checkout that has staged the runtime carries the same package a build would: it is what `npm run stage:harness`
-	// puts in `resources/harness/mu-agent`, and using it here is what lets a clone run without MU_ROOT and without a
-	// second checkout beside it. `MU_ROOT` still wins, for a developer working on the runtime itself.
+	// puts in `resources/harness/spec-ai-agent`, and using it here is what lets a clone run without SPEC_AI_JEV_ROOT and without a
+	// second checkout beside it. `SPEC_AI_JEV_ROOT` still wins, for a developer working on the runtime itself.
 	const staged = desktopRoot ? p.join(desktopRoot, "resources", "harness", PACKAGE_NAME) : undefined;
-	if (staged && holdsMu(staged, deps)) return found(staged, "bundled");
+	if (staged && holdsRuntime(staged, deps)) return found(staged, "bundled");
 
-	const besides = desktopRoot ? [p.join(desktopRoot, "..", "KYRN"), p.join(desktopRoot, "..")] : [];
+	const besides = desktopRoot ? [p.join(desktopRoot, "spec.ai.jev"), p.join(desktopRoot, "..")] : [];
 	for (const beside of besides) {
 		const root = p.resolve(beside);
-		if (holdsMu(root, deps)) return found(root, "beside");
+		if (holdsRuntime(root, deps)) return found(root, "beside");
 	}
 
-	const linked = muOnPath(deps);
-	if (linked && holdsMu(linked, deps)) return found(linked, "global");
+	const linked = runtimeOnPath(deps);
+	if (linked && holdsRuntime(linked, deps)) return found(linked, "global");
 
 	for (const dir of globalModuleDirs(deps)) {
 		const root = p.join(dir, PACKAGE_NAME);
-		if (holdsMu(root, deps)) return found(root, "global");
+		if (holdsRuntime(root, deps)) return found(root, "global");
 	}
 	return undefined;
 }
 
 /**
- * Where mu should have been when none was found: in the packaged app (no desktop checkout, a resources folder) the
+ * Where spec should have been when none was found: in the packaged app (no desktop checkout, a resources folder) the
  * copy it carries, which only a broken build lacks; in development the checkout beside this one.
  */
 export function expectedHarness(
@@ -203,7 +201,7 @@ export function expectedHarness(
 	platform: NodeJS.Platform = process.platform,
 ): { readonly root: string; readonly layout: HarnessLayout } {
 	if (!desktopRoot && resourcesPath) return { root: bundledHarnessRoot(resourcesPath, platform), layout: "package" };
-	return { root: pathFor(platform).resolve(desktopRoot ?? ".", "..", "KYRN"), layout: "repo" };
+	return { root: pathFor(platform).resolve(desktopRoot ?? ".", "spec.ai.jev"), layout: "repo" };
 }
 
 /**
@@ -212,8 +210,8 @@ export function expectedHarness(
  */
 export function launcherOf(harness: Pick<Harness, "root" | "layout">, platform: NodeJS.Platform): string {
 	const p = pathFor(platform);
-	if (platform !== "win32" && harness.layout === "repo") return p.join(harness.root, "kyrn", "bin", "kyrn");
-	return p.join(harness.root, "kyrn", "bin", "mu.mjs");
+	if (platform !== "win32" && harness.layout === "repo") return p.join(harness.root, "kyrn", "bin", "spec");
+	return p.join(harness.root, "kyrn", "bin", "agent.mjs");
 }
 
 /**
@@ -225,7 +223,7 @@ export function launchCommand(
 	options: { readonly platform: NodeJS.Platform; readonly processExecPath: string; readonly packaged: boolean },
 ): { readonly command: string; readonly args: readonly string[]; readonly env: Readonly<Record<string, string>> } {
 	const command = launcherOf(harness, options.platform);
-	const viaNode = options.platform === "win32" || options.packaged || command.endsWith("mu.mjs");
+	const viaNode = options.platform === "win32" || options.packaged || command.endsWith("agent.mjs");
 	if (!viaNode) return { command, args: [], env: {} };
 	return {
 		command: options.processExecPath,
@@ -234,7 +232,9 @@ export function launchCommand(
 	};
 }
 
-/** The .env the harness reads its keys from: the checkout's, or for the npm package the one in mu's home. */
+/** The .env the harness reads its keys from: the checkout's, or for the npm package the one in spec.ai.jev's home. */
 export function envFileOf(harness: Pick<Harness, "root" | "layout">, home: string, platform: NodeJS.Platform): string {
-	return pathFor(platform).join(harness.layout === "package" ? home : harness.root, ".env");
+	const p = pathFor(platform);
+	const base = harness.layout === "package" ? p.join(home, ".spec.ai.jev") : harness.root;
+	return p.join(base, ".env");
 }

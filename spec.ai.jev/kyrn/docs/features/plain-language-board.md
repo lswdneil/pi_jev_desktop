@@ -72,7 +72,7 @@ Jev 不可用时按规则判断：看最后一步是什么（读文件 → 弄�
 
 挑好的记在 `<agentDir>/mu/board.json` 的 `model` 里，所有项目共用，以后打开看板不再问。关掉选择框或选了“添加”，什么都不记：看板照样打开，先用对话的模型写，下次 `/board on` 还会问。
 
-**`board.json` 是和桌面端的约定。** 桌面端设置页的“说人话的模型”卡片会写 `model`（2026-09-22，KYRN-desktop `4e26995`），不动 `projects`；在那里选了模型，桌面端还会删掉 mu.json 里的 `features.board.model`，因为 mu 先读它。
+**`board.json` 是和桌面端的约定。** 桌面端设置页的“说人话的模型”卡片会写 `model`（2026-09-22，KYRN-desktop `4e26995`），不动 `projects`；在那里选了模型，桌面端还会删掉 agent.json 里的 `features.board.model`，因为 mu 先读它。
 
 - 格式：`{"version": 1, "projects": {"<项目绝对路径>": true | false}, "model"?: "<提供商>/<模型>" | "session"}`，权限 600。
 - `model` 只认含 `/` 的值或 `session`，其他值（包括空串）都当没选。版本不是 1、文件坏了，都当没设置。

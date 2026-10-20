@@ -129,7 +129,7 @@
 - 退役规则只读判官在 active 模式下的确信"否"：shadow、off、判官失败都不会让经验退役；照做过一次（`applied > 0`）的永不自动退役。`retireAfter: 0` 关掉退役，`applied: false` 连问题一起关。
 - 记账只追加 `{ id, uses }`，不动 `updated`（`updated` 只表示写入、确认或改状态），并且按记账那一刻的文件读，另一个会话刚记过的不会被覆盖。
 - 子代理简报的召回（§7）不记账：简报不是父会话的一轮，父会话也看不见子代理照没照做。展示仍是 `memory.recalled`，载荷多一个 `task`。它和路由并行问，最多等 `waitMs`。
-- 子代理进程里（`KYRN_SWARM_DEPTH`）经验库整个不启用：不写文件，也没有 `remember` 工具。角色文件教它写 `Lesson: <什么时候> -> <该怎么做>`；父会话从 `delegate` / `hive` 结果的 `details.reports` 里读，每个结果最多 8 行，一次 `memory.worth` 请求判完，再逐条过 merge（两只蜂学到同一件事只存一次）。
+- 子代理进程里（`SPEC_AI_JEV_SWARM_DEPTH`）经验库整个不启用：不写文件，也没有 `remember` 工具。角色文件教它写 `Lesson: <什么时候> -> <该怎么做>`；父会话从 `delegate` / `hive` 结果的 `details.reports` 里读，每个结果最多 8 行，一次 `memory.worth` 请求判完，再逐条过 merge（两只蜂学到同一件事只存一次）。
 - `memory.worth` 的 `project_instructions` 是这一轮交给代理的上下文文件（AGENTS.md 等），最多 6000 字符。
 - 展示事件：`memory.retired.reason` 是 `unused` / `contradicted` / `forgotten`；`memory.merged` 在 `same` 时的 `id` 是新经验本来会有的 id（它没有被存）。
 - `/forget` 只认本项目和到处适用的经验；前缀对上多条时列出来让用户多给几位；已退役的会说明。`/remember` 不带文字时等同 `/lessons`。`/lessons all` 把已退役、已替代的也列上，活跃的在前。

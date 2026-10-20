@@ -35,7 +35,7 @@ const SKIP_DIRS = new Set([
 	"playwright-report",
 	".artifacts",
 	// The shell's own staged runtime, when the project someone opened happens to be this repository.
-	"mu-agent",
+	"spec-ai-agent",
 ]);
 
 const MAX_DEPTH = 10;

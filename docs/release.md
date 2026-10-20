@@ -12,7 +12,7 @@ npm run package         # build + stage the runtime + installer in dist/
 node scripts/install-rehearsal.mjs
 ```
 
-`scripts/stage-harness.mjs` accepts `--from <folder>` and `MU_HARNESS_ROOT` when the runtime lives somewhere other than
+`scripts/stage-harness.mjs` accepts `--from <folder>` and `SPEC_AI_JEV_HARNESS_ROOT` when the runtime lives somewhere other than
 `spec.ai.jev/.artifacts/desktop-harness` (the repository's own build of the vendored runtime source). The staged copy is git-ignored;
 ~34 MB of built package does not belong in history.
 
@@ -26,9 +26,8 @@ is gone. It needs a desktop session and Windows; it is not part of CI.
 `.github/workflows/desktop-package.yml` runs on `workflow_dispatch` and on tags matching `v*`:
 
 1. `npm ci`, then the same verify gate as a developer.
-2. `npm pack mu-agent@0.1.8`, unpack it, install its production dependencies, and stage it. CI uses the published package
-   today; the vendored source under `spec.ai.jev/` is where the runtime is maintained, and building it in CI is the next step when the
-   runtime is patched beyond a published version.
+2. Build the vendored runtime (`cd spec.ai.jev && npm ci && npm run build && node kyrn/npm/build.mjs`), install its
+   production dependencies into `.artifacts/npm/spec-ai-agent`, and stage that package.
 3. `npm run package` produces `dist/spec.ai.jev-<version>-x64.exe`, its block map, and `latest.yml`.
 4. The artifact is uploaded; on a tag it is also attached to a **draft** GitHub release.
 

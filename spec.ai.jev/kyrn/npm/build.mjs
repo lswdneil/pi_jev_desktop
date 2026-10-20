@@ -1,26 +1,26 @@
 #!/usr/bin/env node
-// Builds the npm package mu-agent: `npm i -g mu-agent`, then `mu`.
+// Builds the npm package spec-ai-agent: `npm i -g spec-ai-agent`, then `spec`.
 //
-//   node kyrn/npm/build.mjs          stage the package in .artifacts/npm/mu-agent/
+//   node kyrn/npm/build.mjs          stage the package in .artifacts/npm/spec-ai-agent/
 //   node kyrn/npm/build.mjs --pack   and write the tarball beside it (npm pack)
 //
 // Needs `npm run build` first: the package carries pi's own Node bundle (packages/coding-agent/dist/bundle).
 // Publishing is not done here. It is `npm publish <tarball>` by whoever is logged in to npm.
 //
 // The package is laid out like the repository, so the launcher finds everything two folders above
-// kyrn/bin/mu.mjs either way (it tells the two apart with layoutOf):
+// kyrn/bin/agent.mjs either way (it tells the two apart with layoutOf):
 //
-//   kyrn/bin/          mu.mjs (npm's `mu`), kyrn-doctor, kyrn-ledger, kyrn-judge-local
-//   kyrn/local-judge/  the Laya sidecar's server (macOS). `mu judge setup` installs its venv and weights
-//                      into ~/.mu/local-judge, and only when asked to
+//   kyrn/bin/          agent.mjs (npm's `spec`), kyrn-doctor, kyrn-ledger, kyrn-judge-local
+//   kyrn/local-judge/  the Laya sidecar's server (macOS). `spec judge setup` installs its venv and weights
+//                      into ~/.spec.ai.jev/local-judge, and only when asked to
 //   dist/              pi's Node bundle (dist/bundle/cli.js), with its themes, assets, export templates and
 //                      the native clipboard helpers of pi-tui
 //   judge/             the judgment layer built to JavaScript, with its prompts, skills and agents, and the
-//                      manifest.json the desktop app reads its settings from; dist/auth.js is `mu auth`, the
-//                      desktop app's subscription sign-in, dist/import.js is `mu import` and dist/setup.js
-//                      is `mu setup`
+//                      manifest.json the desktop app reads its settings from; dist/auth.js is `spec auth`, the
+//                      desktop app's subscription sign-in, dist/import.js is `spec import` and dist/setup.js
+//                      is `spec setup`
 //   docs/, examples/   pi's documentation, which the agent reads when asked about itself
-//   package.json       names the app mu (piConfig), so pi keeps its files in ~/.mu
+//   package.json       names the app spec (piConfig), so pi keeps its files in ~/.spec.ai.jev
 import { execFileSync, spawnSync } from "node:child_process";
 import {
 	chmodSync,
@@ -47,7 +47,7 @@ const judgeSource = join(repo, "packages", "kyrn-judge");
 /** Optional modules their callers try and do without, as pi's own bundle allows them (scripts/build-coding-agent-bundle.mjs). */
 const OPTIONAL = new Set(["bufferutil", "utf-8-validate", "kerberos", "supports-color"]);
 
-/** pi's bundle, where judge/dist/auth.js (`mu auth`) finds pi: the index of pi's public API. */
+/** pi's bundle, where judge/dist/auth.js (`spec auth`) finds pi: the index of pi's public API. */
 const PI_BUNDLE_INDEX = "../../dist/bundle/index.js";
 
 /** From judge/dist/, where the judgment layer's bundle is, to the chunks of pi's bundle. */
@@ -90,7 +90,7 @@ export function hostModulesChunk(bundleDir) {
  *
  * Why it matters: an extension that Node cannot import is transpiled by jiti with Babel before it runs. For the
  * judgment layer's 3 MB bundle that took more than 500 MB of heap and, on a 1 GB server, minutes of CPU, until V8
- * ran out of memory before the first frame (mu 0.1.3). Nothing was cached either, because the process died first.
+ * ran out of memory before the first frame (spec 0.1.3). Nothing was cached either, because the process died first.
  *
  * Each name becomes a small CommonJS module, `module.exports = VIRTUAL_MODULES[name]`. esbuild then reads every
  * imported binding off pi's module object where it is used, as jiti's transpiled code did: a binding stays live,
@@ -200,7 +200,7 @@ async function buildJudge(out) {
 			entryPoints: { "kyrn-judge": join(judgeSource, "src/extension/kyrn-judge.ts") },
 			outdir: join(judgeRoot, "dist"),
 		}),
-		// `mu doctor` looks for a browser with the same code the browser feature uses.
+		// `spec doctor` looks for a browser with the same code the browser feature uses.
 		await build({ ...common, entryPoints: { chrome: join(judgeSource, "src/browser/chrome.ts") }, outdir: join(judgeRoot, "dist") }),
 	];
 	// Node imports the bundle only when it finds everything the bundle imports: its own modules and pi's host chunk.
@@ -216,7 +216,7 @@ async function buildJudge(out) {
 			}
 		}
 	}
-	// `mu auth` (src/auth) and `mu setup` (src/setup) run outside pi, where no module is handed over: each carries what
+	// `spec auth` (src/auth) and `spec setup` (src/setup) run outside pi, where no module is handed over: each carries what
 	// it imports, and takes pi's model runtime (and settings, and proxy setup) from pi's own bundle, whose index exports
 	// what they use.
 	const piIndex = (command) => ({
@@ -242,30 +242,30 @@ async function buildJudge(out) {
 		entryPoints: { auth: join(judgeSource, "src/auth/main.ts") },
 		outdir: join(judgeRoot, "dist"),
 		plugins: [
-			piIndex("mu auth"),
+			piIndex("spec auth"),
 			{
 				// A sign-in never sends a request to a model: the Google providers' request code, loaded only when one
 				// is sent, stays out, and with it Google's SDK (about 1 MB).
 				name: "no-requests",
 				setup(builder) {
-					builder.onResolve({ filter: /^\.\/cloud-code\.ts$/ }, () => ({ path: "cloud-code", namespace: "mu-auth-unused" }));
-					builder.onLoad({ filter: /.*/, namespace: "mu-auth-unused" }, () => ({ contents: "export {};", loader: "js" }));
+					builder.onResolve({ filter: /^\.\/cloud-code\.ts$/ }, () => ({ path: "cloud-code", namespace: "spec-auth-unused" }));
+					builder.onLoad({ filter: /.*/, namespace: "spec-auth-unused" }, () => ({ contents: "export {};", loader: "js" }));
 				},
 			},
 			plugins[1],
 		],
 	});
-	carried(auth, "mu auth");
+	carried(auth, "spec auth");
 	const setup = await build({
 		...common,
 		entryPoints: { setup: join(judgeSource, "src/setup/main.ts") },
 		outdir: join(judgeRoot, "dist"),
-		plugins: [piIndex("mu setup"), plugins[1]],
+		plugins: [piIndex("spec setup"), plugins[1]],
 	});
-	carried(setup, "mu setup");
-	// What `mu doctor` asks about the key store (kyrn/bin/kyrn-doctor): the store's selection rules live in pi, so the
+	carried(setup, "spec setup");
+	// What `spec doctor` asks about the key store (kyrn/bin/kyrn-doctor): the store's selection rules live in pi, so the
 	// doctor cannot work them out itself and spawns this entry instead. Without it in the package the installed CLI
-	// answered "this mu does not carry the kernel build that knows the store" — true of the package, not of the build.
+	// answered "this spec does not carry the kernel build that knows the store" — true of the package, not of the build.
 	//
 	// No `source-urls` plugin here, on purpose: it rewrites `import.meta.url` to the source path so that entries finding
 	// their own prompts work inside the package, and this entry uses `import.meta.url` for the opposite reason — to
@@ -275,10 +275,10 @@ async function buildJudge(out) {
 		...common,
 		entryPoints: { "secret-cli": join(judgeSource, "src/setup/secret-cli.ts") },
 		outdir: join(judgeRoot, "dist"),
-		plugins: [piIndex("mu doctor")],
+		plugins: [piIndex("spec doctor")],
 	});
-	carried(secrets, "mu doctor");
-	// `mu migrate --credentials`: the kernel owns the credential store and the .env parser the launcher has to agree
+	carried(secrets, "spec doctor");
+	// `spec migrate --credentials`: the kernel owns the credential store and the .env parser the launcher has to agree
 	// with, so the launcher runs this entry rather than re-implementing them. It had the same shape of gap as the key
 	// store question above — the launcher only knew the `tsc` layout — and the same reason for no `source-urls` plugin:
 	// it uses `import.meta.url` to notice that it is the program being run.
@@ -286,12 +286,12 @@ async function buildJudge(out) {
 		...common,
 		entryPoints: { "credentials-cli": join(judgeSource, "src/setup/credentials-cli.ts") },
 		outdir: join(judgeRoot, "dist"),
-		plugins: [piIndex("mu migrate --credentials")],
+		plugins: [piIndex("spec migrate --credentials")],
 	});
-	carried(credentials, "mu migrate --credentials");
-	// `mu doctor --bundle` runs this entry: the bundle module belongs to the kernel, and the launcher only knows where to
+	carried(credentials, "spec migrate --credentials");
+	// `spec doctor --bundle` runs this entry: the bundle module belongs to the kernel, and the launcher only knows where to
 	// look for a built one. Same shape of gap as the key store and the credentials entry above — the package carried the
-	// code but not an entry the launcher could find, so the installed doctor answered "this mu does not carry the kernel
+	// code but not an entry the launcher could find, so the installed doctor answered "this spec does not carry the kernel
 	// build that ships with this one". It goes to `dist/setup/` because that is the path the doctor looks for, and it
 	// gets no `source-urls` plugin for the same reason `secret-cli` gets none: it uses `import.meta.url` to notice that
 	// it is the program being run.
@@ -303,8 +303,8 @@ async function buildJudge(out) {
 		// `import.meta.url` this entry compares with `process.argv[1]` to decide whether it is the program being run.
 		plugins: [],
 	});
-	carried(bundleCli, "mu doctor --bundle");
-	// `mu import` (src/import) runs on a bare Node: what it takes from pi are types, so it carries everything it runs
+	carried(bundleCli, "spec doctor --bundle");
+	// `spec import` (src/import) runs on a bare Node: what it takes from pi are types, so it carries everything it runs
 	// and leaves nothing but Node's own modules to be found.
 	const importer = await build({
 		...common,
@@ -314,11 +314,11 @@ async function buildJudge(out) {
 	for (const output of Object.values(importer.metafile.outputs)) {
 		for (const imported of output.imports) {
 			if (imported.external && !isBuiltin(imported.path)) {
-				throw new Error(`mu import leaves ${imported.path} to be found at run time; it must run on Node alone`);
+				throw new Error(`spec import leaves ${imported.path} to be found at run time; it must run on Node alone`);
 			}
 		}
 	}
-	// manifest.json is what the desktop app draws its settings from, also for an mu that came from npm.
+	// manifest.json is what the desktop app draws its settings from, also for an spec that came from npm.
 	for (const name of ["agents", "prompts", "skills", "manifest.json", "THIRD_PARTY_NOTICES.md"]) {
 		cpSync(join(judgeSource, name), join(judgeRoot, name), { recursive: true });
 	}
@@ -363,7 +363,7 @@ function copyPi(out) {
 }
 
 function copyLauncher(out) {
-	for (const name of ["mu.mjs", "kyrn-doctor", "kyrn-ledger", "kyrn-judge-local"]) {
+	for (const name of ["agent.mjs", "kyrn-doctor", "kyrn-ledger", "kyrn-judge-local"]) {
 		const target = join(out, "kyrn", "bin", name);
 		cpSync(join(repo, "kyrn", "bin", name), target);
 		chmodSync(target, 0o755);
@@ -379,7 +379,7 @@ function copyLauncher(out) {
  * A child process with a small heap imports it, which also runs every module's top level against pi's modules.
  */
 export function checkNativeImport(file) {
-	const home = mkdtempSync(join(tmpdir(), "mu-build-"));
+	const home = mkdtempSync(join(tmpdir(), "spec-build-"));
 	try {
 		const script = `const m = await import(${JSON.stringify(pathToFileURL(file).href)}); if (typeof m.default !== "function") throw new Error("the default export is not an extension factory");`;
 		const result = spawnSync(process.execPath, ["--max-old-space-size=128", "--input-type=module", "-e", script], {
@@ -406,7 +406,7 @@ function gitCommit() {
 }
 
 export async function main(argv = process.argv.slice(2)) {
-	const out = join(repo, ".artifacts", "npm", "mu-agent");
+	const out = join(repo, ".artifacts", "npm", "spec-ai-agent");
 	rmSync(out, { recursive: true, force: true });
 	mkdirSync(out, { recursive: true });
 	// While working on the judgment layer's bundle: that part alone. It is built against pi's bundle, which has to be
@@ -429,7 +429,7 @@ export async function main(argv = process.argv.slice(2)) {
 	const bundleDependencies = ["@earendil-works/chord", "@silvia-odwyer/photon-node", "jiti"];
 	const dependencies = Object.fromEntries(bundleDependencies.map((name) => [name, exactVersion(pi.dependencies[name])]));
 	const template = readJson(join(here, "package.template.json"));
-	const manifest = { ...template, dependencies, muBuild: { pi: pi.version, judge: judgeVersion, commit: gitCommit() } };
+	const manifest = { ...template, dependencies, specBuild: { pi: pi.version, judge: judgeVersion, commit: gitCommit() } };
 	writeFileSync(join(out, "package.json"), `${JSON.stringify(manifest, null, "\t")}\n`);
 
 	const files = listFiles(out).map((file) => relative(out, file));

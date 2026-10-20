@@ -1,5 +1,5 @@
 /**
- * The shape of `mu.json` across versions, and how an older file becomes the current one.
+ * The shape of `agent.json` across versions, and how an older file becomes the current one.
  *
  * `schemaVersion` is the version of the *file format*, not of mu: the npm package and the desktop app are
  * versioned separately, and a user may run a newer app with an older package. Migrations therefore only ever
@@ -64,7 +64,7 @@ export interface MigratedConfig {
 }
 
 /**
- * Brings a parsed `mu.json` to the current schema. It never throws: a file this build cannot understand comes
+ * Brings a parsed `agent.json` to the current schema. It never throws: a file this build cannot understand comes
  * back with `unsupported` set, so the caller can say why instead of failing to start.
  */
 export function migrateConfig(raw: unknown, target = CONFIG_SCHEMA_VERSION): MigratedConfig {
@@ -84,7 +84,7 @@ export function migrateConfig(raw: unknown, target = CONFIG_SCHEMA_VERSION): Mig
 			from: version,
 			to: target,
 			notes: [],
-			unsupported: `it was written by a newer mu (schemaVersion ${version}; this build reads up to ${target}). Upgrade mu, or move the file aside to start from defaults`,
+			unsupported: `it was written by a newer spec.ai.jev (schemaVersion ${version}; this build reads up to ${target}). Upgrade spec.ai.jev, or move the file aside to start from defaults`,
 		};
 	}
 	let value = clone(raw as Record<string, unknown>);

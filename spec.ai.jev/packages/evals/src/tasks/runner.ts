@@ -39,24 +39,24 @@ export interface ArmProfile {
 export function armProfile(arm: ArmName): ArmProfile {
 	switch (arm) {
 		case "pi-baseline":
-			return { arm, env: { MU_JUDGE: "off" }, description: "the agent with mu's judgment layer off" };
+			return { arm, env: { SPEC_AI_JEV_JUDGE: "off" }, description: "the agent with mu's judgment layer off" };
 		case "mu-active":
-			return { arm, env: { MU_DECISIONS: "active" }, description: "judgments act on the run" };
+			return { arm, env: { SPEC_AI_JEV_DECISIONS: "active" }, description: "judgments act on the run" };
 		case "mu-shadow":
-			return { arm, env: { MU_DECISIONS: "shadow" }, description: "judgments are recorded but do not act" };
+			return { arm, env: { SPEC_AI_JEV_DECISIONS: "shadow" }, description: "judgments are recorded but do not act" };
 		case "mu-off":
-			return { arm, env: { MU_JUDGE: "off" }, description: "judgments are not consulted at all" };
+			return { arm, env: { SPEC_AI_JEV_JUDGE: "off" }, description: "judgments are not consulted at all" };
 	}
 }
 
 /** Write the arm's settings where the harness reads them, so a mode is chosen the way a person chooses it. */
 export function prepareAgentDir(root: string, arm: ArmName): string {
-	const agentDir = join(root, ".mu", "agent");
+	const agentDir = join(root, ".spec.ai.jev", "agent");
 	mkdirSync(agentDir, { recursive: true });
 	const modes: Record<string, string> = {};
 	if (arm === "mu-shadow") modes.default = "shadow";
 	writeFileSync(
-		join(agentDir, "mu.json"),
+		join(agentDir, "agent.json"),
 		`${JSON.stringify({ schemaVersion: 1, ...(Object.keys(modes).length === 0 ? {} : { modes }) }, null, 2)}\n`,
 	);
 	return agentDir;
@@ -207,7 +207,7 @@ export async function runArm(options: BenchmarkOptions): Promise<{ runs: TaskRun
 }
 
 function copyWorkspace(task: TaskFixture): string {
-	const workspace = mkdtempSync(join(tmpdir(), `mu-agent-${task.id}-`));
+	const workspace = mkdtempSync(join(tmpdir(), `spec-ai-agent-${task.id}-`));
 	cpSync(join(task.directory, "repo"), workspace, { recursive: true });
 	return workspace;
 }

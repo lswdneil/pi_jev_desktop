@@ -5,14 +5,14 @@
  * A harness that answers the JSONL protocol without an agent behind it.
  *
  * The end-to-end tests need a harness whose manifest and events they control, without a model, a key, or a network.
- * This is the smallest thing that behaves like `mu`: one JSON command per line in, answers and events out. It also
+ * This is the smallest thing that behaves like `spec.ai.jev`: one JSON command per line in, answers and events out. It also
  * implements the two subcommands the shell runs as a command line — `judge consent accept|revoke` and
  * `ledger --json` — so those paths are exercised against a child process rather than mocked.
  *
  * The prompt decides which scripted conversation runs: "stream" (default), "danger" (an approval), "write" (a tool
  * that touches a file), "notice" (a presentation-coded line), "slow" (streaming that a stop can interrupt).
  *
- * Not shipped, not imported by the app: `MU_ROOT` points at this folder, so the shell starts it the same way it starts
+ * Not shipped, not imported by the app: `SPEC_AI_JEV_ROOT` points at this folder, so the shell starts it the same way it starts
  * a real checkout.
  */
 
@@ -22,12 +22,12 @@ import { join } from "node:path";
 import { createInterface } from "node:readline";
 
 const argv = process.argv.slice(2);
-const agentDir = process.env.MU_AGENT_DIR || join(homedir(), ".mu", "agent");
+const agentDir = process.env.SPEC_AI_JEV_AGENT_DIR || join(homedir(), ".spec.ai.jev", "agent");
 const consentFile = join(agentDir, "consent.json");
 
 /** Crash on startup on purpose: the end-to-end test for "the agent died and the window says why". */
-if (process.env.MU_FIXTURE_CRASH_ON_START === "1") {
-	process.stderr.write("fixture: crashing on purpose (MU_FIXTURE_CRASH_ON_START=1)\n");
+if (process.env.SPEC_AI_JEV_FIXTURE_CRASH_ON_START === "1") {
+	process.stderr.write("fixture: crashing on purpose (SPEC_AI_JEV_FIXTURE_CRASH_ON_START=1)\n");
 	process.exit(3);
 }
 
@@ -56,7 +56,7 @@ if (argv[0] === "judge" && argv[1] === "consent") {
 	process.exit(1);
 }
 
-// `mu ledger --json`: one JSON object per decision, the way kyrn-ledger prints them.
+// `spec ledger --json`: one JSON object per decision, the way kyrn-ledger prints them.
 if (argv[0] === "ledger") {
 	if (!argv.includes("--json")) {
 		process.stdout.write("2026-10-18 10:00  [fixture active v1] turn.continue\n");
@@ -84,7 +84,7 @@ if (argv[0] === "ledger") {
 	process.exit(0);
 }
 
-const scratch = mkdtempSync(join(tmpdir(), "mu-fixture-agent-"));
+const scratch = mkdtempSync(join(tmpdir(), "spec-fixture-agent-"));
 /** The model the last `set_model` chose, so `get_state` can report it the way the real agent does. */
 let chosenModel;
 /** Which scripted conversation is waiting on an answer from the window. */
@@ -115,11 +115,11 @@ function delta(text) {
 }
 
 /**
- * The messages a session that continues answers with: the default three, or `MU_FIXTURE_HISTORY=<n>` alternating rows
+ * The messages a session that continues answers with: the default three, or `SPEC_AI_JEV_FIXTURE_HISTORY=<n>` alternating rows
  * so a test can hand the window a conversation far longer than the number of rows it is allowed to mount.
  */
 function historyMessages() {
-	const count = Number.parseInt(process.env.MU_FIXTURE_HISTORY ?? "", 10);
+	const count = Number.parseInt(process.env.SPEC_AI_JEV_FIXTURE_HISTORY ?? "", 10);
 	if (!Number.isFinite(count) || count <= 0) {
 		return [
 			{ role: "user", content: [{ type: "text", text: "earlier question" }] },
@@ -187,7 +187,7 @@ function runPrompt(text) {
 	}
 
 	if (text.includes("markdown")) {
-		const link = process.env.MU_FIXTURE_LINK_URL ?? "https://example.com/docs";
+		const link = process.env.SPEC_AI_JEV_FIXTURE_LINK_URL ?? "https://example.com/docs";
 		const answer = `## Result\n\nUse \`npm test\`.\n\n\`\`\`sh\nnpm test -- --run\n\`\`\`\n\nSee [the build](${link}).`;
 		emit({ type: "message_start", message: assistant("") });
 		for (const chunk of ["## Result\n\nUse `npm test`.", "\n\n```sh\nnpm test -- --run\n```"]) emit(delta(chunk));
@@ -244,7 +244,7 @@ reader.on("line", (line) => {
 
 	switch (command.type) {
 		case "new_session":
-			if (process.env.MU_FIXTURE_CANCEL_NEW_SESSION === "1") {
+			if (process.env.SPEC_AI_JEV_FIXTURE_CANCEL_NEW_SESSION === "1") {
 				answer(command.id, "new_session", { cancelled: true });
 				break;
 			}
@@ -254,7 +254,7 @@ reader.on("line", (line) => {
 			break;
 		case "get_messages":
 			// What a session that already exists answers: the window opening into it must show this conversation.
-			// `MU_FIXTURE_HISTORY=<n>` makes it a long one, to check that the window mounts a bounded number of rows.
+			// `SPEC_AI_JEV_FIXTURE_HISTORY=<n>` makes it a long one, to check that the window mounts a bounded number of rows.
 			answer(command.id, "get_messages", { messages: hasSession ? historyMessages() : [] });
 			break;
 		case "get_state":

@@ -25,7 +25,7 @@ test("fits the workspace at the minimum desktop window size", async () => {
 });
 
 test("follows a long history to the latest message without dragging a reader down", async () => {
-	const profile = await launchApp({ env: { MU_FIXTURE_HISTORY: "250" } });
+	const profile = await launchApp({ env: { SPEC_AI_JEV_FIXTURE_HISTORY: "250" } });
 	try {
 		const { page } = profile;
 		await completeFirstRun(page);
@@ -88,7 +88,7 @@ test("keeps an unsent draft when visiting settings", async () => {
 });
 
 test("keeps the old messages when a new session is cancelled", async () => {
-	const profile = await launchApp({ env: { MU_FIXTURE_CANCEL_NEW_SESSION: "1" } });
+	const profile = await launchApp({ env: { SPEC_AI_JEV_FIXTURE_CANCEL_NEW_SESSION: "1" } });
 	try {
 		await completeFirstRun(profile.page);
 		await expect(profile.page.locator(".message")).toHaveCount(2);
@@ -101,10 +101,10 @@ test("keeps the old messages when a new session is cancelled", async () => {
 });
 
 test("quick open finds a project file and opens it in the Files panel", async () => {
-	const workspace = mkdtempSync(join(tmpdir(), "mu-e2e-quick-open-"));
+	const workspace = mkdtempSync(join(tmpdir(), "spec-e2e-quick-open-"));
 	mkdirSync(join(workspace, "src"), { recursive: true });
 	writeFileSync(join(workspace, "src", "app.ts"), "export const value = 1;\n");
-	const profile = await launchApp({ env: { MU_WORKSPACE: workspace } });
+	const profile = await launchApp({ env: { SPEC_AI_JEV_WORKSPACE: workspace } });
 	try {
 		const { page } = profile;
 		await completeFirstRun(page);
@@ -151,7 +151,7 @@ test("the panels are a tablist a keyboard can drive", async () => {
 });
 
 test("comes back at the size it was closed at", async () => {
-	const profileDir = mkdtempSync(join(tmpdir(), "mu-e2e-window-"));
+	const profileDir = mkdtempSync(join(tmpdir(), "spec-e2e-window-"));
 	const first = await launchApp({ profileDir });
 	try {
 		await completeFirstRun(first.page);
@@ -176,7 +176,7 @@ test("comes back at the size it was closed at", async () => {
 });
 
 test("zooms with Ctrl+= and remembers the level", async () => {
-	const profileDir = mkdtempSync(join(tmpdir(), "mu-e2e-zoom-"));
+	const profileDir = mkdtempSync(join(tmpdir(), "spec-e2e-zoom-"));
 	const levelOf = (app: Awaited<ReturnType<typeof launchApp>>["app"]) =>
 		app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.webContents.getZoomLevel() ?? 0);
 	const first = await launchApp({ profileDir });

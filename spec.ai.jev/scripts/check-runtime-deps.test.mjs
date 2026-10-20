@@ -130,7 +130,7 @@ for (const statement of ['export * from "./experimental/server";', 'import type 
 	});
 }
 
-runtimeDepsTest("ignores tests, declarations, and packages that are not bundled into mu-agent", async (t) => {
+runtimeDepsTest("ignores tests, declarations, and packages that are not bundled into spec-ai-agent", async (t) => {
 	// The selection used to be "private packages are skipped". Every harness package is private now (they must
 	// never be published under pi's scope), so the rule is the two packages that are not part of the bundle.
 	const result = await check(t, {}, "", {

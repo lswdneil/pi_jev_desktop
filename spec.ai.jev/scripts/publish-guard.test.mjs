@@ -40,7 +40,7 @@ describe("publish guard", () => {
 	it("lets the scope owner publish when they say so explicitly", () => {
 		assert.equal(publishRefusal({ name: "@earendil-works/pi-ai" }, { allowForeignScope: true }), undefined);
 		assert.equal(
-			publishRefusal({ name: "mu-agent", version: "0.1.8" }, { allowForeignScope: false }),
+			publishRefusal({ name: "spec-ai-agent", version: "0.1.8" }, { allowForeignScope: false }),
 			undefined,
 			"the repository's own package needs no override",
 		);
@@ -55,8 +55,8 @@ describe("what publish.mjs is allowed to see", () => {
 	});
 
 	it("would publish a workspace member only if it were the published package", () => {
-		// The guard is a function of the manifest, so a manifest that names mu-agent passes it.
-		assert.equal(publishRefusal({ name: "mu-agent", version: "0.1.8" }, { allowForeignScope: false }), undefined);
+		// The guard is a function of the manifest, so a manifest that names spec-ai-agent passes it.
+		assert.equal(publishRefusal({ name: "spec-ai-agent", version: "0.1.8" }, { allowForeignScope: false }), undefined);
 	});
 });
 

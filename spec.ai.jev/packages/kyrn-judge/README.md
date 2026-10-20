@@ -1,8 +1,9 @@
 # @kyrn/judge
 
-> The project was renamed from KYRN to **mu** (command `mu`, mark μ) on 2026-09-21. The package name, this folder and the `kyrn.*` names stored in sessions are unchanged; see `kyrn/docs/10-rename-to-mu.md`.
+> The package folder and the `kyrn.*` names stored in sessions keep the kernel's internal name; the product and its
+> command are spec.ai.jev and `spec`.
 
-mu's harness layer for [pi](https://github.com/earendil-works/pi): a small, fast judgment model makes the routine calls (what kind of turn is this, which tool output matters, which sub-agent and model fit a task, what to click next on a web page), code carries them out, and the main model keeps its context for thinking.
+spec.ai.jev's harness layer for [pi](https://github.com/earendil-works/pi): a small, fast judgment model makes the routine calls (what kind of turn is this, which tool output matters, which sub-agent and model fit a task, what to click next on a web page), code carries them out, and the main model keeps its context for thinking.
 
 The judgment model is pluggable: Jev through the Vercel AI Gateway, a local Laya sidecar, any HTTP server that speaks `{state, questions}` → `{answers}`, or any generative model pi can reach. Features never know which one answers. Every decision fails open to pi's stock behaviour and is written to a ledger.
 
@@ -14,11 +15,11 @@ pi -e packages/kyrn-judge/src/extension/kyrn-browser.ts      # only the browser
 pi -e packages/kyrn-judge/src/extension/kyrn-swarm.ts        # only judge-routed sub-agents
 ```
 
-From this repository, `kyrn/bin/mu` (on Windows `kyrn\bin\mu.cmd`; the launcher itself is `kyrn/bin/mu.mjs`, and its Windows and WSL paths have not been run on a real machine yet, see `kyrn/docs/features/windows-and-wsl.md`) runs pi from source with the full extension and its own agent directory (`~/.mu/agent`). `mu link` puts the command on your PATH. On a machine that still has `~/.kyrn` from before the rename, `mu migrate` moves it to `~/.mu` in one step (`--dry-run` shows what it would do); until then the old home stays in use.
+From this repository, `kyrn/bin/spec` (on Windows `kyrn\bin\spec.cmd`; the launcher itself is `kyrn/bin/agent.mjs`) runs pi from source with the full extension and its own agent directory (`~/.spec.ai.jev/agent`). `spec link` puts the command on your PATH.
 
 ## Configure it
 
-`<agent dir>/mu.json`, all optional (`kyrn.json` is read when there is no `mu.json`):
+`<agent dir>/agent.json`, all optional:
 
 ```jsonc
 {
@@ -33,13 +34,13 @@ From this repository, `kyrn/bin/mu` (on Windows `kyrn\bin\mu.cmd`; the launcher 
 }
 ```
 
-Environment: `MU_JUDGE=laya,llm:provider/model` (or `off`), `MU_JUDGE_MODE=active`; the `KYRN_` spellings still work. In a session: `/mu`, `/mu judge laya,jev`, `/mu mode tool.admission active`, `/agents`, `/remember`.
+Environment: `SPEC_AI_JEV_JUDGE=laya,llm:provider/model` (or `off`), `SPEC_AI_JEV_JUDGE_MODE=active`. In a session: `/spec`, `/spec judge laya,jev`, `/spec mode tool.admission active`, `/agents`, `/remember`.
 
 ## What the main model gets
 
 | Tool | What happens behind it |
 | --- | --- |
-| `browse({ url, goal })` | A real Chrome in mu's own profile. The judge picks every operation and target from the elements on the page until the goal is visibly met; only the final page and the action trace come back. Needs a judge that can relate a goal to a page (Jev or an `llm:` tier). |
+| `browse({ url, goal })` | A real Chrome in spec.ai.jev's own profile. The judge picks every operation and target from the elements on the page until the goal is visibly met; only the final page and the action trace come back. Needs a judge that can relate a goal to a page (Jev or an `llm:` tier). |
 | `delegate({ tasks })` | Each task runs in a fresh pi process. The judge picks the role (`agents/*.md`, pi's agent file format; add your own in `<agent dir>/agents/`), the model from your ladder and the thinking level. With no configuration: built-in roles on the session's current model. |
 | `hive({ goal, bees })` | Several investigators on one hard problem. The judge decides after every step what is worth passing on and to whom; nobody's main model spends a token on it. |
 | `locate({ query })` | Judge-ranked file paths instead of repeated grep. |
@@ -51,7 +52,7 @@ Everything else (turn preflight, tool-output admission, context forgetting, risk
 
 ## Browser safety
 
-Own Chrome profile (`~/.mu/browser-profile`), never the user's. Password, file and hidden inputs are never offered to the judge. Clicks that look irreversible (pay, delete, send) need confirmation and stop when nobody can give it. Page text is passed along as untrusted data. Closed shadow roots, iframes and canvas-only interfaces are not observed.
+Own Chrome profile (`~/.spec.ai.jev/browser-profile`), never the user's. Password, file and hidden inputs are never offered to the judge. Clicks that look irreversible (pay, delete, send) need confirmation and stop when nobody can give it. Page text is passed along as untrusted data. Closed shadow roots, iframes and canvas-only interfaces are not observed.
 
 The browser is a TypeScript port of [browser-use/jev-ultrafast](https://github.com/browser-use/jev-ultrafast) (MIT); see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 

@@ -26,7 +26,7 @@ export const SECRET_PATTERNS = [
 	{ pattern: /sk-[A-Za-z0-9_-]{16,}/, what: "an Anthropic/OpenAI style key" },
 	{ pattern: /AIza[0-9A-Za-z_-]{30,}/, what: "a Google API key" },
 	{ pattern: /-----BEGIN [A-Z ]*PRIVATE KEY-----/, what: "a private key" },
-	{ pattern: /(?:ANTHROPIC_API_KEY|OPENAI_API_KEY|MU_JUDGE_API_KEY|AWS_SECRET_ACCESS_KEY)\s*[=:]\s*\S{8,}/, what: "a key in an assignment" },
+	{ pattern: /(?:ANTHROPIC_API_KEY|OPENAI_API_KEY|SPEC_AI_JEV_JUDGE_API_KEY|AWS_SECRET_ACCESS_KEY)\s*[=:]\s*\S{8,}/, what: "a key in an assignment" },
 ];
 
 /** A text file small enough to scan. Binary traces are scanned too: the patterns survive zlib badly, but cheaply. */

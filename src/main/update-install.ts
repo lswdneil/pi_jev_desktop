@@ -52,7 +52,7 @@ export async function installUpdate(options: InstallOptions): Promise<InstallOut
 	if (!trust.ok) return { state: "refused", reason: trust.reason ?? "untrusted artifact URL" };
 
 	const fetchImpl = options.fetch ?? globalThis.fetch;
-	const directory = await mkdtemp(join(tmpdir(), "mu-update-"));
+	const directory = await mkdtemp(join(tmpdir(), "spec-update-"));
 	const destination = join(directory, basename(new URL(options.url).pathname) || "update.bin");
 	try {
 		const controller = new AbortController();

@@ -20,13 +20,13 @@ export function parseDoctorBundleArgs(argv: readonly string[], env = process.env
 	const outputIndex = argv.indexOf("--out");
 	return {
 		dryRun: argv.includes("--dry-run"),
-		outputDir: argv[outputIndex + 1] ?? env.MU_BUNDLE_DIR,
+		outputDir: argv[outputIndex + 1] ?? env.SPEC_AI_JEV_BUNDLE_DIR,
 	};
 }
 
 export function agentDirFromEnv(env = process.env): string {
-	const read = (name: string): string | undefined => env[`MU_${name}`] || env[`KYRN_${name}`];
-	return read("AGENT_DIR") ?? env.PI_CODING_AGENT_DIR ?? join(homedir(), ".mu", "agent");
+	const read = (name: string): string | undefined => env[`SPEC_AI_JEV_${name}`];
+	return read("AGENT_DIR") ?? env.PI_CODING_AGENT_DIR ?? join(homedir(), ".spec.ai.jev", "agent");
 }
 
 export interface RunDoctorBundleOptions {

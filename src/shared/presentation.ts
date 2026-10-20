@@ -4,7 +4,7 @@
 /**
  * What the harness says, in the reader's language.
  *
- * mu writes presentation events in English with a stable `code` beside the sentence and `params` naming what the
+ * spec.ai.jev writes presentation events in English with a stable `code` beside the sentence and `params` naming what the
  * sentence mentions (`kyrn/docs/features/presentation-codes.md`). The shell translates by code and keeps the English
  * when it has no translation — an unknown code from a newer harness must show the sentence it came with, not a blank
  * row. Model-written text, paths and commands have no codes and are shown as they are.
@@ -27,7 +27,7 @@ export interface PresentationEvent {
  */
 const SHELL_TEXTS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
 	en: {
-		"permissions.ask": "mu wants to run {command}. Allow it?",
+		"permissions.ask": "spec.ai.jev wants to run {command}. Allow it?",
 		"permissions.denied": "Not allowed: {command}",
 		"permissions.allowed": "Allowed: {command}",
 		"board.running": "Running {tool}",
@@ -36,7 +36,7 @@ const SHELL_TEXTS: Readonly<Record<string, Readonly<Record<string, string>>>> = 
 		"judge.fallback": "Answered without the judge ({reason})",
 	},
 	zh: {
-		"permissions.ask": "mu 想执行 {command}，允许吗？",
+		"permissions.ask": "spec.ai.jev 想执行 {command}，允许吗？",
 		"permissions.denied": "已拒绝：{command}",
 		"permissions.allowed": "已允许：{command}",
 		"board.running": "正在执行 {tool}",
@@ -45,7 +45,7 @@ const SHELL_TEXTS: Readonly<Record<string, Readonly<Record<string, string>>>> = 
 		"judge.fallback": "未使用判官（{reason}）",
 	},
 	"zh-TW": {
-		"permissions.ask": "mu 想執行 {command}，允許嗎？",
+		"permissions.ask": "spec.ai.jev 想執行 {command}，允許嗎？",
 		"permissions.denied": "已拒絕：{command}",
 		"permissions.allowed": "已允許：{command}",
 		"board.running": "正在執行 {tool}",

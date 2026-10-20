@@ -1,6 +1,6 @@
 # Changelog
 
-What changed in each release of mu: the desktop app and the `mu` command line together. Releases are published under [Releases](https://github.com/qybaihe/mu/releases) with their downloads; the `mu-agent` npm package has its own, more detailed [changelog](kyrn/npm/CHANGELOG.md).
+What changed in each release of mu: the desktop app and the `mu` command line together. Releases are published under [Releases](https://github.com/qybaihe/mu/releases) with their downloads; the `spec-ai-agent` npm package has its own, more detailed [changelog](kyrn/npm/CHANGELOG.md).
 
 mu is in pre-release (0.1.x): names, settings and formats may still change between releases.
 
@@ -46,7 +46,7 @@ mu is in pre-release (0.1.x): names, settings and formats may still change betwe
   the test uses.
 - **An npm-installed `mu` can answer "where are my keys", and migrate them.** Two commands hand work to a kernel entry
   by path and only knew the kernel's `tsc` layout (`judge/dist/setup/*.js`); the package ships a flat bundle instead, and
-  neither entry was ever bundled. So an installed `mu-agent` answered "this mu does not carry the kernel build that knows
+  neither entry was ever bundled. So an installed `spec-ai-agent` answered "this mu does not carry the kernel build that knows
   the store" for `mu doctor` and "needs the kernel build that ships with this mu" for `mu migrate --credentials`: honest
   about a missing file, wrong about the build. Both are now bundled (`judge/dist/secret-cli.js`,
   `judge/dist/credentials-cli.js`) and looked for there, and neither is given the source-url rewrite that would make its
@@ -161,7 +161,7 @@ mu is in pre-release (0.1.x): names, settings and formats may still change betwe
   benchmark's self-check — in an order that fails cheap first, and `--full` adds the shell: its unit tests, build, size
   budget, startup budget and end-to-end suite. It stops at the first failure and prints one summary of what passed, what
   failed and what each step was proving. Separately, an end-to-end test now covers the case the error screen exists for:
-  an agent that starts and dies (`MU_FIXTURE_CRASH_ON_START=1`) — the window spends its retries, then says the exit code
+  an agent that starts and dies (`SPEC_AI_JEV_FIXTURE_CRASH_ON_START=1`) — the window spends its retries, then says the exit code
   and the child's own last line. The Windows-only failure in `merge-update-info.test.mjs` was fixed on the way (the
   assertion compared a path with forward slashes against the platform's own).
 - **Startup is measured, not assumed.** `npm run startup` in `desktop-next` launches the built app three times against
@@ -198,7 +198,7 @@ mu is in pre-release (0.1.x): names, settings and formats may still change betwe
   A tampered artifact, an unsigned release, a downgrade or a feed that cannot be reached each end in a sentence on the
   settings screen, and the running build stays usable.
 - **The new shell can be packaged, and it checks for updates.** `desktop-next/electron-builder.yml` builds nsis, dmg/zip
-  and AppImage/deb artifacts with the harness beside them in `resources/harness/mu-agent`, a packaging workflow stages
+  and AppImage/deb artifacts with the harness beside them in `resources/harness/spec-ai-agent`, a packaging workflow stages
   and packages on all three platforms and scans the artifacts for secrets, and the shell reads the release feed on
   request: `src/shared/update.ts` parses `latest.yml`, compares versions properly and refuses anything unverifiable (no
   sha512, unsigned when a signature is required, not newer, not https on a release host), while the settings screen
@@ -229,7 +229,7 @@ mu is in pre-release (0.1.x): names, settings and formats may still change betwe
   `manifest.json` of the harness it is attached to: every feature, option kind, bound, choice and decision point, in the
   languages the kernel ships. A kernel that adds an option gets it drawn without a change in the shell, and an option
   from a newer kernel is shown read-only instead of disappearing. A change is validated against the same manifest and
-  written to `mu.json`; the screen says it takes effect when the agent restarts. The first run is language, consent,
+  written to `agent.json`; the screen says it takes effect when the agent restarts. The first run is language, consent,
   model, done — with refusing consent and having no key both normal paths, since local judges keep working either way.
 - **A licence check and a generated third-party inventory.** `node scripts/license-check.mjs` (in `npm run check` and
   its own CI job) fails when a package manifest declares no licence, when `desktop-next/` carries an MIT header, when a
@@ -258,8 +258,8 @@ mu is in pre-release (0.1.x): names, settings and formats may still change betwe
   from the environment or from an earlier line of the same file; a reference to something unset stays as
   text rather than becoming an empty key. `mu doctor` uses the same rule to decide whether a key is set, so
   a reference that cannot resolve is no longer reported as configured.
-- **`mu.json` has a `schemaVersion`.** A file from an earlier mu is migrated on the next start, with the
-  file it replaced kept as `mu.json.bak`; a file from a newer mu is refused with a message instead of being
+- **`agent.json` has a `schemaVersion`.** A file from an earlier mu is migrated on the next start, with the
+  file it replaced kept as `agent.json.bak`; a file from a newer mu is refused with a message instead of being
   half-understood. The schema and what each version means are in [compatibility.md](docs/compatibility.md).
 - **Releases are verifiable.** Each release now carries a CycloneDX SBOM (`sbom.cdx.json`), a keyless
   signature over `SHA256SUMS` (`SHA256SUMS.sigstore.json`) and a GitHub build attestation. `node
@@ -277,11 +277,11 @@ mu is in pre-release (0.1.x): names, settings and formats may still change betwe
 
 ### Changed
 
-- **Files mu writes are owner-only.** `.env`, `mu.json`, `models.json` and `auth.json` are written with mode
+- **Files mu writes are owner-only.** `.env`, `agent.json`, `models.json` and `auth.json` are written with mode
   0600, and a file that was already world-readable (a `.env` created at 0644, which every rewrite kept) is
   tightened on the next write. On Windows the mode bits are not what enforces this; the credentials work in
   progress is what will.
-- **Decisions act by default.** Every decision point is `active` unless `mu.json` says otherwise; before, a fresh install only recorded verdicts. To keep recording only, set `"modes": { "default": "shadow" }` in `~/.mu/agent/mu.json`.
+- **Decisions act by default.** Every decision point is `active` unless `agent.json` says otherwise; before, a fresh install only recorded verdicts. To keep recording only, set `"modes": { "default": "shadow" }` in `~/.spec.ai.jev/agent/agent.json`.
 - MCP servers run on pi's built-in client. mu keeps what it adds: servers stay hidden until a task needs them, project servers need your approval, their output is screened and credentials are masked.
 
 ### Fixed
@@ -350,7 +350,7 @@ Preview build.
 
 ## [0.1.0] - 2026-09-23
 
-The first preview: the desktop app for macOS (signed and notarized), Windows and Linux, x64 and arm64, with mu inside it, and `mu-agent` on npm.
+The first preview: the desktop app for macOS (signed and notarized), Windows and Linux, x64 and arm64, with mu inside it, and `spec-ai-agent` on npm.
 
 [Unreleased]: https://github.com/qybaihe/mu/compare/v0.1.6...main
 [0.1.6]: https://github.com/qybaihe/mu/releases/tag/v0.1.6

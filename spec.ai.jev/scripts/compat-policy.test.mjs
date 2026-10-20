@@ -22,7 +22,7 @@ function repo(overrides = {}) {
 		[COMPATIBILITY_DOC, DOC],
 		[CONFIG_MIGRATIONS_SOURCE, "export const CONFIG_SCHEMA_VERSION = 1;\nexport const CONFIG_MIGRATIONS = [];\n"],
 		["package.json", JSON.stringify({ name: "pi-monorepo", version: "0.0.3" })],
-		["kyrn/npm/package.template.json", JSON.stringify({ name: "mu-agent", version: "0.1.8" })],
+		["kyrn/npm/package.template.json", JSON.stringify({ name: "spec-ai-agent", version: "0.1.8" })],
 		["CHANGELOG.md", "# Changelog\n\n## [Unreleased]\n\n## [0.1.6] - 2026-09-30\n"],
 	]);
 	for (const [path, value] of Object.entries(overrides)) {

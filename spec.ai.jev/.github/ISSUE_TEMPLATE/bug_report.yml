@@ -27,7 +27,7 @@ body:
     attributes:
       label: Version
       description: "`mu --version`, or the desktop app's About page."
-      placeholder: "mu-agent 0.1.7 / desktop 0.1.6"
+      placeholder: "spec-ai-agent 0.1.7 / desktop 0.1.6"
     validations:
       required: true
 

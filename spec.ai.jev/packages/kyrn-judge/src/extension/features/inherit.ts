@@ -69,7 +69,7 @@ export function inheritedFor(
 			mcp: !off && options.mcp,
 		},
 		own,
-		ownSource: join(roots.agentDir, "mu.json"),
+		ownSource: join(roots.agentDir, "agent.json"),
 		// What pi loads by itself, so that no skill is offered twice.
 		piSkillDirs: [join(roots.agentDir, "skills"), join(roots.home, ".agents", "skills")],
 		env: process.env,
@@ -142,10 +142,10 @@ export function registerInherit(runtime: KyrnRuntime, roots: HarnessRoots | unde
 			const found = ensureScanned(ctx);
 			for (const problem of found.problems) runtime.problems.push(`${problem.source}: ${problem.message}`);
 			// Sub-agents inherit the same things in silence, and a notice nobody can see is not shown.
-			if (!ctx.hasUI || process.env.KYRN_SWARM_DEPTH) return undefined;
+			if (!ctx.hasUI || process.env.SPEC_AI_JEV_SWARM_DEPTH) return undefined;
 			const summary = inheritanceSummary(found);
 			if (!summary || readInheritState(roots.agentDir).noticeShownAt) return undefined;
-			ctx.ui.notify(`${summary} /inherit lists them; features.inherit in mu.json switches sources off.`, "info");
+			ctx.ui.notify(`${summary} /inherit lists them; features.inherit in agent.json switches sources off.`, "info");
 			writeInheritState(roots.agentDir, { noticeShownAt: new Date().toISOString() });
 			return undefined;
 		}),

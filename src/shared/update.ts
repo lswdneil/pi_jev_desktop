@@ -156,7 +156,7 @@ export const UPDATE_HOSTS = ["github.com", "objects.githubusercontent.com", "rel
  * Whether a feed URL is one this build is willing to ask. The published feed must be https on a release host: an
  * update over plain HTTP, or from somewhere else, is a downgrade dressed as a version.
  *
- * An explicitly configured feed (`MU_UPDATE_FEED`, a test's localhost server) is trusted for its host and scheme
+ * An explicitly configured feed (`SPEC_AI_JEV_UPDATE_FEED`, a test's localhost server) is trusted for its host and scheme
  * because setting it is a deliberate act by whoever runs the build — the URL is not something a server can talk the
  * app into.
  */

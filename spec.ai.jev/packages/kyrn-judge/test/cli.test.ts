@@ -72,13 +72,13 @@ describe("welcome screen", () => {
 	});
 
 	// mu 0.1.3 from npm greeted with "v0.1.0 · built on pi 0.1.3": the judgment layer's own version, and pi's
-	// VERSION, which pi reads from the folder the launcher points it at, mu-agent's.
+	// VERSION, which pi reads from the folder the launcher points it at, spec-ai-agent's.
 	it("shows mu's version and pi's, from the npm package and from a source checkout", () => {
 		const pkg = mkdtempSync(join(tmpdir(), "mu-versions-"));
 		try {
 			writeFileSync(
 				join(pkg, "package.json"),
-				JSON.stringify({ name: "mu-agent", version: "0.1.4", muBuild: { pi: "0.86.0", judge: "0.1.0" } }),
+				JSON.stringify({ name: "spec-ai-agent", version: "0.1.4", specBuild: { pi: "0.86.0", judge: "0.1.0" } }),
 			);
 			mkdirSync(join(pkg, "judge", "dist"), { recursive: true });
 			writeFileSync(join(pkg, "judge", "package.json"), JSON.stringify({ name: "@kyrn/judge", version: "0.1.0" }));

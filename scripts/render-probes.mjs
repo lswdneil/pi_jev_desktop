@@ -24,8 +24,8 @@
  *
  *   node scripts/render-probes.mjs                  # 200 rows, 5 mount samples, writes render-probes.json
  *   node scripts/render-probes.mjs --json           # print the same numbers
- *   cd ../.. && node scripts/perf-budget.mjs --judge --result desktop-next/shell-metrics.json \
- *       --render desktop-next/render-probes.json
+ *   cd ../.. && node scripts/perf-budget.mjs --judge --result shell-metrics.json \
+ *       --render render-probes.json
  *
  * Run it on an otherwise quiet machine: the scroll numbers are sub-millisecond when nothing else is running, and a
  * 900 ms startup measurement next door is enough to make them look terrible.
@@ -162,14 +162,14 @@ async function imeProbe(page, samples) {
 }
 
 async function launch() {
-	const home = mkdtempSync(join(tmpdir(), "mu-render-home-"));
-	const profile = mkdtempSync(join(tmpdir(), "mu-render-profile-"));
+	const home = mkdtempSync(join(tmpdir(), "spec-render-home-"));
+	const profile = mkdtempSync(join(tmpdir(), "spec-render-profile-"));
 	const app = await electron.launch({
 		args: [MAIN, `--user-data-dir=${profile}`],
 		env: {
 			...process.env,
-			MU_ROOT: FIXTURE_HARNESS,
-			MU_FIXTURE_HISTORY: String(FIXTURE_HISTORY),
+			SPEC_AI_JEV_ROOT: FIXTURE_HARNESS,
+			SPEC_AI_JEV_FIXTURE_HISTORY: String(FIXTURE_HISTORY),
 			USERPROFILE: home,
 			HOME: home,
 		},
@@ -317,7 +317,7 @@ async function main() {
 				: `render-probes: input method not measured: ${measures.imeError}`,
 		);
 		console.log(`render-probes: wrote ${out}`);
-		console.log("render-probes: judge it with: node scripts/perf-budget.mjs --judge --result desktop-next/shell-metrics.json --render " + out);
+		console.log("render-probes: judge it with: node scripts/perf-budget.mjs --judge --result shell-metrics.json --render " + out);
 	}
 	// A composition that does not survive the commit is a broken composer, not a slow one: that fails the run.
 	if (measures.imeCommittedOk === false) {

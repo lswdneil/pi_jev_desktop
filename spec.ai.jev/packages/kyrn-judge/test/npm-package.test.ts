@@ -17,7 +17,7 @@ import {
 } from "../../../kyrn/npm/build.mjs";
 
 /**
- * The npm package mu-agent (kyrn/npm/build.mjs). Building it needs pi's bundle, so these check the decisions
+ * The npm package spec-ai-agent (kyrn/npm/build.mjs). Building it needs pi's bundle, so these check the decisions
  * the build rests on; the package itself is built, installed and run in CI (.github/workflows/npm.yml).
  */
 const repo = join(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -40,7 +40,7 @@ function write(path: string, text: string): string {
 }
 
 /**
- * A package laid out like mu-agent, with a stand-in for pi's bundle: one chunk with a pi-tui class and a live
+ * A package laid out like spec-ai-agent, with a stand-in for pi's bundle: one chunk with a pi-tui class and a live
  * binding, and the chunk that hands it to extensions as VIRTUAL_MODULES, written the way esbuild writes it.
  */
 function fakePackage(): { root: string; hostImport: string; source: string } {
@@ -176,9 +176,9 @@ describe("the npm package", () => {
 			'const PROMPTS_DIR = fileURLToPath(new URL("../../../prompts", new URL("src/extension/features/commands.ts", new URL("../", import.meta.url)).href));',
 		);
 		// From judge/dist/kyrn-judge.js that is judge/prompts, where the build copies them.
-		const bundle = "file:///usr/lib/node_modules/mu-agent/judge/dist/kyrn-judge.js";
+		const bundle = "file:///usr/lib/node_modules/spec-ai-agent/judge/dist/kyrn-judge.js";
 		const at = new URL("src/extension/features/commands.ts", new URL("../", bundle)).href;
-		expect(new URL("../../../prompts", at).href).toBe("file:///usr/lib/node_modules/mu-agent/judge/prompts");
+		expect(new URL("../../../prompts", at).href).toBe("file:///usr/lib/node_modules/spec-ai-agent/judge/prompts");
 		expect(rewriteMetaUrl("export const x = 1;", "src/x.ts")).toBe("export const x = 1;");
 	});
 

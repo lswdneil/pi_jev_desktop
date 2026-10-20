@@ -175,7 +175,7 @@ export function registerWeb(runtime: KyrnRuntime): void {
 			runtime.present("web.search", details);
 			if (outcome.results.length === 0) {
 				throw new Error(
-					`No search results.\n${problems.map((problem) => `- ${problem}`).join("\n")}\nTry other words, another source (features.web.search in mu.json: ${Object.keys(SOURCES).join(", ")}, searxng:<url>), or search with the browse tool.`,
+					`No search results.\n${problems.map((problem) => `- ${problem}`).join("\n")}\nTry other words, another source (features.web.search in agent.json: ${Object.keys(SOURCES).join(", ")}, searxng:<url>), or search with the browse tool.`,
 				);
 			}
 			const lines = outcome.results.map(

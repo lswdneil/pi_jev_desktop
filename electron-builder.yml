@@ -1,8 +1,8 @@
 # Packaging. `npm run build` produces `out/`; electron-builder turns that into an installable app.
 #
-# The judgment layer ships inside `resources/harness/mu-agent` (the shell's resolver looks there first in a packaged
+# The judgment layer ships inside `resources/harness/spec-ai-agent` (the shell's resolver looks there first in a packaged
 # app, see `src/main/harness.ts`). The release pipeline stages that folder before calling electron-builder, so a local
-# `electron-builder --dir` without staging it produces an app that reports "mu was not found" — which is the error
+# `electron-builder --dir` without staging it produces an app that reports "spec.ai.jev was not found" — which is the error
 # screen working, not a packaging bug.
 appId: ai.spec.jev
 productName: spec.ai.jev
@@ -22,10 +22,10 @@ files:
   - LICENSES/**/*
 
 # Beside the asar, so the harness is a real folder with its own node_modules rather than a path inside an archive.
-# The source is the folder that *holds* `mu-agent`, not `mu-agent` itself: electron-builder never copies the root
+# The source is the folder that *holds* `spec-ai-agent`, not `spec-ai-agent` itself: electron-builder never copies the root
 # `node_modules` of a source folder (it skips it unconditionally, see `createFilter` in app-builder-lib), and the
 # harness cannot load its own judge extension without `jiti`. Copying the parent puts the dependencies one level
-# down, where they are copied, and lands the package at `harness/mu-agent` — the path `bundledHarnessRoot` resolves.
+# down, where they are copied, and lands the package at `harness/spec-ai-agent` — the path `bundledHarnessRoot` resolves.
 extraResources:
   - from: resources/harness
     to: harness

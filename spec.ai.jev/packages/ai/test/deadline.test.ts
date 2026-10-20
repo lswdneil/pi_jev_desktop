@@ -193,20 +193,20 @@ describe("transportStageOf", () => {
 describe("deadlinePolicy", () => {
 	it("uses the preset table and lets an integer env override replace one stage", () => {
 		expect(deadlinePolicy("judge", {})).toEqual(DEADLINE_PRESETS.judge);
-		expect(deadlinePolicy("judge", { MU_DEADLINE_JUDGE_TOTAL: "15000" })).toEqual({
+		expect(deadlinePolicy("judge", { SPEC_AI_JEV_DEADLINE_JUDGE_TOTAL: "15000" })).toEqual({
 			...DEADLINE_PRESETS.judge,
 			totalMs: 15_000,
 		});
-		expect(deadlinePolicy("judge", { MU_DEADLINE_JUDGE_TOTAL: "0" })).toEqual({
+		expect(deadlinePolicy("judge", { SPEC_AI_JEV_DEADLINE_JUDGE_TOTAL: "0" })).toEqual({
 			...DEADLINE_PRESETS.judge,
 			totalMs: 0,
 		});
-		expect(deadlinePolicy("bash-command", { MU_DEADLINE_BASH_COMMAND_TOTAL: "5000" })).toEqual({ totalMs: 5_000 });
+		expect(deadlinePolicy("bash-command", { SPEC_AI_JEV_DEADLINE_BASH_COMMAND_TOTAL: "5000" })).toEqual({ totalMs: 5_000 });
 	});
 
 	it("ignores an override that is not a whole number of milliseconds", () => {
-		expect(deadlinePolicy("judge", { MU_DEADLINE_JUDGE_TOTAL: "15s" })).toEqual(DEADLINE_PRESETS.judge);
-		expect(deadlinePolicy("judge", { MU_DEADLINE_JUDGE_TOTAL: "-1" })).toEqual(DEADLINE_PRESETS.judge);
+		expect(deadlinePolicy("judge", { SPEC_AI_JEV_DEADLINE_JUDGE_TOTAL: "15s" })).toEqual(DEADLINE_PRESETS.judge);
+		expect(deadlinePolicy("judge", { SPEC_AI_JEV_DEADLINE_JUDGE_TOTAL: "-1" })).toEqual(DEADLINE_PRESETS.judge);
 	});
 });
 

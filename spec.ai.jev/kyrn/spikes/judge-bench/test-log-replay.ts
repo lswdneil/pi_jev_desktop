@@ -5,7 +5,7 @@
  * omission would cost to recover from the archive.
  *
  *   node kyrn/spikes/judge-bench/test-log-replay.ts                       offline: full, rules, ceiling, oracle
- *   KYRN_JUDGE=jev node --env-file=.env kyrn/spikes/judge-bench/test-log-replay.ts     adds the live judge
+ *   SPEC_AI_JEV_JUDGE=jev node --env-file=.env kyrn/spikes/judge-bench/test-log-replay.ts     adds the live judge
  *
  * Offline reference arms use mock judges and cost nothing:
  * - `ceiling`: a judge that always says "omit". What the protections alone guarantee, and
@@ -38,7 +38,7 @@ import {
 	testLogCases,
 } from "../../../packages/kyrn-judge/test/fixtures/test-log-cases.ts";
 
-const live = process.env.KYRN_JUDGE === "jev";
+const live = process.env.SPEC_AI_JEV_JUDGE === "jev";
 const wordings = (process.env.WORDINGS ?? "suffices,policy").split(",") as TestLogWording[];
 const anchorModes = process.env.ANCHORS === "both" ? [true, false] : [process.env.ANCHORS !== "off"];
 const maxRequests = Number(process.env.MAX_REQUESTS ?? 150);

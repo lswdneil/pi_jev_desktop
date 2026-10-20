@@ -80,5 +80,5 @@ jobs:
       # Throwaway home, stub model, mock judge: nothing of the runner's is read and no model is called.
       - name: Start chain and permission round trip
         env:
-          MU_ROOT: ${{ github.workspace }}
+          SPEC_AI_JEV_ROOT: ${{ github.workspace }}
         run: node desktop/scripts/kyrn/start-check/check.mjs --permission

@@ -118,11 +118,11 @@ function build(overrides: Partial<ApiDependencies> = {}): {
 		settings: {
 			snapshot: async () => {
 				calls.push("settings-snapshot");
-				return { manifest: { version: 1 }, document: {}, path: "/home/ada/.spec.ai.jev/agent/mu.json", problems: [] };
+				return { manifest: { version: 1 }, document: {}, path: "/home/ada/.spec.ai.jev/agent/agent.json", problems: [] };
 			},
 			write: async (change) => {
 				calls.push(`write:${change.feature}.${change.option}=${JSON.stringify(change.value)}`);
-				return { manifest: { version: 1 }, document: {}, path: "/home/ada/.spec.ai.jev/agent/mu.json", problems: [] };
+				return { manifest: { version: 1 }, document: {}, path: "/home/ada/.spec.ai.jev/agent/agent.json", problems: [] };
 			},
 		},
 		consent: {
@@ -368,7 +368,7 @@ describe("settings and consent", () => {
 		const { api, calls } = build();
 		await expect(api.dispatch("settings:write", { feature: "preflight", option: "thinking", value: true })).resolves.toMatchObject({
 			ok: true,
-			value: { path: "/home/ada/.spec.ai.jev/agent/mu.json" },
+			value: { path: "/home/ada/.spec.ai.jev/agent/agent.json" },
 		});
 		expect(calls).toContain("write:preflight.thinking=true");
 	});

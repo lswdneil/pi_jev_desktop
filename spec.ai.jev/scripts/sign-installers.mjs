@@ -14,7 +14,7 @@
  *   node scripts/sign-installers.mjs dist --key mu-update-private.pem
  *   node scripts/sign-installers.mjs dist --key mu-update-private.pem --check
  *
- * `--key` is a PEM file; `MU_UPDATE_SIGNING_KEY` (the PEM itself, for a CI secret) is used when it is not given. The
+ * `--key` is a PEM file; `SPEC_AI_JEV_UPDATE_SIGNING_KEY` (the PEM itself, for a CI secret) is used when it is not given. The
  * script writes `<artifact>.sig` for every installer in the folder and then verifies what it wrote against the public
  * half derived from the same key, so a key that is wrong, a file that changed under it, or a signature written to the
  * wrong name fails here rather than on a user's machine.
@@ -76,15 +76,15 @@ export function signInstallers(directory, privateKey) {
 	return written;
 }
 
-/** The PEM from `--key <file>` or from `MU_UPDATE_SIGNING_KEY`, and the public half to check with. */
+/** The PEM from `--key <file>` or from `SPEC_AI_JEV_UPDATE_SIGNING_KEY`, and the public half to check with. */
 export function loadKey(options) {
 	if (options.keyFile !== undefined) {
 		if (!existsSync(options.keyFile)) throw new Error(`${options.keyFile} does not exist`);
 		return createPrivateKey(readFileSync(options.keyFile, "utf8"));
 	}
-	const inline = options.keyPem ?? process.env.MU_UPDATE_SIGNING_KEY;
+	const inline = options.keyPem ?? process.env.SPEC_AI_JEV_UPDATE_SIGNING_KEY;
 	if (inline === undefined || inline.trim() === "") {
-		throw new Error("no signing key: pass --key <file> or set MU_UPDATE_SIGNING_KEY to the PEM");
+		throw new Error("no signing key: pass --key <file> or set SPEC_AI_JEV_UPDATE_SIGNING_KEY to the PEM");
 	}
 	return createPrivateKey(inline);
 }

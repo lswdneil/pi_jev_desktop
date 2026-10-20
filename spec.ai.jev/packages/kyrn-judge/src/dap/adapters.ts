@@ -5,7 +5,7 @@ import type { Transport } from "./client.ts";
  * Which debug adapter debugs what. Built in are the adapters that speak the
  * protocol themselves and are one install away: debugpy for Python, delve for
  * Go, lldb-dap for anything compiled (C, C++, Rust, Swift). The user can add
- * or replace any of them in mu.json (`features.packs.debugAdapters`), which is
+ * or replace any of them in agent.json (`features.packs.debugAdapters`), which is
  * how js-debug or codelldb come in.
  */
 export interface AdapterSpec {
@@ -78,7 +78,7 @@ export function builtInAdapters(platform: NodeJS.Platform): AdapterSpec[] {
 	];
 }
 
-/** What a user may write for an adapter in mu.json. Anything missing falls back to the built-in of that id. */
+/** What a user may write for an adapter in agent.json. Anything missing falls back to the built-in of that id. */
 export interface AdapterOverride {
 	readonly title?: string;
 	readonly transport?: Transport;

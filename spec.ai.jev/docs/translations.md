@@ -1,6 +1,6 @@
 # Translations
 
-mu speaks several languages in different places. Corrections from native speakers are especially welcome: open a pull request that changes the strings, or an issue that quotes the wrong text and suggests a better one.
+spec.ai.jev speaks several languages in different places. Corrections from native speakers are especially welcome: open a pull request that changes the strings, or an issue that quotes the wrong text and suggests a better one.
 
 | What | Languages | Where |
 | --- | --- | --- |
@@ -26,8 +26,8 @@ Guidelines:
 
 - Translate the meaning for a person using the app, not word for word. Keep it short: buttons and labels are narrow.
 - Keep placeholders exactly as they are (`{{count}}`, `{{name}}`), and the plural forms the locale needs (`_one`, `_other`, and for Slavic languages `_few` and `_many`).
-- Names stay as they are: mu, Jev, Laya, pi, MCP, and model and provider names.
-- Commands, paths, keys and code stay in English (`/permissions`, `mu.json`).
+- Names stay as they are: spec.ai.jev, Jev, Laya, pi, MCP, and model and provider names.
+- Commands, paths, keys and code stay in English (`/permissions`, `agent.json`).
 
 ## The kernel's settings text
 

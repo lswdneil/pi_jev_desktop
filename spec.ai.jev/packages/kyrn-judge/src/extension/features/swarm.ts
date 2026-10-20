@@ -159,7 +159,7 @@ export function chainRunner(runner: SwarmRunner): SwarmRunner {
 /** A sub-agent works in its parent's permission mode, as it is now, not as the parent started. */
 export function permissionEnv(runtime: KyrnRuntime): Record<string, string> {
 	const mode = runtime.permissionMode?.();
-	return mode ? { MU_PERMISSIONS: mode } : {};
+	return mode ? { SPEC_AI_JEV_PERMISSIONS: mode } : {};
 }
 
 /** Where a sub-agent leaves its acceptance list for the parent. */
@@ -213,7 +213,7 @@ export const spawnRunner: SwarmRunner = async (task, assignment, signal, env, ob
 				env: {
 					...process.env,
 					...(process.versions.electron ? { ELECTRON_RUN_AS_NODE: "1" } : {}),
-					KYRN_SWARM_DEPTH: "1",
+					SPEC_AI_JEV_SWARM_DEPTH: "1",
 					...env,
 				},
 			});
@@ -330,7 +330,7 @@ export function announceRouting(
 	});
 }
 
-/** Limits of a swarm, as they are written in mu.json. */
+/** Limits of a swarm, as they are written in agent.json. */
 export const SWARM_LIMIT_DEFAULTS = {
 	/** Minutes a sub-agent may work before it is told to wrap up and report. 0 means no budget. */
 	beeMinutes: 10,
@@ -453,7 +453,7 @@ export function registerSwarm(runtime: KyrnRuntime, runner: SwarmRunner = spawnR
 		...SWARM_LIMIT_DEFAULTS,
 	});
 	// A sub-agent does not get to spawn its own swarm.
-	if (!options.enabled || process.env.KYRN_SWARM_DEPTH) return;
+	if (!options.enabled || process.env.SPEC_AI_JEV_SWARM_DEPTH) return;
 	const { pi } = runtime;
 	const isolation = new Isolation(runtime, options);
 	isolation.registerTool();
@@ -521,7 +521,7 @@ export function registerSwarm(runtime: KyrnRuntime, runner: SwarmRunner = spawnR
 			}));
 			const constraints = (parent?.constraints ?? []).map((constraint) => constraint.text);
 			const inheritedConstraints =
-				constraints.length > 0 ? { KYRN_SWARM_CONSTRAINTS: JSON.stringify(constraints.slice(-12)) } : undefined;
+				constraints.length > 0 ? { SPEC_AI_JEV_SWARM_CONSTRAINTS: JSON.stringify(constraints.slice(-12)) } : undefined;
 			const names = uniqueNames(tasks.map((task) => task.title));
 			announceRouting(onUpdate, tasks.length);
 			const roles = usable();

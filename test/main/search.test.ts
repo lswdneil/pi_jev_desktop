@@ -61,7 +61,7 @@ describe("quick open", () => {
 			".git/config",
 			"out/main.js",
 			".hidden/secret.ts",
-			"resources/harness/mu-agent/examples/app-extension.ts",
+			"resources/harness/spec-ai-agent/examples/app-extension.ts",
 		]);
 		expect(searchProjectFiles(root, "app").map((hit) => hit.path)).toEqual(["src/app.ts"]);
 		expect(searchProjectFiles(root, "index")).toEqual([]);

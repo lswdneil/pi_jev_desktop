@@ -12,7 +12,7 @@ import { FakeProcess } from "./fakes.ts";
  * dead, say where mu should have been. Every test drives the process by hand, so no real child is started.
  */
 
-const CHECKOUT: Harness = { root: "/work/KYRN", layout: "repo", source: "beside" };
+const CHECKOUT: Harness = { root: "/work/spec.ai.jev", layout: "repo", source: "beside" };
 
 interface Rig {
 	readonly supervisor: AgentSupervisor;
@@ -31,8 +31,8 @@ function rig(processes: FakeProcess[], overrides: Partial<SupervisorOptions> = {
 
 	const supervisor = new AgentSupervisor({
 		locate: () => harness,
-		launchOf: (found) => ({ command: `${found.root}/kyrn/bin/kyrn`, args: [], cwd: found.root, env: {} }),
-		expected: () => ({ root: "/work/KYRN", layout: "repo" }),
+		launchOf: (found) => ({ command: `${found.root}/kyrn/bin/spec`, args: [], cwd: found.root, env: {} }),
+		expected: () => ({ root: "/work/spec.ai.jev", layout: "repo" }),
 		spawn: (launch): AgentProcess => {
 			launches.push(launch);
 			const next = queue.shift();
@@ -97,8 +97,8 @@ describe("starting", () => {
 
 		const status = await test.supervisor.start();
 
-		expect(status).toEqual({ state: "running", root: "/work/KYRN", layout: "repo", pid: 9_001 });
-		expect(test.launches[0]).toMatchObject({ command: "/work/KYRN/kyrn/bin/kyrn", cwd: "/work/KYRN" });
+		expect(status).toEqual({ state: "running", root: "/work/spec.ai.jev", layout: "repo", pid: 9_001 });
+		expect(test.launches[0]).toMatchObject({ command: "/work/spec.ai.jev/kyrn/bin/spec", cwd: "/work/spec.ai.jev" });
 	});
 
 	it("fails at once, with where mu should have been, when there is no harness", async () => {
@@ -109,8 +109,8 @@ describe("starting", () => {
 
 		expect(status).toMatchObject({
 			state: "failed",
-			reason: "mu was not found where this build looks for it",
-			expected: { root: "/work/KYRN", layout: "repo" },
+			reason: "spec.ai.jev was not found where this build looks for it",
+			expected: { root: "/work/spec.ai.jev", layout: "repo" },
 		});
 		expect(test.launches).toHaveLength(0);
 	});

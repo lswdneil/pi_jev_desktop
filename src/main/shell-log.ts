@@ -2,13 +2,13 @@
 // Copyright (c) 2025-2026 the mu authors
 
 /**
- * The shell's own log: one line per event, in `<agentDir>/logs/mu-shell.log`.
+ * The shell's own log: one line per event, in `<agentDir>/logs/spec-shell.log`.
  *
  * A packaged app has no console on Windows, so an error in the shell leaves no trace unless it is written down. This is
  * that trace: a crash, a renderer or child process that is gone, an unresponsive window, and the start and end of a
  * run. Nothing a person typed belongs here — a line carries versions, reasons, exit codes and the shell's own URLs.
  *
- * It lives beside the agent's own logs rather than in the app's browser profile for one reason: `mu doctor --bundle`
+ * It lives beside the agent's own logs rather than in the app's browser profile for one reason: `spec doctor --bundle`
  * reads `<agentDir>/logs`, so a person reporting a problem can send the shell's story along with the kernel's.
  *
  * The file is capped: past `limitBytes` the current file becomes `<name>.1` and a new one starts, so an app left
@@ -18,7 +18,7 @@
 import { appendFileSync, existsSync, mkdirSync, renameSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-export const SHELL_LOG_FILE = "mu-shell.log";
+export const SHELL_LOG_FILE = "spec-shell.log";
 export const SHELL_LOG_LIMIT_BYTES = 2 * 1024 * 1024;
 
 export type ShellLogLevel = "info" | "warn" | "error" | "fatal";

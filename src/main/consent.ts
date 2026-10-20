@@ -5,8 +5,8 @@
  * The judge's consent: read here, granted through the harness.
  *
  * `~/.spec.ai.jev/agent/consent.json` is the kernel's file (`packages/kyrn-judge/src/consent.ts`), in this app's own
- * agent folder (`MU_AGENT_DIR`; the command line's `~/.mu` is a different product and is never read here). The shell only
- * reads it — the durable answer is written by `mu judge consent accept`, which is the same code the command line uses.
+ * agent folder (`SPEC_AI_JEV_AGENT_DIR`, the same one the command line uses). The shell only reads it - the durable
+ * answer is written by `spec judge consent accept`, which is the same code the command line uses.
  * Writing the four fields here would mean a second copy of a format that has a version number, and the first kernel bump
  * would leave the shell writing files the kernel ignores.
  *
@@ -21,7 +21,7 @@ import type { AgentLaunch, AgentProcess, SpawnAgent } from "./rpc.ts";
 export const CONSENT_JUDGE_ID = "jev";
 export const CONSENT_VERSION = 1;
 export const CONSENT_SCOPE = "remote-judge";
-export const CONSENT_ENV = "MU_JUDGE_CONSENT";
+export const CONSENT_ENV = "SPEC_AI_JEV_JUDGE_CONSENT";
 
 export interface ConsentRecord {
 	readonly judgeId: string;
@@ -55,7 +55,7 @@ export function readConsent(file: string, read: (path: string) => string = (path
 
 export interface ConsentState {
 	readonly granted: boolean;
-	/** True when the answer comes from `MU_JUDGE_CONSENT=1` for this run, rather than from the file. */
+	/** True when the answer comes from `SPEC_AI_JEV_JUDGE_CONSENT=1` for this run, rather than from the file. */
 	readonly fromEnvironment: boolean;
 	readonly agreedAt: string | undefined;
 	readonly file: string;
@@ -127,7 +127,7 @@ export function runHarnessCommand(options: {
 	});
 }
 
-/** `mu judge consent accept|revoke`, which is the only writer of the consent file. */
+/** `spec judge consent accept|revoke`, which is the only writer of the consent file. */
 export function runConsentCommand(options: {
 	readonly launch: AgentLaunch;
 	readonly spawn: SpawnAgent;

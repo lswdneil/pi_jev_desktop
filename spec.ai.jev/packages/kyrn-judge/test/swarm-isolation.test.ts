@@ -275,7 +275,7 @@ describe("delegate with worktree isolation", () => {
 		await switchedOff.session.prompt("Go.");
 		expect(where.size).toBe(2);
 		expect(isolatedTitles()).toEqual([]);
-		expect(resultTexts(switchedOff)[0]).toContain("Not isolated (isolation is switched off in mu.json)");
+		expect(resultTexts(switchedOff)[0]).toContain("Not isolated (isolation is switched off in agent.json)");
 
 		// A path the parent wrote down means the copy, under either spelling of a symlinked repository.
 		const parent = {

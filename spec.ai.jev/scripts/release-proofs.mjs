@@ -81,7 +81,7 @@ function versionOf(directory) {
 
 function commitOf() {
 	// A delivery copy has no `.git` of its own, so CI's own variable and an explicit override come first.
-	const fromEnv = process.env.GITHUB_SHA ?? process.env.MU_COMMIT;
+	const fromEnv = process.env.GITHUB_SHA ?? process.env.SPEC_AI_JEV_COMMIT;
 	if (fromEnv !== undefined && /^[0-9a-f]{40}$/.test(fromEnv.trim())) return fromEnv.trim();
 	const result = spawnSync("git", ["-C", ROOT, "rev-parse", "HEAD"], { encoding: "utf8" });
 	const text = (result.stdout ?? "").trim();

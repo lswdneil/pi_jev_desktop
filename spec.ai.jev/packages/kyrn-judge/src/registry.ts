@@ -3,7 +3,7 @@ import { CascadeJudge, type CascadeTier } from "./cascade.ts";
 import { BUILT_IN_JUDGES, type JudgeConfig, type KyrnConfig } from "./config.ts";
 import { JudgeError } from "./errors.ts";
 import { Judge, type JudgeLike } from "./judge.ts";
-import { muEnv } from "./naming.ts";
+import { specEnv } from "./naming.ts";
 import { type ClassifierCall, ClassifierJudgeProvider } from "./providers/classifier.ts";
 import { FreeJevFallback, type FreeJevOutcome } from "./providers/free-jev.ts";
 import { type ApiKeyResolver, GatewayJudgeProvider } from "./providers/gateway.ts";
@@ -75,9 +75,9 @@ export function defaultJudgeTimeoutMs(type: JudgeConfig["type"]): number {
  * variable may hold a TypeSafe key under a name of its own, and goes to TypeSafe when no address is set.
  */
 const KEYS_FOR_ELSEWHERE: ReadonlySet<string> = new Set([
-	"MU_JUDGE_OPENROUTER_API_KEY",
-	"MU_JUDGE_CUSTOM_API_KEY",
-	"MU_JUDGE_CLM_API_KEY",
+	"SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY",
+	"SPEC_AI_JEV_JUDGE_CUSTOM_API_KEY",
+	"SPEC_AI_JEV_JUDGE_CLM_API_KEY",
 ]);
 
 /** `llm:provider/model` and `classifier:provider/model` name a judge inline, without a `judges` entry. */
@@ -99,13 +99,13 @@ export function judgeKeyEnvNames(judge: JudgeConfig): readonly string[] {
 		case "typesafe":
 			return [judge.apiKeyEnv ?? "TYPESAFE_API_KEY"];
 		case "clm":
-			return [judge.apiKeyEnv ?? "MU_JUDGE_CLM_API_KEY"];
+			return [judge.apiKeyEnv ?? "SPEC_AI_JEV_JUDGE_CLM_API_KEY"];
 		case "http":
 			return judge.apiKeyEnv === undefined ? [] : [judge.apiKeyEnv];
 		case "jev": {
 			const own = judge.apiKeyEnv ?? "TYPESAFE_API_KEY";
 			// `jev` tries TypeSafe, then Jev on OpenRouter, then the gateway, then OpenCode and Cloudflare.
-			return [own, "MU_JUDGE_OPENROUTER_API_KEY", "AI_GATEWAY_API_KEY", "OPENCODE_API_KEY", "CLOUDFLARE_API_KEY"];
+			return [own, "SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY", "AI_GATEWAY_API_KEY", "OPENCODE_API_KEY", "CLOUDFLARE_API_KEY"];
 		}
 		case "gateway":
 			return [judge.apiKeyEnv ?? "AI_GATEWAY_API_KEY"];
@@ -125,7 +125,7 @@ function createProvider(name: string, judge: JudgeConfig, host: JudgeHost): Judg
 			return new MockJudgeProvider();
 		case "local":
 			return new LocalJudgeProvider({
-				baseUrl: judge.baseUrl ?? muEnv("LOCAL_JUDGE_URL", host.env ?? {}),
+				baseUrl: judge.baseUrl ?? specEnv("LOCAL_JUDGE_URL", host.env ?? {}),
 				fetch: host.fetch,
 			});
 		case "http": {
@@ -169,7 +169,7 @@ function createProvider(name: string, judge: JudgeConfig, host: JudgeHost): Judg
 		}
 		case "clm": {
 			// `clm-serve` asks for a key only when it was started with CLM_API_KEY; without one set here, none is sent.
-			const keyName = judge.apiKeyEnv ?? "MU_JUDGE_CLM_API_KEY";
+			const keyName = judge.apiKeyEnv ?? "SPEC_AI_JEV_JUDGE_CLM_API_KEY";
 			return new TypeSafeJudgeProvider({
 				apiKey: () => host.env?.[keyName],
 				keyName,

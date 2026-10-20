@@ -67,7 +67,7 @@ test.describe("a crashed renderer", () => {
 test.describe("a crash that keeps happening", () => {
 	/**
 	 * The budget is per run, not per window: two replacements, then the third crash is recorded and the person is told
-	 * to restart mu — a window that only reproduces the crash would look like the app still works. The crash here comes
+	 * to restart spec.ai.jev — a window that only reproduces the crash would look like the app still works. The crash here comes
 	 * from the main process (`forcefullyCrashRenderer`), not the DevTools protocol — the protocol call on a window that
 	 * has already been replaced never answers, which is why this case cannot use `Page.crash`.
 	 */
@@ -126,7 +126,7 @@ test.describe("a crash that keeps happening", () => {
 			);
 			expect(messages).toHaveLength(1);
 			expect(messages[0]).toContain("keeps crashing");
-			expect(messages[0]).toContain("mu-shell.log");
+			expect(messages[0]).toContain("spec-shell.log");
 		} finally {
 			await profile.close();
 		}

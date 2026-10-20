@@ -319,7 +319,7 @@ export function registerCommands(runtime: KyrnRuntime, roots?: HarnessRoots): vo
 				`${ok(providers.length > 0)}login      ${providers.length > 0 ? providers.join(", ") : "no provider has credentials: /login"}`,
 				probe
 					? `${ok(probe.ok)}judge      ${engine.providerId} ${probe.ok ? `answers in ${probe.latencyMs} ms` : `does not answer (${probe.error}). For laya: mu judge start`}`
-					: "--  judge      off (MU_JUDGE=off)",
+					: "--  judge      off (SPEC_AI_JEV_JUDGE=off)",
 				`--  decisions  default ${engine.getMode("*")}. Change with /mu mode default <off|shadow|active>`,
 				`${ok(Boolean(chrome))}browser    ${chrome ?? browserAdvice(browserHost)}`,
 				`--  browse     driven by ${engine.judgeFor("browser.step").id}. It needs a judge that can relate a goal to a page (jev, or an llm judge): /mu route browser.step luna`,

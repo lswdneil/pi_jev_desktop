@@ -104,7 +104,7 @@ src/a.ts:20:9 warning 6133 'x' is declared but never used.
 | Rust | `rust-analyzer` | Cargo.toml |
 | C / C++ | `clangd` | compile_commands.json、compile_flags.txt、.clangd |
 
-用户级配置（`mu.json`）可以新增、覆盖、删除，用户配置的服务器在同组里优先于内置顺序：
+用户级配置（`agent.json`）可以新增、覆盖、删除，用户配置的服务器在同组里优先于内置顺序：
 
 ```json
 {
@@ -125,7 +125,7 @@ src/a.ts:20:9 warning 6133 'x' is declared but never used.
 - **工作区根**：从文件所在目录往上找最近的根标记；文件在会话目录之内时不越过会话目录，找不到就用会话目录。每个（服务器，根）一个进程，最多 `maxServers` 个（默认 4），超出时停掉最久没用的。
 - **懒启动**：第一次改到匹配扩展名的文件才启动。会话开始时只在 PATH 上查找一遍，并把找到的服务器登记到能力目录（`lsp:<id>`，`kind: "lsp"`，`always`，无工具），另有一条总的 `lsp:diagnostics`。
 - **崩溃**：下一次用到时重启一次；第二次崩溃后本会话不再启动，`/lsp` 显示最后的错误和 stderr 末尾。请求有超时，stderr 只保留最后 8 KB。
-- **项目级文件**：`<项目>/<配置目录>/lsp.json`（配置目录是 pi 的 `CONFIG_DIR_NAME`：经 `mu` 启动时是 `.mu`，开发树里是 `.pi`），形状是 `{ "servers": { … } }`。项目不被信任时**整个文件不合并**，它既不能加服务器，也不能改掉内置服务器的命令。
+- **项目级文件**：`<项目>/<配置目录>/lsp.json`（配置目录是 pi 的 `CONFIG_DIR_NAME`：经 `mu` 启动时是 `.spec.ai.jev`，开发树里是 `.pi`），形状是 `{ "servers": { … } }`。项目不被信任时**整个文件不合并**，它既不能加服务器，也不能改掉内置服务器的命令。
 - **“被信任”的含义**：项目里没有需要信任的东西时，pi 的 `isProjectTrusted()` 默认返回 true，而 pi 并不认识 `lsp.json`。所以只有两种情况算数：pi 确实因为项目里的其他资源问过用户并得到了肯定回答；或者信任库里存着对这个目录（或其上级目录）的肯定决定（`/trust`）。用 `--approve` 启动但没存过决定的，不算。
 - **子代理**：swarm / hive 的子进程默认不启动语言服务器（`subAgents: false`），否则五个子代理就是五套 rust-analyzer。
 - **Windows / WSL**：PATH 查找按 `PATHEXT` 补后缀；`.cmd` / `.bat` 垫片经 `cmd.exe /d /s /c "<整行>"` 启动（不经 shell 拼接，引号在这里处理），结束时用 `taskkill /T` 连同子进程一起结束。WSL 里优先用 Linux 侧的可执行文件，Windows 挂载目录只接受真正的 `.exe`（npm 留在那里的 sh 垫片会去调 Windows 的 node）；这种情况下 URI 按 Windows 写法生成（`/mnt/c/…` → `file:///c:/…`，其余 → `file://wsl.localhost/<发行版>/…`），读回来时 `c%3A`、`wsl$` 等写法都认。
@@ -163,7 +163,7 @@ src/a.ts:20:9 warning 6133 'x' is declared but never used.
 
 **未验证**：
 
-- **没有对任何真实的语言服务器跑过**。这台机器上没有 `typescript-language-server`（有 `gopls`、`rust-analyzer`、`clangd`、`pylsp`，按约定没有拿它们试）。`test/lsp-real-server.test.ts` 是对 `typescript-language-server` 的可选集成测试，要 `MU_LSP_REAL=1` 且 PATH 上有它才运行，这次是跳过的。真实服务器的分批推送节奏、`workspace/configuration` 的具体期望、初始化耗时，都只是按协议和经验写的。
+- **没有对任何真实的语言服务器跑过**。这台机器上没有 `typescript-language-server`（有 `gopls`、`rust-analyzer`、`clangd`、`pylsp`，按约定没有拿它们试）。`test/lsp-real-server.test.ts` 是对 `typescript-language-server` 的可选集成测试，要 `SPEC_AI_JEV_LSP_REAL=1` 且 PATH 上有它才运行，这次是跳过的。真实服务器的分批推送节奏、`workspace/configuration` 的具体期望、初始化耗时，都只是按协议和经验写的。
 - Windows 和 WSL 没有在真机上运行：`.cmd` 垫片的启动、`taskkill`、WSL 互操作只有单元测试覆盖命令拼装和路径转换。
 - 推送式服务器没有“分析结束”信号：安静期过短时可能把半成品当结论，表现为漏报，或把晚到的老问题当成新问题（一次最多 `maxItems` 条，下次核对时会消失）。不带版本号的服务器在改动发出的瞬间还在路上的旧诊断，会被当成新文本的诊断。
 - 只用完整文本同步（`didChange` 发全文）。大文件上有额外开销，超过 `maxFileBytes` 的文件直接跳过。
@@ -172,7 +172,7 @@ src/a.ts:20:9 warning 6133 'x' is declared but never used.
 
 ## 真实服务器上的验证（2026-09-22 补）
 
-`test/lsp-real-server.test.ts` 是可选测试（`MU_LSP_REAL=1`），只用本机已装的服务器，不代装。
+`test/lsp-real-server.test.ts` 是可选测试（`SPEC_AI_JEV_LSP_REAL=1`），只用本机已装的服务器，不代装。
 
 - **gopls 0.20.0 + Go 1.24.1：通过。** 临时 Go 模块，文件里原有一个未声明标识符的错误；改动在最前面加一行注释、在末尾加一个新的未声明标识符。结果只报新引入的那一条，原有错误虽然行号下移了一行也不算新。连跑三次稳定，单次约 1.5 秒。
 - typescript-language-server：本机未安装，用例跳过。

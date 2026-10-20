@@ -38,14 +38,14 @@ describe("which variable a judge reads", () => {
 	it("names the variables a provider factory would read, specific first", () => {
 		expect(judgeKeyEnvNames({ type: "jev" })).toEqual([
 			"TYPESAFE_API_KEY",
-			"MU_JUDGE_OPENROUTER_API_KEY",
+			"SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY",
 			"AI_GATEWAY_API_KEY",
 			"OPENCODE_API_KEY",
 			"CLOUDFLARE_API_KEY",
 		]);
 		expect(judgeKeyEnvNames({ type: "gateway" })).toEqual(["AI_GATEWAY_API_KEY"]);
 		expect(judgeKeyEnvNames({ type: "typesafe", apiKeyEnv: "MY_KEY" })).toEqual(["MY_KEY"]);
-		expect(judgeKeyEnvNames({ type: "clm" })).toEqual(["MU_JUDGE_CLM_API_KEY"]);
+		expect(judgeKeyEnvNames({ type: "clm" })).toEqual(["SPEC_AI_JEV_JUDGE_CLM_API_KEY"]);
 		expect(judgeKeyEnvNames({ type: "http" })).toEqual([]);
 		// Judges that never hold a key of their own: the host's credentials or none at all.
 		expect(judgeKeyEnvNames({ type: "classifier", model: "x/y" })).toEqual([]);

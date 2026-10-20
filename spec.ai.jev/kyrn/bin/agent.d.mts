@@ -1,4 +1,4 @@
-// Types of mu.mjs, for the tests that call its functions with win32, linux and WSL parameters.
+// Types of agent.mjs, for the tests that call its functions with win32, linux and WSL parameters.
 import type { PlatformPath } from "node:path";
 
 export type Platform = NodeJS.Platform;
@@ -7,8 +7,8 @@ export type Env = Readonly<Record<string, string | undefined>>;
 export const MIN_NODE: readonly [number, number];
 export function nodeVersionOk(version: string): boolean;
 export function pathFor(platform: Platform): PlatformPath;
-export function muEnv(name: string, env: Env): string | undefined;
-export function muHome(host: { home: string; platform: Platform; isDir(path: string): boolean }): string;
+export function specEnv(name: string, env: Env): string | undefined;
+export function specHome(host: { home: string; platform: Platform }): string;
 export function detectWsl(host: { platform: Platform; env: Env; procVersion?: string }): boolean;
 export function platformName(host: { platform: Platform; wsl?: boolean }): string;
 export function usage(platform: Platform): string;
@@ -43,8 +43,8 @@ export function packageEntries(input: { root: string; platform: Platform }): {
 	import: string;
 	setup: string;
 };
-export function envFilePath(input: { layout: Layout; root: string; muDir: string; platform: Platform }): string;
-export function agentDirFor(input: { env: Env; muDir: string; platform: Platform }): string;
+export function envFilePath(input: { layout: Layout; root: string; specDir: string; platform: Platform }): string;
+export function agentDirFor(input: { env: Env; specDir: string; platform: Platform }): string;
 export function wantsLaya(input: {
 	env: Env;
 	agentDir: string;
@@ -65,8 +65,8 @@ export interface LaunchPlan {
 	env: Record<string, string>;
 	strategy: "exec" | "spawn";
 	layout: Layout;
-	muDir: string;
-	/** PI_PACKAGE_DIR: the view at <home>/app for a checkout, the package itself for mu-agent. */
+	specDir: string;
+	/** PI_PACKAGE_DIR: the view at <home>/app for a checkout, the package itself for spec-ai-agent. */
 	appDir: string;
 	agentDir: string;
 	startJudge: boolean;
@@ -87,7 +87,7 @@ export function planLaunch(input: {
 	fs: { exists(path: string): boolean; isDir(path: string): boolean; readFile(path: string): string };
 }): LaunchPlan | { error: string };
 
-/** How pi runs inside a process of another program (the desktop app's runtime host): see planHost in mu.mjs. */
+/** How pi runs inside a process of another program (the desktop app's runtime host): see planHost in agent.mjs. */
 export interface HostPlan {
 	error?: undefined;
 	/** The module to import pi's `setupCli` and `main` from: pi's bundle in the package, its sources in a checkout. */
@@ -98,8 +98,8 @@ export interface HostPlan {
 	args: string[];
 	env: Record<string, string>;
 	layout: Layout;
-	muDir: string;
-	/** PI_PACKAGE_DIR: the view at <home>/app for a checkout, the package itself for mu-agent. */
+	specDir: string;
+	/** PI_PACKAGE_DIR: the view at <home>/app for a checkout, the package itself for spec-ai-agent. */
 	appDir: string;
 	agentDir: string;
 	startJudge: boolean;
@@ -203,7 +203,7 @@ export interface SetupPlan {
 	env: Record<string, string>;
 	strategy: "spawn";
 	agentDir: string;
-	/** A key came on the command line; it is in env.MU_SETUP_KEY, and never in args. */
+	/** A key came on the command line; it is in env.SPEC_AI_JEV_SETUP_KEY, and never in args. */
 	keyGiven: boolean;
 }
 export function planSetup(input: {
@@ -268,50 +268,5 @@ export function linkState(input: {
 	bin: string;
 	fs: { readFile(path: string): string; readlink(path: string): string };
 }): string | undefined;
-
-export interface ProcessRow {
-	pid: number;
-	name: string;
-	command: string;
-}
-export interface Busy {
-	sessions: number[];
-	browser: number[];
-	desktop: number[];
-}
-export function parseCsv(text: string): string[][];
-export function parseTasklist(text: string): ProcessRow[];
-export function parseWindowsProcesses(text: string): ProcessRow[];
-export function busyFromProcesses(input: {
-	processes: readonly ProcessRow[];
-	old: string;
-	platform: Platform;
-	self: number;
-}): Busy;
-export function findBusy(input: {
-	platform: Platform;
-	old: string;
-	self: number;
-	run(command: string, args: string[]): string | undefined;
-}): Busy | undefined;
-export function migrate(input: {
-	platform: Platform;
-	home: string;
-	argv: readonly string[];
-	self: number;
-	run(command: string, args: string[]): string | undefined;
-	alive(pid: number): boolean;
-	out(line: string): void;
-	err(line: string): void;
-	fs: {
-		isLink(path: string): boolean;
-		isDir(path: string): boolean;
-		exists(path: string): boolean;
-		readlink(path: string): string;
-		readFile(path: string): string;
-		rename(from: string, to: string): void;
-		link(target: string, at: string, kind: "junction" | "dir"): void;
-	};
-}): number;
 
 export function main(argv?: string[]): Promise<number>;

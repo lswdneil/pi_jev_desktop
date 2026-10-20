@@ -54,7 +54,7 @@ function findInstaller() {
 /**
  * An OpenAI-compatible endpoint that answers without a key, in this process.
  *
- * The rehearsal is about mu, not about a provider: what has to hold is that the installed app carries the question to
+ * The rehearsal is about spec.ai.jev, not about a provider: what has to hold is that the installed app carries the question to
  * the harness, the harness to a provider, and the answer back to the window and to a session file. A local stub makes
  * that testable with no network and no secret.
  */
@@ -196,15 +196,15 @@ function sessionFiles(home) {
 }
 
 /**
- * The mu entries a previous install left outside its own folder, with what they point at: the uninstall entry's
+ * The spec.ai.jev entries a previous install left outside its own folder, with what they point at: the uninstall entry's
  * `UninstallString` and the Start Menu shortcut's target. A rehearsal that only checks the folder would pass on an
  * uninstaller that forgets both.
  */
-let muStateCalls = 0;
+let specStateCalls = 0;
 
 /** PowerShell from a temp file: a multi-line script through -Command can wait on stdin forever, which is a hang. */
 function runPowerShell(script) {
-	const file = join(tmpdir(), `mu-state-${process.pid}-${muStateCalls++}.ps1`);
+	const file = join(tmpdir(), `spec-state-${process.pid}-${specStateCalls++}.ps1`);
 	writeFileSync(file, script, "utf8");
 	try {
 		const result = spawnSync("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", file], { encoding: "utf8", timeout: 120_000 });
@@ -214,7 +214,7 @@ function runPowerShell(script) {
 	}
 }
 
-function muState() {
+function specState() {
 	const script = [
 		"$rows = @()",
 		"Get-ChildItem 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall' -ErrorAction SilentlyContinue | ForEach-Object {",
@@ -248,7 +248,7 @@ function machineState() {
 		"$rows = @()",
 		"Get-ChildItem 'HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall' -ErrorAction SilentlyContinue | ForEach-Object {",
 		"  $item = Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue",
-		"  if ($item.DisplayName -eq 'mu') { $rows += ($_.PSPath + '|' + $item.UninstallString) }",
+		"  if ($item.DisplayName -eq 'spec.ai.jev') { $rows += ($_.PSPath + '|' + $item.UninstallString) }",
 		"}",
 		"$rows",
 	].join("\n");
@@ -259,12 +259,12 @@ function machineState() {
 }
 
 /**
- * A machine that already has mu installed shares the installer's app id, so a rehearsal would overwrite that install's
+ * A machine that already has spec installed shares the installer's app id, so a rehearsal would overwrite that install's
  * Start Menu entry and uninstall key. Both are copied first and put back afterwards; the caller still has to say yes.
  */
 function snapshotState(directory) {
 	mkdirSync(directory, { recursive: true });
-	const state = muState();
+	const state = specState();
 	const registry = [];
 	const shortcuts = [];
 	for (const [index, entry] of state.entries()) {
@@ -290,7 +290,7 @@ function restoreState(snapshot) {
 function isolatedEnvironment(home) {
 	const env = { ...process.env, HOME: home, USERPROFILE: home };
 	for (const key of Object.keys(env)) {
-		if (/^(MU_|OPENROUTER_|AI_GATEWAY_|ANTHROPIC_|OPENAI_)/.test(key)) delete env[key];
+		if (/^(SPEC_AI_JEV_|OPENROUTER_|AI_GATEWAY_|ANTHROPIC_|OPENAI_)/.test(key)) delete env[key];
 	}
 	return env;
 }
@@ -327,10 +327,10 @@ async function main() {
 	if (!existsSync(join(realHome, ".spec.ai.jev"))) console.log("install rehearsal: this machine has no ~/.spec.ai.jev to protect; the isolation check is vacuous");
 
 	// A path outside the project the stub will ask to write: the guard has to ask, and the denial must keep it absent.
-	const deniedWrite = join(tmpdir(), "mu-rehearsal-write-denied.txt");
+	const deniedWrite = join(tmpdir(), "spec-rehearsal-write-denied.txt");
 	rmSync(deniedWrite, { force: true });
 	const stub = await startStubProvider(deniedWrite);
-	const root = mkdtempSync(join(tmpdir(), "mu-install-rehearsal-"));
+	const root = mkdtempSync(join(tmpdir(), "spec-install-rehearsal-"));
 	const installDir = join(root, "app");
 	const home = join(root, "home");
 	const profile = join(root, "profile");
@@ -345,20 +345,20 @@ async function main() {
 		"utf8",
 	);
 	const evidence = { installer: statSync(installer).size, agentBefore: agentFingerprint(realHome) };
-	const realLog = join(realHome, ".spec.ai.jev", "agent", "logs", "mu-shell.log");
+	const realLog = join(realHome, ".spec.ai.jev", "agent", "logs", "spec-shell.log");
 	const realLogBefore = existsSync(realLog) ? statSync(realLog).mtimeMs : 0;
-	/** Filled in once the machine's existing mu entries are snapshotted; `finally` puts them back. */
+	/** Filled in once the machine's existing spec.ai.jev entries are snapshotted; `finally` puts them back. */
 	let snapshot;
 
 	try {
 		snapshot = snapshotState(join(root, "state"));
-		const existing = snapshot.state.filter((entry) => !entry.target.includes("mu-install-rehearsal-"));
+		const existing = snapshot.state.filter((entry) => !entry.target.includes("spec-install-rehearsal-"));
 		if (existing.length > 0 && !allowExisting) {
 			throw new Error(
-				`this machine already has mu installed (${existing.map((entry) => entry.target || entry.path).join(", ")}); the installer shares its app id and would overwrite that install's Start Menu entry and uninstall key. Pass --allow-existing-install to rehearse anyway (they are snapshotted and put back).`,
+				`this machine already has spec installed (${existing.map((entry) => entry.target || entry.path).join(", ")}); the installer shares its app id and would overwrite that install's Start Menu entry and uninstall key. Pass --allow-existing-install to rehearse anyway (they are snapshotted and put back).`,
 			);
 		}
-		if (existing.length > 0) console.log(`install rehearsal: ${existing.length} existing mu entr(y/ies) snapshotted and will be put back`);
+		if (existing.length > 0) console.log(`install rehearsal: ${existing.length} existing spec.ai.jev entr(y/ies) snapshotted and will be put back`);
 		evidence.existing = existing.length;
 
 		installInto(installer, installDir);
@@ -366,7 +366,7 @@ async function main() {
 		if (!existsSync(executable)) throw new Error(`the installer produced no ${executable}`);
 		evidence.installed = countFiles(installDir);
 		evidence.fileVersion = fileVersion(executable);
-		const ours = muState().filter((entry) => entry.target.includes(installDir));
+		const ours = specState().filter((entry) => entry.target.includes(installDir));
 		evidence.registered = ours.length;
 		if (ours.length === 0) throw new Error("the installer registered no uninstall entry or Start Menu shortcut for this install");
 		// Per-user install: nothing about this install may appear in HKLM.
@@ -390,7 +390,7 @@ async function main() {
 			}
 			const text = await readRunningAgent(first.page);
 			console.log(`install rehearsal: the installed app reports running · package (${text.replace(/\s+/g, " ").trim().slice(0, 120)})`);
-			evidence.onboarded = await first.page.evaluate(() => window.localStorage.getItem("mu.onboarded"));
+			evidence.onboarded = await first.page.evaluate(() => window.localStorage.getItem("spec.ai.jev.onboarded"));
 
 			await first.page.locator('[data-testid="composer"]').fill(PROMPT);
 			await first.page.locator('[data-testid="send"]').click();
@@ -459,7 +459,7 @@ async function main() {
 		if (!sessions.some((file) => file.text.includes(PROMPT))) throw new Error("the turn is not in any session file under the temporary home");
 		console.log(`install rehearsal: the turn is in a session file under the temporary home (${sessions.length} file(s))`);
 
-		const log = join(home, ".spec.ai.jev", "agent", "logs", "mu-shell.log");
+		const log = join(home, ".spec.ai.jev", "agent", "logs", "spec-shell.log");
 		if (!existsSync(log)) throw new Error(`the installed app wrote no shell log at ${log}`);
 		const lines = readFileSync(log, "utf8").split("\n").filter(Boolean);
 		const starts = lines.filter((line) => line.includes(" info started "));
@@ -478,9 +478,9 @@ async function main() {
 		if (nextInstaller !== undefined) {
 			// The conversation the first install produced is what an upgrade must not lose.
 			const before = sessions;
-			const settingsPath = join(home, ".spec.ai.jev", "agent", "mu.json");
+			const settingsPath = join(home, ".spec.ai.jev", "agent", "agent.json");
 			const settingsBefore = existsSync(settingsPath) ? readFileSync(settingsPath, "utf8") : "";
-			if (settingsBefore === "") throw new Error("the rehearsal changed no setting, so there is no mu.json for the upgrade to keep");
+			if (settingsBefore === "") throw new Error("the rehearsal changed no setting, so there is no agent.json for the upgrade to keep");
 
 			evidence.nextInstaller = statSync(nextInstaller).size;
 			installInto(nextInstaller, installDir);
@@ -496,8 +496,8 @@ async function main() {
 				if ((await second.page.locator('[data-testid="first-run"]').count()) !== 0) {
 					throw new Error("the first-run wizard came back after the upgrade");
 				}
-				const onboarded = await second.page.evaluate(() => window.localStorage.getItem("mu.onboarded"));
-				if (onboarded !== "1") throw new Error(`the profile lost its onboarding: mu.onboarded=${onboarded}`);
+				const onboarded = await second.page.evaluate(() => window.localStorage.getItem("spec.ai.jev.onboarded"));
+				if (onboarded !== "1") throw new Error(`the profile lost its onboarding: spec.ai.jev.onboarded=${onboarded}`);
 				const after = sessionFiles(home);
 				for (const file of before) {
 					const now = after.find((candidate) => candidate.path === file.path);
@@ -505,7 +505,7 @@ async function main() {
 					if (now.text !== file.text) throw new Error(`the session file ${file.path} changed across the upgrade`);
 				}
 				const settingsAfter = existsSync(settingsPath) ? readFileSync(settingsPath, "utf8") : "";
-				if (settingsAfter !== settingsBefore) throw new Error("mu.json changed across the upgrade");
+				if (settingsAfter !== settingsBefore) throw new Error("agent.json changed across the upgrade");
 				if (evidence.setting !== undefined) {
 					await second.page.locator('[data-testid="nav-settings"]').click();
 					await second.page.locator('[data-testid="settings"]').waitFor({ state: "visible", timeout: 60_000 });
@@ -526,7 +526,7 @@ async function main() {
 		while (existsSync(installDir) && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 500));
 		if (existsSync(installDir)) throw new Error(`the install directory is still there: ${readdirSync(installDir).join(", ")}`);
 		console.log("install rehearsal: the install directory is gone");
-		const stillOurs = muState().filter((entry) => entry.target.includes(installDir));
+		const stillOurs = specState().filter((entry) => entry.target.includes(installDir));
 		if (stillOurs.length > 0) {
 			throw new Error(`the uninstaller left ${stillOurs.map((entry) => `${entry.kind} ${entry.path}`).join(" | ")} behind`);
 		}

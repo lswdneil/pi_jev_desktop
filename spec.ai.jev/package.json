@@ -36,7 +36,7 @@
 		"check:docs-commands": "node scripts/check-docs-commands.mjs",
 		"check:compat-policy": "node scripts/compat-policy.mjs",
 		"check:packaging": "node scripts/check-packaging.mjs",
-		"version:mu-agent": "node scripts/release-versions.mjs --set",
+		"version:spec-ai-agent": "node scripts/release-versions.mjs --set",
 		"generate:models": "npm --prefix packages/ai run generate-models",
 		"hydrate:model-data": "npm --prefix packages/ai run hydrate-model-data",
 		"hydrate:model-data:pin": "node scripts/hydrate-model-data-from-pin.mjs",

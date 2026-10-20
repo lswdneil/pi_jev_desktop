@@ -283,7 +283,7 @@ export function registerBoard(runtime: KyrnRuntime, roots: HarnessRoots | undefi
 		maxSteps: 10,
 		narrateTimeoutMs: 60000,
 	});
-	if (!options.enabled || process.env.KYRN_SWARM_CONTROL) return;
+	if (!options.enabled || process.env.SPEC_AI_JEV_SWARM_CONTROL) return;
 	const { pi } = runtime;
 	const projects = new BoardProjects(roots ? join(roots.agentDir, "mu") : undefined);
 	const calls = new Map<string, { name: string; input: Record<string, unknown> }>();
@@ -332,7 +332,7 @@ export function registerBoard(runtime: KyrnRuntime, roots: HarnessRoots | undefi
 	};
 
 	const on = (ctx: ExtensionContext) => projects.get(ctx.cwd) ?? options.defaultOn;
-	/** The model named in kyrn.json, else the one the person picked: "provider/id", or "session". */
+	/** The model named in agent.json, else the one the person picked: "provider/id", or "session". */
 	const chosen = (): string | undefined => options.model || projects.model();
 	const usable = (ctx: ExtensionContext, ref: string): boolean => {
 		const slash = ref.indexOf("/");
@@ -381,7 +381,7 @@ export function registerBoard(runtime: KyrnRuntime, roots: HarnessRoots | undefi
 		if (!ctx?.hasUI || ctx.mode !== "tui") return;
 		ctx.ui.setWidget(WIDGET_KEY, board && on(ctx) ? boardWidget(board, language(), notes.at(-1)) : undefined);
 	};
-	/** A fixed language first, then the app's (MU_LANG), then the language the user writes in. */
+	/** A fixed language first, then the app's (SPEC_AI_JEV_LANG), then the language the user writes in. */
 	const language = (): BoardLanguage => {
 		if (options.language === "zh" || options.language === "en") return options.language;
 		return appLanguage()?.wording ?? languageOf(`${runtime.frame?.goal ?? ""} ${runtime.turn.userMessage}`);

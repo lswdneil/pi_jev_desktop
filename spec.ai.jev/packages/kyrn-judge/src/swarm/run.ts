@@ -444,7 +444,7 @@ export class SwarmRun<Assignment> {
 					spec.task,
 					spec.assignment,
 					controller.signal,
-					{ ...spec.env, KYRN_SWARM_CONTROL: controlPath(this.dir, index) },
+					{ ...spec.env, SPEC_AI_JEV_SWARM_CONTROL: controlPath(this.dir, index) },
 					observer,
 				);
 			} catch (error) {

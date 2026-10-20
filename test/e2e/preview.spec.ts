@@ -40,7 +40,7 @@ function serve(): Promise<{ server: Server; origin: string }> {
 test.describe("the preview", () => {
 	test("a link in a message opens the preview, and the window closes it", async () => {
 		const { server, origin } = await serve();
-		const profile = await launchApp({ env: { MU_FIXTURE_LINK_URL: `${origin}/docs` } });
+		const profile = await launchApp({ env: { SPEC_AI_JEV_FIXTURE_LINK_URL: `${origin}/docs` } });
 		try {
 			const { page } = profile;
 			await completeFirstRun(page);

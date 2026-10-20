@@ -2,8 +2,8 @@
  * Runs the real `input.preflight` decision against a real judge and compares
  * the verdicts with hand-written labels.
  *
- *   KYRN_JUDGE=laya    node kyrn/spikes/judge-bench/preflight-bench.ts   (local sidecar, default)
- *   KYRN_JUDGE=gateway node --env-file=.env kyrn/spikes/judge-bench/preflight-bench.ts
+ *   SPEC_AI_JEV_JUDGE=laya    node kyrn/spikes/judge-bench/preflight-bench.ts   (local sidecar, default)
+ *   SPEC_AI_JEV_JUDGE=gateway node --env-file=.env kyrn/spikes/judge-bench/preflight-bench.ts
  *
  * Needs Node >= 23.6 (runs TypeScript directly). Writes results/preflight-<judge>-<time>.json.
  */
@@ -22,11 +22,11 @@ import {
 } from "../../../packages/kyrn-judge/src/index.ts";
 import { type Scenario, scenarios } from "./scenarios.ts";
 
-const backend = process.env.KYRN_JUDGE ?? "laya";
+const backend = process.env.SPEC_AI_JEV_JUDGE ?? "laya";
 const provider: JudgeProvider =
 	backend === "gateway"
 		? new GatewayJudgeProvider({ apiKey: () => process.env.AI_GATEWAY_API_KEY })
-		: new LocalJudgeProvider({ baseUrl: process.env.KYRN_LOCAL_JUDGE_URL });
+		: new LocalJudgeProvider({ baseUrl: process.env.SPEC_AI_JEV_LOCAL_JUDGE_URL });
 
 const ledger = new MemoryLedger();
 const engine = new DecisionEngine({

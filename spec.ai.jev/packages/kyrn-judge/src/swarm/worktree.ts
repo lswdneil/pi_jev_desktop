@@ -66,7 +66,7 @@ export function gitArgs(args: readonly string[], platform: NodeJS.Platform = pro
 		"-c",
 		"core.quotepath=false",
 		"-c",
-		"core.hooksPath=.mu-no-hooks",
+		"core.hooksPath=.spec-ai-jev-no-hooks",
 		...(platform === "win32" ? ["-c", "core.longpaths=true"] : []),
 		...args,
 	];

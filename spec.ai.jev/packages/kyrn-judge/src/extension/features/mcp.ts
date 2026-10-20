@@ -81,7 +81,7 @@ function literal(value: string): string {
 }
 
 /**
- * MCP servers mu takes over from Claude Code, Cursor, Codex and mu.json, on
+ * MCP servers mu takes over from Claude Code, Cursor, Codex and agent.json, on
  * pi's own MCP client. pi connects, signs in (`/mcp login`), calls and
  * reconnects; mu decides when a server is there at all. Every such server is a
  * `judged` capability in the catalog: until the judge finds a task needs it, or
@@ -94,7 +94,7 @@ function literal(value: string): string {
  * through `tool_search`). An inherited server of the same name yields to them.
  *
  * With `capability.disclosure` off nothing is hidden, so every server is
- * registered with the session. A server with `"exposure": "always"` in mu.json
+ * registered with the session. A server with `"exposure": "always"` in agent.json
  * is registered with the session either way.
  */
 export function registerMcp(runtime: KyrnRuntime, roots: HarnessRoots | undefined): void {
@@ -195,7 +195,7 @@ export function registerMcp(runtime: KyrnRuntime, roots: HarnessRoots | undefine
 		if (!store.isApproved(ctx.cwd, definition)) {
 			if (!ctx.hasUI) {
 				throw codedError(
-					`it is defined by the project (${definition.source}) and has not been approved. Start mu in this folder interactively and open it once, or define it in mu.json`,
+					`it is defined by the project (${definition.source}) and has not been approved. Start mu in this folder interactively and open it once, or define it in agent.json`,
 					{ code: "needs_approval", params: { source: definition.source } },
 				);
 			}

@@ -14,7 +14,7 @@ const MAX_BOX_WIDTH = 78;
 const MIN_BOX_WIDTH = 44;
 
 export interface Versions {
-	/** mu's own: what `npm i -g mu-agent` installed, or what this source tree is released as. */
+	/** mu's own: what `npm i -g spec-ai-agent` installed, or what this source tree is released as. */
 	readonly mu: string;
 	/** The pi mu is built on. */
 	readonly pi: string;
@@ -23,11 +23,11 @@ export interface Versions {
 /**
  * mu's version and pi's, from where each is written down. `judgeRoot` is the judgment layer's own folder:
  *
- *   npm package (mu-agent)   <package>/package.json: `version` is mu's, `muBuild.pi` is pi's (kyrn/npm/build.mjs)
+ *   npm package (spec-ai-agent)   <package>/package.json: `version` is mu's, `specBuild.pi` is pi's (kyrn/npm/build.mjs)
  *   source checkout          kyrn/npm/package.template.json is mu's, packages/coding-agent/package.json is pi's
  *
  * Two places that look right are not. The judgment layer's own package.json says 0.1.0, a number never released.
- * pi's `VERSION` is read from PI_PACKAGE_DIR, which the launcher points at mu-agent's folder in the package, so
+ * pi's `VERSION` is read from PI_PACKAGE_DIR, which the launcher points at spec-ai-agent's folder in the package, so
  * there it is mu's version: mu 0.1.3 greeted with "v0.1.0 · built on pi 0.1.3".
  */
 export function readVersions(judgeRoot: URL, fallbackPi = PI_VERSION): Versions {
@@ -41,11 +41,11 @@ export function readVersions(judgeRoot: URL, fallbackPi = PI_VERSION): Versions 
 	};
 	const text = (value: unknown): string | undefined => (typeof value === "string" && value ? value : undefined);
 	const installed = read("../package.json");
-	// Only the npm build writes `muBuild`.
-	if (typeof installed.muBuild === "object" && installed.muBuild !== null) {
+	// Only the npm build writes `specBuild`.
+	if (typeof installed.specBuild === "object" && installed.specBuild !== null) {
 		return {
 			mu: text(installed.version) ?? "0.0.0",
-			pi: text((installed.muBuild as { pi?: unknown }).pi) ?? fallbackPi,
+			pi: text((installed.specBuild as { pi?: unknown }).pi) ?? fallbackPi,
 		};
 	}
 	return {

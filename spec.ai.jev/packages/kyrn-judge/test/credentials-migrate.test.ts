@@ -37,7 +37,7 @@ const config = (overrides: Partial<KyrnConfig> = {}): KyrnConfig => ({ ...DEFAUL
 
 describe("moving keys into the store", () => {
 	it("moves a key only mu reads, and leaves the file without it", async () => {
-		const { agentDir, envFile, store } = setup("MU_JUDGE_OPENROUTER_API_KEY=secret-one\nOTHER=kept\n");
+		const { agentDir, envFile, store } = setup("SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY=secret-one\nOTHER=kept\n");
 		const result = await migrateCredentials({
 			agentDir,
 			envFile,
@@ -46,13 +46,13 @@ describe("moving keys into the store", () => {
 		});
 
 		expect(result.moved).toEqual([
-			{ name: "MU_JUDGE_OPENROUTER_API_KEY", judge: "jev-openrouter", removedFromEnv: true },
+			{ name: "SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY", judge: "jev-openrouter", removedFromEnv: true },
 		]);
 		expect(result.envFileWritten).toBe(true);
 		expect(store.readSync(JUDGE_SECRET("jev-openrouter"))).toBe("secret-one");
 		const text = readFileSync(envFile, "utf8");
 		expect(text).not.toContain("secret-one");
-		expect(text).not.toContain("MU_JUDGE_OPENROUTER_API_KEY");
+		expect(text).not.toContain("SPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY");
 		expect(envFileValue(text, "OTHER")).toBe("kept");
 		expect(text).toContain("# Keys moved to the credential store");
 		expect(result.backup).toBeDefined();
@@ -84,7 +84,7 @@ describe("moving keys into the store", () => {
 	});
 
 	it("writes nothing at all in a dry run", async () => {
-		const { agentDir, envFile, store } = setup("MU_JUDGE_CLM_API_KEY=secret-two\n");
+		const { agentDir, envFile, store } = setup("SPEC_AI_JEV_JUDGE_CLM_API_KEY=secret-two\n");
 		const before = readFileSync(envFile, "utf8");
 		const result = await migrateCredentials({
 			agentDir,
@@ -102,7 +102,7 @@ describe("moving keys into the store", () => {
 
 	it("keeps what is not a key: references, empty values and names no judge reads", async () => {
 		const { agentDir, envFile, store } = setup(
-			"MU_JUDGE_CLM_API_KEY=$ALREADY_IN_SHELL\nMU_JUDGE_OPENROUTER_API_KEY=\nUNRELATED=1\n",
+			"SPEC_AI_JEV_JUDGE_CLM_API_KEY=$ALREADY_IN_SHELL\nSPEC_AI_JEV_JUDGE_OPENROUTER_API_KEY=\nUNRELATED=1\n",
 		);
 		const result = await migrateCredentials({
 			agentDir,
@@ -116,11 +116,11 @@ describe("moving keys into the store", () => {
 			"it has no value",
 			"no judge of this configuration reads it",
 		]);
-		expect(readFileSync(envFile, "utf8")).toContain("MU_JUDGE_CLM_API_KEY=$ALREADY_IN_SHELL");
+		expect(readFileSync(envFile, "utf8")).toContain("SPEC_AI_JEV_JUDGE_CLM_API_KEY=$ALREADY_IN_SHELL");
 	});
 
 	it("is idempotent: the second run finds nothing to move", async () => {
-		const { agentDir, envFile, store } = setup("MU_JUDGE_CLM_API_KEY=secret-three\n");
+		const { agentDir, envFile, store } = setup("SPEC_AI_JEV_JUDGE_CLM_API_KEY=secret-three\n");
 		await migrateCredentials({ agentDir, envFile, config: config({ tiers: ["clm"] }), store });
 		const again = await migrateCredentials({ agentDir, envFile, config: config({ tiers: ["clm"] }), store });
 		expect(again.moved).toEqual([]);
@@ -128,7 +128,7 @@ describe("moving keys into the store", () => {
 	});
 
 	it("says what it did, that auth.json is not part of it, and that the backup is still a secret", async () => {
-		const { agentDir, envFile, store } = setup("MU_JUDGE_CLM_API_KEY=k\n");
+		const { agentDir, envFile, store } = setup("SPEC_AI_JEV_JUDGE_CLM_API_KEY=k\n");
 		const result = await migrateCredentials({ agentDir, envFile, config: config({ tiers: ["clm"] }), store });
 		const lines = describeMigration(result).join("\n");
 		expect(lines).toMatch(/1 key moved to the file store/);
@@ -160,8 +160,8 @@ describe("the CLI arguments", () => {
 			rewriteEnv: false,
 			json: true,
 		});
-		expect(parseCredentialsArgs([], { MU_AGENT_DIR: "/tmp/from-env" })).toMatchObject({ agentDir: "/tmp/from-env" });
+		expect(parseCredentialsArgs([], { SPEC_AI_JEV_AGENT_DIR: "/tmp/from-env" })).toMatchObject({ agentDir: "/tmp/from-env" });
 		expect(() => parseCredentialsArgs([], {})).toThrow(/--agent-dir is required/);
-		expect(() => parseCredentialsArgs(["--nope"], { MU_AGENT_DIR: "/x" })).toThrow(/unknown argument/);
+		expect(() => parseCredentialsArgs(["--nope"], { SPEC_AI_JEV_AGENT_DIR: "/x" })).toThrow(/unknown argument/);
 	});
 });

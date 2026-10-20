@@ -80,7 +80,7 @@ export function registerLsp(runtime: KyrnRuntime): void {
 		maxFileBytes: 2_000_000,
 		waitMs: 4000,
 	});
-	if (!options.enabled || (process.env.KYRN_SWARM_DEPTH && !options.subAgents)) return;
+	if (!options.enabled || (process.env.SPEC_AI_JEV_SWARM_DEPTH && !options.subAgents)) return;
 	const { pi } = runtime;
 
 	runtime.catalog.register({

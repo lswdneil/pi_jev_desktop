@@ -6,23 +6,23 @@ import { OtlpTelemetryContext } from "./sinks/otlp.ts";
 /** What the host reads from its environment. Every value is optional: the defaults are the safe ones. */
 export interface TelemetryEnvironment {
 	/** `jsonl` (default), `otlp`, or `off`. */
-	MU_TELEMETRY?: string;
+	SPEC_AI_JEV_TELEMETRY?: string;
 	/** `1` turns OTLP on; anything else leaves it off. */
-	MU_OTEL?: string;
+	SPEC_AI_JEV_OTEL?: string;
 	/** Collector base URL, e.g. `http://127.0.0.1:4318`. */
-	MU_OTEL_ENDPOINT?: string;
-	/** Where the JSONL files go. The host passes its own default (`~/.mu/logs`). */
-	MU_TELEMETRY_DIR?: string;
+	SPEC_AI_JEV_OTEL_ENDPOINT?: string;
+	/** Where the JSONL files go. The host passes its own default (`~/.spec.ai.jev/logs`). */
+	SPEC_AI_JEV_TELEMETRY_DIR?: string;
 }
 
 export type TelemetryMode = "off" | "jsonl" | "otlp";
 
-/** OTLP is opt-in twice over: the mode must ask for it and `MU_OTEL=1` must be set. */
+/** OTLP is opt-in twice over: the mode must ask for it and `SPEC_AI_JEV_OTEL=1` must be set. */
 export function telemetryMode(env: TelemetryEnvironment): TelemetryMode {
-	const requested = env.MU_TELEMETRY?.trim().toLowerCase();
+	const requested = env.SPEC_AI_JEV_TELEMETRY?.trim().toLowerCase();
 	if (requested === "off" || requested === "none") return "off";
-	if (requested === "otlp") return env.MU_OTEL?.trim() === "1" ? "otlp" : "off";
-	if (env.MU_OTEL?.trim() === "1") return "otlp";
+	if (requested === "otlp") return env.SPEC_AI_JEV_OTEL?.trim() === "1" ? "otlp" : "off";
+	if (env.SPEC_AI_JEV_OTEL?.trim() === "1") return "otlp";
 	return "jsonl";
 }
 
@@ -51,7 +51,7 @@ export interface TelemetryHandle {
  * The one place a host decides whether mu writes telemetry and where.
  *
  * Default is local JSONL: the spans answer "what happened" without leaving the machine, and they hold
- * no prompt, no output and no key. A remote collector needs `MU_OTEL=1` as well, so a setting copied
+ * no prompt, no output and no key. A remote collector needs `SPEC_AI_JEV_OTEL=1` as well, so a setting copied
  * from a colleague's config cannot start shipping spans by itself.
  */
 export function createTelemetryContext(options: TelemetryFactoryOptions): TelemetryHandle {
@@ -66,7 +66,7 @@ export function createTelemetryContext(options: TelemetryFactoryOptions): Teleme
 	}
 	if (mode === "otlp") {
 		const sink = new OtlpTelemetryContext({
-			endpoint: options.env.MU_OTEL_ENDPOINT?.trim() || "http://127.0.0.1:4318",
+			endpoint: options.env.SPEC_AI_JEV_OTEL_ENDPOINT?.trim() || "http://127.0.0.1:4318",
 			resource: { "service.name": "mu", ...(options.version ? { "service.version": options.version } : {}) },
 			...(options.fetch ? { fetch: options.fetch } : {}),
 			...(options.redact ? { redact: options.redact } : {}),
@@ -81,7 +81,7 @@ export function createTelemetryContext(options: TelemetryFactoryOptions): Teleme
 		};
 	}
 	const sink = new JsonlTelemetryContext({
-		dir: options.env.MU_TELEMETRY_DIR?.trim() || options.dir,
+		dir: options.env.SPEC_AI_JEV_TELEMETRY_DIR?.trim() || options.dir,
 		...(options.redact ? { redact: options.redact } : {}),
 	});
 	return {

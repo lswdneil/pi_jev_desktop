@@ -212,9 +212,9 @@ describe("judge configuration", () => {
 			for (const type of ["jev", "gateway"] as const) {
 				const config = parseConfig({
 					tiers: ["custom"],
-					judges: { custom: { type, apiKeyEnv: "KYRN_JUDGE_CUSTOM" } },
+					judges: { custom: { type, apiKeyEnv: "SPEC_AI_JEV_JUDGE_CUSTOM" } },
 				});
-				const built = buildJudge(config, { env: { KYRN_JUDGE_CUSTOM: "fixture" } });
+				const built = buildJudge(config, { env: { SPEC_AI_JEV_JUDGE_CUSTOM: "fixture" } });
 				await built.judge.evaluate({ state: "fixture", questions: { q: questions.edit } }).catch(() => {});
 				const [url, options] = fetch.mock.lastCall as unknown as [string, RequestInit];
 				expect(new Headers(options.headers).get("authorization")).toBe("Bearer fixture");
@@ -250,14 +250,14 @@ describe("judge configuration", () => {
 	});
 
 	it("lets the environment pick the tiers, the default mode, or switch the kernel off", () => {
-		const picked = loadConfig({ env: { KYRN_JUDGE: "laya, gateway", KYRN_JUDGE_MODE: "active" } });
+		const picked = loadConfig({ env: { SPEC_AI_JEV_JUDGE: "laya, gateway", SPEC_AI_JEV_JUDGE_MODE: "active" } });
 		expect(picked.config.tiers).toEqual(["laya", "jev"]);
 		expect(picked.config.modes.default).toBe("active");
-		expect(loadConfig({ env: { KYRN_JUDGE: "off" } }).disabled).toBe(true);
+		expect(loadConfig({ env: { SPEC_AI_JEV_JUDGE: "off" } }).disabled).toBe(true);
 		expect(loadConfig({ env: {} }).config.tiers).toEqual(["jev"]);
 	});
 
-	it("ignores malformed parts of mu.json instead of failing", () => {
+	it("ignores malformed parts of agent.json instead of failing", () => {
 		const config = parseConfig({
 			tiers: "laya",
 			modes: { default: "loud", "tool.admission": "active" },

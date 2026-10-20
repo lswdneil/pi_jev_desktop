@@ -35,7 +35,7 @@ describe("the shell log", () => {
 		const home = mkdtempSync(join(tmpdir(), "mu-shell-log-"));
 		try {
 			const file = shellLogPath(home);
-			expect(file.replaceAll("\\", "/")).toMatch(/\/logs\/mu-shell\.log$/);
+		expect(file.replaceAll("\\", "/")).toMatch(/\/logs\/spec-shell\.log$/);
 			appendShellLog(file, "first\n");
 			appendShellLog(file, "second\n");
 			expect(readFileSync(file, "utf8")).toBe("first\nsecond\n");
