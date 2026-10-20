@@ -28,6 +28,7 @@ import {
 	type TextMessagePartProps,
 	type ToolCallMessagePartProps,
 } from "@assistant-ui/react";
+import { FilePenLine, Terminal, Wrench } from "lucide-react";
 import { useMemo } from "react";
 import { MAX_PROMPT_IMAGES, PROMPT_IMAGE_TYPES, type PromptImage } from "../../../shared/api.ts";
 import { type ConversationState, visibleMessages } from "../../../shared/conversation.ts";
@@ -129,12 +130,29 @@ function ToolFallback({
 }: ToolCallMessagePartProps & { readonly text: (key: string) => string }): React.JSX.Element {
 	const state = isError === true ? "error" : status.type === "running" ? "running" : "ok";
 	const output = toolResultText(result);
+	const label =
+		state === "error"
+			? text("conversation.toolFailed")
+			: state === "running"
+				? text("conversation.toolRunning")
+				: text("conversation.toolDone");
+	const ToolIcon = /write|edit|patch/i.test(toolName)
+		? FilePenLine
+		: /bash|shell|exec/i.test(toolName)
+			? Terminal
+			: Wrench;
 	return (
 		<article className={`message message-tool tool-${state}`} data-role="tool">
-			<span className="who">{toolName}</span>
-			<p className="text">
-				<code>{argsText ?? ""}</code> <span className="muted">({state})</span>
-			</p>
+			<div className="tool-head">
+				<span className="tool-icon" aria-hidden="true">
+					<ToolIcon />
+				</span>
+				<span className="tool-name">{toolName}</span>
+				<code className="tool-args" title={argsText ?? ""}>
+					{argsText ?? ""}
+				</code>
+				<span className={`tool-status tool-status-${state}`}>{label}</span>
+			</div>
 			{output === undefined ? null : (
 				<details className="tool-output" data-testid="tool-output">
 					<summary>{text("conversation.output")}</summary>
