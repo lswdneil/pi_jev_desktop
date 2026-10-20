@@ -20,6 +20,10 @@ import {
 	valueOf,
 } from "../../shared/settings.ts";
 import { shellText } from "../lib/i18n.ts";
+import { Input } from "../ui/input.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
+import { Switch } from "../ui/switch.tsx";
+import { Textarea } from "../ui/textarea.tsx";
 
 export function OptionControl({
 	feature,
@@ -43,12 +47,14 @@ export function OptionControl({
 	const id = `option-${feature.name}-${option.key}`;
 
 	return (
-		<div className="option" data-option={`${feature.name}.${option.key}`}>
-			<label className="option-label" htmlFor={id}>
-				{label}
-			</label>
-			<div className="option-control">{control(option, value, disabled, id, language, onChange)}</div>
-			{help === undefined ? null : <p className="option-help">{help}</p>}
+		<div className="option grid gap-2 border-b border-border/70 py-3 last:border-0" data-option={`${feature.name}.${option.key}`}>
+			<div className="flex flex-wrap items-center justify-between gap-3">
+				<label className="option-label text-[13px] font-medium" htmlFor={id}>
+					{label}
+				</label>
+				<div className="option-control">{control(option, value, disabled, id, language, onChange)}</div>
+			</div>
+			{help === undefined ? null : <p className="option-help text-[11px] leading-5 text-muted-foreground">{help}</p>}
 			{option.kind === "unsupported" ? <p className="option-help">{shellText(language, "settings.readOnly")}</p> : null}
 		</div>
 	);
@@ -65,20 +71,20 @@ function control(
 	switch (option.kind) {
 		case "boolean":
 			return (
-				<input
+				<Switch
 					id={id}
-					type="checkbox"
 					checked={value === true}
 					disabled={disabled}
-					onChange={(event) => onChange(event.target.checked)}
+					onCheckedChange={onChange}
 				/>
 			);
 		case "number":
 			return (
-				<span className="number-row">
-					<input
+				<span className="flex items-center gap-2">
+					<Input
 						id={id}
 						type="number"
+						className="w-[9rem]"
 						value={typeof value === "number" ? value : 0}
 						min={option.min}
 						max={option.max}
@@ -89,15 +95,16 @@ function control(
 						}}
 					/>
 					{option.unit === undefined ? null : (
-						<span className="unit">{localized(option.unit, language, `${option.key}.unit`)}</span>
+						<span className="unit text-[11px] text-muted-foreground">{localized(option.unit, language, `${option.key}.unit`)}</span>
 					)}
 				</span>
 			);
 		case "text":
 			return (
-				<input
+				<Input
 					id={id}
 					type="text"
+					className="w-[min(24rem,100%)]"
 					value={typeof value === "string" ? value : ""}
 					disabled={disabled}
 					onChange={(event) => onChange(event.target.value)}
@@ -105,9 +112,10 @@ function control(
 			);
 		case "list":
 			return (
-				<textarea
+				<Textarea
 					id={id}
 					rows={3}
+					className="min-h-[76px] w-[min(30rem,100%)]"
 					value={Array.isArray(value) ? value.join("\n") : ""}
 					disabled={disabled}
 					onChange={(event) =>
@@ -122,9 +130,10 @@ function control(
 			);
 		case "numbers":
 			return (
-				<textarea
+				<Textarea
 					id={id}
 					rows={2}
+					className="min-h-[64px] w-[min(30rem,100%)]"
 					value={Array.isArray(value) ? value.join(", ") : ""}
 					disabled={disabled}
 					onChange={(event) => {
@@ -139,18 +148,22 @@ function control(
 			);
 		case "choice":
 			return (
-				<select
-					id={id}
+				<Select
 					value={typeof value === "string" ? value : option.default}
+					onValueChange={onChange}
 					disabled={disabled}
-					onChange={(event) => onChange(event.target.value)}
 				>
-					{option.choices.map((choice) => (
-						<option key={choice.value} value={choice.value}>
-							{localized(choice.label, language, `${option.key}.${choice.value}`)}
-						</option>
-					))}
-				</select>
+					<SelectTrigger id={id} className="w-[min(22rem,100%)]">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						{option.choices.map((choice) => (
+							<SelectItem key={choice.value} value={choice.value}>
+								{localized(choice.label, language, `${option.key}.${choice.value}`)}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
 			);
 		case "unsupported":
 			return <code id={id}>{describeValue(value)}</code>;

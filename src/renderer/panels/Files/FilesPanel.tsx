@@ -15,9 +15,13 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Pencil, RotateCw, Save, X } from "lucide-react";
 import type { FilePreview, SpecApi } from "../../../shared/api.ts";
 import type { ChangedFile } from "../../../shared/conversation.ts";
 import { diffLines } from "../../../shared/diff.ts";
+import { Badge } from "../../ui/badge.tsx";
+import { Button } from "../../ui/button.tsx";
+import { Textarea } from "../../ui/textarea.tsx";
 
 /** A 1 MB file can produce tens of thousands of rows; the panel shows the start and says so. */
 const MAX_DIFF_ROWS = 400;
@@ -119,14 +123,15 @@ export function FilesPanel({
 				<ul className="files">
 					{newest.map((file, index) => (
 						<li key={`${file.path}-${index}`} data-file={file.path}>
-							<button
+							<Button
 								type="button"
-								className={`file-row${file.path === selected ? " active" : ""}`}
+								variant="ghost"
+								className={`file-row h-auto w-full justify-start gap-2 px-2 py-1.5 text-left${file.path === selected ? " active bg-primary/10" : ""}`}
 								onClick={() => open(file.path)}
 								title={file.path}
 							>
 								<code>{file.path}</code> <span className="muted">{file.tool}</span>
-							</button>
+							</Button>
 						</li>
 					))}
 				</ul>
@@ -136,16 +141,17 @@ export function FilesPanel({
 					<div className="file-preview-head">
 						<code>{selected}</code>
 						{preview === undefined ? null : <span className="muted file-size">{size(preview.text)}</span>}
-						<button type="button" aria-label={text("panel.closePreview")} onClick={close}>
-							×
-						</button>
+						<Button type="button" variant="ghost" size="icon-sm" aria-label={text("panel.closePreview")} onClick={close}>
+							<X />
+						</Button>
 					</div>
 					{loading ? <p className="muted">{text("panel.loadingFile")}</p> : null}
 					{error === "" ? null : <p className="line-error">{error}</p>}
 					{conflict ? (
-						<button type="button" data-testid="file-reload" onClick={() => open(selected)}>
+						<Button type="button" variant="outline" size="sm" data-testid="file-reload" onClick={() => open(selected)}>
+							<RotateCw />
 							{text("panel.reload")}
-						</button>
+						</Button>
 					) : null}
 					{preview?.binary === true ? <p className="muted">{text("panel.binaryFile")}</p> : null}
 					{preview?.truncated === true ? <p className="muted">{text("panel.truncatedFile")}</p> : null}
@@ -153,19 +159,20 @@ export function FilesPanel({
 					{preview === undefined || preview.binary ? null : draft === undefined ? (
 						<>
 							{preview.editable ? (
-								<p className="row file-actions">
-									<button type="button" data-testid="file-edit" onClick={() => setDraft(preview.text)}>
+								<div className="flex flex-wrap items-center gap-2 file-actions">
+									<Button type="button" variant="outline" size="sm" data-testid="file-edit" onClick={() => setDraft(preview.text)}>
+										<Pencil />
 										{text("panel.editFile")}
-									</button>
+									</Button>
 									{saved ? <span className="muted">{text("panel.saved")}</span> : null}
-								</p>
+								</div>
 							) : null}
 							<pre>{preview.text}</pre>
 						</>
 					) : (
 						<>
-							<textarea
-								className="file-editor"
+							<Textarea
+								className="file-editor min-h-[320px] resize-y font-mono text-[12px] leading-5"
 								data-testid="file-editor"
 								aria-label={text("panel.editor")}
 								value={draft}
@@ -181,25 +188,26 @@ export function FilesPanel({
 									}
 								}}
 							/>
-							<p className="row file-actions">
-								<button type="button" data-testid="file-save" disabled={!dirty || saving} onClick={save}>
+							<div className="flex flex-wrap items-center gap-2 file-actions">
+								<Button type="button" data-testid="file-save" disabled={!dirty || saving} onClick={save}>
+									<Save />
 									{text("panel.saveFile")}
-								</button>
-								<button type="button" data-testid="file-cancel" disabled={saving} onClick={() => setDraft(undefined)}>
+								</Button>
+								<Button type="button" variant="ghost" data-testid="file-cancel" disabled={saving} onClick={() => setDraft(undefined)}>
 									{text("app.cancel")}
-								</button>
+								</Button>
 								<span className="muted">{dirty ? text("panel.diff") : text("panel.noChanges")}</span>
-							</p>
+							</div>
 						</>
 					)}
 
 					{diff === undefined ? null : (
 						<div className="diff" data-testid="file-diff">
-							<p className="row diff-counts">
-								<span className="diff-add">+{diff.added}</span>
-								<span className="diff-remove">-{diff.removed}</span>
+							<div className="flex items-center gap-2 diff-counts">
+								<Badge>{`+${diff.added}`}</Badge>
+								<Badge variant="destructive">-{diff.removed}</Badge>
 								{diff.tooLarge ? <span className="muted">{text("panel.diffTooLarge")}</span> : null}
-							</p>
+							</div>
 							<div className="diff-rows">
 								{rows.map((row, index) => (
 									<div key={index} className={`diff-row diff-${row.kind}`}>

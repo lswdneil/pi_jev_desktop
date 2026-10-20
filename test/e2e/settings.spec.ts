@@ -33,11 +33,14 @@ test.describe("settings from the manifest", () => {
 			await expect(feature.locator("summary")).toContainText("Fixture feature");
 
 			// One control per kind, all of them described by the manifest rather than by this repository's code.
-			await expect(profile.page.locator('[data-option="fixtureFeature.flag"] input[type="checkbox"]')).toBeVisible();
+			await expect(profile.page.locator('[data-option="fixtureFeature.flag"] [role="switch"]')).toBeVisible();
 			await expect(profile.page.locator('[data-option="fixtureFeature.limit"] input[type="number"]')).toHaveValue("7");
 			await expect(profile.page.locator('[data-option="fixtureFeature.limit"]')).toContainText("items");
-			await expect(profile.page.locator('[data-option="fixtureFeature.mode"] select')).toHaveValue("alpha");
-			await expect(profile.page.locator('[data-option="fixtureFeature.mode"] select option')).toHaveCount(2);
+			const mode = profile.page.locator('[data-option="fixtureFeature.mode"] [role="combobox"]');
+			await expect(mode).toContainText("Alpha");
+			await mode.click();
+			await expect(profile.page.getByRole("option")).toHaveCount(2);
+			await profile.page.keyboard.press("Escape");
 
 			// A kind from a newer kernel is shown as it stands in the file, not dropped.
 			const future = profile.page.locator('[data-option="fixtureFeature.futureThing"]');
@@ -56,7 +59,7 @@ test.describe("settings from the manifest", () => {
 		try {
 			await openSettings(profile);
 
-			await profile.page.locator('[data-option="fixtureFeature.flag"] input[type="checkbox"]').check();
+			await profile.page.locator('[data-option="fixtureFeature.flag"] [role="switch"]').click();
 
 			await expect(profile.page.locator('[data-testid="settings-saved"]')).toContainText("Restart the agent");
 			await expect(profile.page.locator('[data-option="fixtureFeature.limit"] input[type="number"]')).toHaveValue("7");

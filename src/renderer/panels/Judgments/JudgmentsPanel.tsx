@@ -10,7 +10,10 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { Copy } from "lucide-react";
 import type { JudgmentRecord, SpecApi } from "../../../shared/api.ts";
+import { Badge } from "../../ui/badge.tsx";
+import { Button } from "../../ui/button.tsx";
 
 const REFRESH_MS = 3_000;
 
@@ -58,21 +61,22 @@ export function JudgmentsPanel({
 					<ul className="judgments">
 						{newest.map((record) => (
 							<li key={record.id} data-judgment={record.id}>
-								<button
+								<Button
 									type="button"
-									className={`judgment-row${record.id === selected ? " active" : ""}`}
+									variant="ghost"
+									className={`judgment-row h-auto w-full justify-start gap-2 px-2 py-1.5 text-left${record.id === selected ? " active bg-primary/10" : ""}`}
 									onClick={() => {
 										setSelected(record.id === selected ? undefined : record.id);
 										setCopied(false);
 									}}
 								>
 									<code>{record.specId}</code>{" "}
-									<span className={`chip chip-${record.mode === "active" ? "running" : "stopped"}`}>{record.mode}</span>{" "}
+									<Badge variant={record.mode === "active" ? "default" : "secondary"}>{record.mode}</Badge>{" "}
 									<span className="muted">{record.providerId}</span>
 									{record.userMessage === undefined ? null : (
 										<span className="muted judgment-message">{record.userMessage}</span>
 									)}
-								</button>
+								</Button>
 								{record.id === selected && detail !== undefined ? (
 									<dl className="judgment-detail" data-testid="judgment-detail">
 										<dt>{text("panel.spec")}</dt>
@@ -104,15 +108,18 @@ export function JudgmentsPanel({
 										<dt>{text("panel.id")}</dt>
 										<dd>
 											<code>{detail.id}</code>{" "}
-											<button
+											<Button
 												type="button"
+												variant="outline"
+												size="sm"
 												data-testid="judgment-copy"
 												onClick={() => {
 													void navigator.clipboard.writeText(detail.id).then(() => setCopied(true));
 												}}
 											>
+												<Copy />
 												{copied ? text("panel.copied") : text("panel.copyId")}
-											</button>
+											</Button>
 										</dd>
 									</dl>
 								) : null}

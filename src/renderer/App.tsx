@@ -20,6 +20,7 @@ import { JudgmentsPanel } from "./panels/Judgments/JudgmentsPanel.tsx";
 import { Button } from "./ui/button.tsx";
 import { Input } from "./ui/input.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.tsx";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip.tsx";
 
 /**
@@ -910,43 +911,28 @@ function Panels({
 }): React.JSX.Element {
 	const state = useSyncExternalStore(store.subscribe, store.getSnapshot);
 	return (
-		<>
-			{/* A tablist, not three buttons: a screen reader should hear "tab 2 of 3, selected" and the arrows should work. */}
-			<nav className="tabs" role="tablist" aria-label={text("panel.sections")}>
+		<Tabs
+			value={tab}
+			onValueChange={(value) => onTab(value as "board" | "files" | "judgments")}
+			className="flex min-h-0 flex-col gap-3"
+		>
+			<TabsList aria-label={text("panel.sections")} className="w-full justify-start">
 				{(["board", "files", "judgments"] as const).map((name) => (
-					<button
-						key={name}
-						type="button"
-						role="tab"
-						id={`tab-${name}`}
-						aria-selected={tab === name}
-						aria-controls={`panel-${name}`}
-						tabIndex={tab === name ? 0 : -1}
-						className={tab === name ? "active" : ""}
-						onClick={() => onTab(name)}
-						onKeyDown={(event) => {
-							if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-							event.preventDefault();
-							const order = ["board", "files", "judgments"] as const;
-							const step = event.key === "ArrowRight" ? 1 : -1;
-							const next = order[(order.indexOf(tab) + step + order.length) % order.length];
-							if (next !== undefined) {
-								onTab(next);
-								document.getElementById(`tab-${next}`)?.focus();
-							}
-						}}
-						data-testid={`tab-${name}`}
-					>
+					<TabsTrigger key={name} value={name} id={`tab-${name}`} data-testid={`tab-${name}`}>
 						{text(`panel.${name}`)}
-					</button>
+					</TabsTrigger>
 				))}
-			</nav>
-			<div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
-				{tab === "board" ? <BoardPanel board={state.board} text={text} /> : null}
-				{tab === "files" ? <FilesPanel files={state.files} api={api} text={text} openFile={openFile} /> : null}
-				{tab === "judgments" ? <JudgmentsPanel api={api} text={text} /> : null}
-			</div>
-		</>
+			</TabsList>
+			<TabsContent value="board">
+				<BoardPanel board={state.board} text={text} />
+			</TabsContent>
+			<TabsContent value="files">
+				<FilesPanel files={state.files} api={api} text={text} openFile={openFile} />
+			</TabsContent>
+			<TabsContent value="judgments">
+				<JudgmentsPanel api={api} text={text} />
+			</TabsContent>
+		</Tabs>
 	);
 }
 
