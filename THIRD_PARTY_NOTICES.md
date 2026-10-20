@@ -38,3 +38,7 @@ The conversation runtime and composer use assistant-ui (`@assistant-ui/react` an
 `@assistant-ui/core`, `@assistant-ui/store`, `@assistant-ui/tap`, and `assistant-stream`; all MIT) for the
 external-store runtime, message model, composer state and attachments. Zustand (MIT) is their state store. The
 product keeps its own `ConversationStore`; assistant-ui only runs the view state.
+
+Quick open uses cmdk (MIT), error notices use sonner (MIT), the resizable workspace uses
+react-resizable-panels (MIT), and code blocks are tokenized by Shiki (MIT). Shiki grammars load on demand and
+are rendered as React spans, never as HTML strings.

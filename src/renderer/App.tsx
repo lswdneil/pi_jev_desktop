@@ -3,6 +3,8 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { FolderOpen, MessageSquare, Plus, RotateCw, Search, Settings, X } from "lucide-react";
+import { toast } from "sonner";
+import { Group, Panel, Separator } from "react-resizable-panels";
 import logo from "./assets/logo.png";
 import type { AgentEvent, HarnessStatus, ModelChoice, SpecApi, SessionSnapshot, SessionSummary, Unsubscribe } from "../shared/api.ts";
 import type { ConversationEvent } from "../shared/conversation.ts";
@@ -22,6 +24,7 @@ import { Input } from "./ui/input.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs.tsx";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip.tsx";
+import { Toaster } from "./ui/sonner.tsx";
 
 /**
  * The window: the conversation, three panels around it, the settings screen, and the two screens that come before the
@@ -76,7 +79,6 @@ export function App(): React.JSX.Element {
 	const [version, setVersion] = useState<string>("");
 	const [status, setStatus] = useState<HarnessStatus>({ state: "stopped" });
 	const [snapshot, setSnapshot] = useState<SessionSnapshot | undefined>(undefined);
-	const [error, setError] = useState("");
 	const [busy, setBusy] = useState(false);
 	const operation = useRef(false);
 	const [sessionRevision, setSessionRevision] = useState(0);
@@ -96,7 +98,9 @@ export function App(): React.JSX.Element {
 	const zoom = useRef(0);
 	const [modelBusy, setModelBusy] = useState(false);
 
-	const report = useCallback((message: string) => setError(message), []);
+	const report = useCallback((message: string) => {
+		toast.error(<span data-testid="error">{message}</span>, { id: "app-error", duration: Infinity, closeButton: true });
+	}, []);
 
 	/** Links are preview requests: the hardened view in the right third, never a navigation of this page. */
 	const openPreview = useCallback(
@@ -290,7 +294,7 @@ export function App(): React.JSX.Element {
 		if (api === undefined || operation.current) return;
 		operation.current = true;
 		setBusy(true);
-		setError("");
+		toast.dismiss("app-error");
 		try {
 			const next = await api.harness.restart();
 			store.reset();
@@ -307,7 +311,7 @@ export function App(): React.JSX.Element {
 		if (api === undefined || operation.current) return;
 		operation.current = true;
 		setBusy(true);
-		setError("");
+		toast.dismiss("app-error");
 		try {
 			await api.harness.newSession();
 			store.reset();
@@ -324,7 +328,7 @@ export function App(): React.JSX.Element {
 		if (api === undefined || operation.current) return;
 		operation.current = true;
 		setBusy(true);
-		setError("");
+		toast.dismiss("app-error");
 		try {
 			const choice = await api.workspace.choose();
 			if (choice.cancelled) return;
@@ -346,7 +350,7 @@ export function App(): React.JSX.Element {
 			if (api === undefined || operation.current) return;
 			operation.current = true;
 			setBusy(true);
-			setError("");
+			toast.dismiss("app-error");
 			try {
 				const choice = await api.workspace.open(path);
 				if (choice.cancelled) return;
@@ -372,7 +376,7 @@ export function App(): React.JSX.Element {
 			const modelId = rest.join("/");
 			if (provider === undefined || modelId === "") return;
 			setModelBusy(true);
-			setError("");
+			toast.dismiss("app-error");
 			try {
 				await api.harness.setModel(provider, modelId);
 				setSnapshot(await api.harness.snapshot());
@@ -390,7 +394,7 @@ export function App(): React.JSX.Element {
 			if (api === undefined || operation.current) return;
 			operation.current = true;
 			setBusy(true);
-			setError("");
+			toast.dismiss("app-error");
 			try {
 				await api.sessions.open(path);
 				store.reset();
@@ -413,7 +417,7 @@ export function App(): React.JSX.Element {
 			if (api === undefined || operation.current) return;
 			operation.current = true;
 			setBusy(true);
-			setError("");
+			toast.dismiss("app-error");
 			try {
 				const opened = await api.sessions.openAcross(path);
 				setWorkspacePath(opened.path);
@@ -437,7 +441,7 @@ export function App(): React.JSX.Element {
 			if (api === undefined || operation.current) return;
 			operation.current = true;
 			setBusy(true);
-			setError("");
+			toast.dismiss("app-error");
 			try {
 				await api.sessions.rename(name);
 				setSnapshot(await api.harness.snapshot());
@@ -465,7 +469,7 @@ export function App(): React.JSX.Element {
 			if (api === undefined || operation.current) return;
 			operation.current = true;
 			setBusy(true);
-			setError("");
+			toast.dismiss("app-error");
 			try {
 				const result = await api.sessions.remove(path);
 				setConfirmDelete(undefined);
@@ -826,22 +830,6 @@ export function App(): React.JSX.Element {
 					)}
 				</header>
 
-			{error === "" ? null : (
-				<div className="error-banner" role="alert">
-					<p className="line-error" data-testid="error">
-						{error}
-					</p>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Button type="button" variant="ghost" size="icon-sm" aria-label={text("app.dismiss")} onClick={() => setError("")}>
-								<X />
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>{text("app.dismiss")}</TooltipContent>
-					</Tooltip>
-				</div>
-			)}
-
 			{status.state === "failed" ? (
 				<Failure status={status} onRetry={() => void restart()} retryLabel={text("app.retry")} />
 			) : (
@@ -849,29 +837,36 @@ export function App(): React.JSX.Element {
 					{view === "settings" ? (
 						<SettingsPage api={api} language={language} setLanguage={setLanguage} text={text} />
 					) : null}
-					<div className="workspace" hidden={view !== "conversation"}>
-						<ConversationPage
-							key={sessionRevision}
-							api={api}
-							store={store}
-							running={running && !busy}
-							active={view === "conversation"}
-							onError={report}
-							onOpenLink={openPreview}
-							language={language}
-						/>
-						<aside className="panels">
-							{view === "conversation" ? (
-								<Panels
-									store={store}
+					<div className="flex min-h-0 flex-1" hidden={view !== "conversation"}>
+						<Group orientation="horizontal" className="min-h-0 w-full">
+							<Panel defaultSize="68" minSize="45" className="flex min-h-0 min-w-0 flex-col">
+								<ConversationPage
+									key={sessionRevision}
 									api={api}
-									text={text}
-									tab={panelTab}
-									onTab={setPanelTab}
-									openFile={openFile}
+									store={store}
+									running={running && !busy}
+									active={view === "conversation"}
+									onError={report}
+									onOpenLink={openPreview}
+									language={language}
 								/>
-							) : null}
-						</aside>
+							</Panel>
+							<Separator className="w-1.5 shrink-0 bg-transparent transition-colors hover:bg-primary/30 data-[resize-handle-state=drag]:bg-primary/50" />
+							<Panel defaultSize="32" minSize="22" maxSize="48" className="min-h-0 min-w-0">
+								<aside className="panels h-full">
+									{view === "conversation" ? (
+										<Panels
+											store={store}
+											api={api}
+											text={text}
+											tab={panelTab}
+											onTab={setPanelTab}
+											openFile={openFile}
+										/>
+									) : null}
+								</aside>
+							</Panel>
+						</Group>
 					</div>
 				</>
 			)}
@@ -889,6 +884,7 @@ export function App(): React.JSX.Element {
 			) : null}
 				</main>
 			</div>
+			<Toaster />
 		</TooltipProvider>
 	);
 }

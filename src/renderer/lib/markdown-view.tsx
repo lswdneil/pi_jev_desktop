@@ -9,7 +9,9 @@
  * says `<script>`. Links are data too: the parser emits http(s) addresses, and a click asks the app to preview one.
  */
 
+import { useEffect, useState } from "react";
 import { type Block, type InlineSpan, parseMarkdown } from "../../shared/markdown.ts";
+import { highlight, type HighlightToken } from "./highlight.ts";
 
 export function Markdown({
 	text,
@@ -38,11 +40,7 @@ function BlockView({
 }): React.JSX.Element {
 	switch (block.kind) {
 		case "code":
-			return (
-				<pre className="code" data-block="code">
-					<code data-language={block.language}>{block.text}</code>
-				</pre>
-			);
+			return <CodeBlock text={block.text} language={block.language} />;
 		case "heading": {
 			const content = <Spans spans={block.spans} onOpenLink={onOpenLink} />;
 			if (block.level === 1) return <h1>{content}</h1>;
@@ -80,6 +78,40 @@ function BlockView({
 				</p>
 			);
 	}
+}
+
+function CodeBlock({ text, language }: { readonly text: string; readonly language: string | undefined }): React.JSX.Element {
+	const [tokens, setTokens] = useState<readonly (readonly HighlightToken[])[] | undefined>(undefined);
+
+	useEffect(() => {
+		let alive = true;
+		setTokens(undefined);
+		void highlight(text, language).then((next) => {
+			if (alive) setTokens(next);
+		});
+		return () => {
+			alive = false;
+		};
+	}, [text, language]);
+
+	return (
+		<pre className="code" data-block="code">
+			<code data-language={language}>
+				{tokens === undefined
+					? text
+					: tokens.map((line, index) => (
+							<span key={index} className="code-line">
+								{line.map((token, tokenIndex) => (
+									<span key={tokenIndex} style={token.color === undefined ? undefined : { color: token.color }}>
+										{token.content}
+									</span>
+								))}
+								{index === tokens.length - 1 ? null : "\n"}
+							</span>
+						))}
+			</code>
+		</pre>
+	);
 }
 
 function Spans({
