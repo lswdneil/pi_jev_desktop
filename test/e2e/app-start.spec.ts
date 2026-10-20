@@ -30,7 +30,7 @@ async function violations(page: Page): Promise<string[]> {
 }
 
 test.describe("starting", () => {
-	test("starts the configured mu harness and reports it", async () => {
+	test("starts the configured runtime and reports it", async () => {
 		test.skip(
 			(process.env.SPEC_AI_JEV_HARNESS ?? process.env.PI_JEV_HARNESS) === undefined,
 			"set SPEC_AI_JEV_HARNESS to a runtime checkout to run this test",
@@ -53,8 +53,10 @@ test.describe("starting", () => {
 			const status = await page.evaluate(() => window.spec.harness.status());
 			expect(status.state).toBe("running");
 			if (status.state === "running") {
-				expect(status.layout).toBe("repo");
-				expect(status.root.replaceAll("\\", "/")).toBe(process.env.PI_JEV_HARNESS?.replaceAll("\\", "/"));
+				// A checkout and a built package are both valid sources; the env names the one this run uses.
+				expect(status.layout).toMatch(/^(repo|package)$/);
+				const configured = (process.env.SPEC_AI_JEV_HARNESS ?? process.env.PI_JEV_HARNESS ?? "").replaceAll("\\", "/");
+				expect(status.root.replaceAll("\\", "/")).toBe(configured);
 			}
 		} finally {
 			await profile.close();

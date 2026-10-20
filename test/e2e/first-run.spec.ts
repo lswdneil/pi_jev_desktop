@@ -31,7 +31,8 @@ test.describe("first run", () => {
 			// Declining is a normal path, not an error page.
 			await page.locator('[data-testid="first-run-decline"]').click();
 			await expect(page.locator('[data-testid="first-run-model"]')).toBeVisible();
-			await expect(page.locator('[data-testid="first-run-key-hint"]')).toContainText("mu auth");
+			await expect(page.locator('[data-testid="first-run-key-hint"]')).toContainText("auth");
+			await expect(page.locator('[data-testid="first-run-key-hint"]')).not.toContainText("mu auth");
 			await expect(page.locator('[data-testid="first-run-error"]')).toHaveCount(0);
 
 			await page.locator('[data-testid="first-run-finish"]').click();
