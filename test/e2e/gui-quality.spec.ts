@@ -3,7 +3,7 @@
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { completeFirstRun, FIXTURE_HARNESS, launchApp } from "./helpers/app.ts";
 
@@ -116,7 +116,8 @@ test("quick open finds a project file and opens it in the Files panel", async ()
 
 		const hit = page.getByTestId("quick-open-hit").first();
 		await expect(hit).toContainText("src/app.ts");
-		await hit.click();
+		// The palette has to keep a selection under the keyboard as results arrive.
+		await page.keyboard.press("Enter");
 
 		await expect(page.getByTestId("quick-open")).toHaveCount(0);
 		await expect(page.getByTestId("tab-files")).toHaveAttribute("aria-selected", "true");
@@ -124,6 +125,104 @@ test("quick open finds a project file and opens it in the Files panel", async ()
 	} finally {
 		await profile.close();
 		rmSync(workspace, { recursive: true, force: true });
+	}
+});
+
+test("Ctrl+K opens the palette and runs an action", async () => {
+	const profile = await launchApp();
+	try {
+		const { page } = profile;
+		await completeFirstRun(page);
+
+		await page.keyboard.press("Control+K");
+		await expect(page.getByTestId("quick-open")).toBeVisible();
+		await page.getByTestId("quick-open-input").fill("settings");
+
+		await page.getByTestId("quick-open-action").filter({ hasText: "Settings" }).click();
+		await expect(page.getByTestId("settings")).toBeVisible();
+		await expect(page.getByTestId("quick-open")).toHaveCount(0);
+	} finally {
+		await profile.close();
+	}
+});
+
+test("the palette reaches a session in another project", async () => {
+	const workspace = mkdtempSync(join(tmpdir(), "spec-e2e-palette-"));
+	const other = mkdtempSync(join(tmpdir(), "spec-e2e-palette-other-"));
+	const profile = await launchApp({
+		env: { SPEC_AI_JEV_WORKSPACE: workspace },
+		prepareHome: (home) => {
+			const directory = join(home, ".spec.ai.jev", "agent", "sessions", "encoded");
+			mkdirSync(directory, { recursive: true });
+			const lines = [
+				JSON.stringify({ type: "session", version: 3, id: "palette", cwd: other }),
+				JSON.stringify({
+					type: "message",
+					message: { role: "user", content: [{ type: "text", text: "Palette target" }] },
+				}),
+			];
+			writeFileSync(join(directory, "palette.jsonl"), `${lines.join("\n")}\n`, "utf8");
+		},
+	});
+	try {
+		const { page } = profile;
+		await completeFirstRun(page);
+		await expect(page.locator(".chip")).toContainText("running", { timeout: 60_000 });
+
+		await page.keyboard.press("Control+K");
+		await page.getByTestId("quick-open-input").fill("palette target");
+		const session = page.getByTestId("quick-open-session").filter({ hasText: "Palette target" });
+		await expect(session).toBeVisible({ timeout: 30_000 });
+		await session.click();
+
+		await expect(page.locator(".workspace-name")).toHaveText(basename(other), { timeout: 60_000 });
+	} finally {
+		await profile.close();
+		rmSync(workspace, { recursive: true, force: true });
+		rmSync(other, { recursive: true, force: true });
+	}
+});
+
+test("folds the right panel away without losing the draft, and remembers the choice", async () => {
+	const profileDir = mkdtempSync(join(tmpdir(), "spec-e2e-panels-"));
+	const first = await launchApp({ profileDir });
+	try {
+		const { page } = first;
+		await completeFirstRun(page);
+		await expect(page.getByTestId("board-panel")).toBeVisible();
+		await page.getByTestId("composer").fill("a draft that stays put");
+
+		await page.getByTestId("toggle-panels").click();
+		await expect
+			.poll(() => page.getByTestId("right-panel").evaluate((element) => element.getBoundingClientRect().width))
+			.toBe(0);
+		await expect(page.getByTestId("composer")).toBeVisible();
+		await expect(page.getByTestId("composer")).toHaveValue("a draft that stays put");
+		expect(await page.evaluate(() => window.localStorage.getItem("spec.ai.jev.panelsOpen"))).toBe("0");
+
+		await page.getByTestId("toggle-panels").click();
+		await expect(page.getByTestId("board-panel")).toBeVisible();
+		expect(await page.evaluate(() => window.localStorage.getItem("spec.ai.jev.panelsOpen"))).toBe("1");
+
+		// Leave it folded so the next launch has to restore that.
+		await page.getByTestId("toggle-panels").click();
+		await expect
+			.poll(() => page.getByTestId("right-panel").evaluate((element) => element.getBoundingClientRect().width))
+			.toBe(0);
+	} finally {
+		await first.close();
+	}
+
+	const second = await launchApp({ profileDir });
+	try {
+		await expect(second.page.getByTestId("composer")).toBeVisible();
+		await expect
+			.poll(() => second.page.getByTestId("right-panel").evaluate((element) => element.getBoundingClientRect().width))
+			.toBe(0);
+		await expect(second.page.getByTestId("toggle-panels")).toHaveAttribute("aria-label", "Show panels");
+	} finally {
+		await second.close();
+		rmSync(profileDir, { recursive: true, force: true });
 	}
 });
 

@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2025-2026 the mu authors
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { FolderOpen, MessageSquare, Plus, RotateCw, Search, Settings, X } from "lucide-react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { FolderOpen, MessageSquare, PanelRightClose, PanelRightOpen, Plus, RotateCw, Search, Settings, X } from "lucide-react";
 import { toast } from "sonner";
-import { Group, Panel, Separator } from "react-resizable-panels";
+import { Group, Panel, Separator, usePanelRef } from "react-resizable-panels";
 import logo from "./assets/logo.png";
 import type { AgentEvent, HarnessStatus, ModelChoice, SpecApi, SessionSnapshot, SessionSummary, Unsubscribe } from "../shared/api.ts";
 import type { ConversationEvent } from "../shared/conversation.ts";
 import { ConversationStore } from "./lib/conversation-store.ts";
 import { hasOnboarded, markOnboarded, useLanguage } from "./lib/i18n.ts";
-import { QuickOpen } from "./lib/QuickOpen.tsx";
+import { QuickOpen, type PaletteItem } from "./lib/QuickOpen.tsx";
+import { readPanelsOpen, rememberPanelsOpen } from "./lib/panel-visibility.ts";
 import { forgetWorkspace, readRecentWorkspaces, rememberWorkspace } from "./lib/recent-workspaces.ts";
 import { cn } from "./lib/utils.ts";
 import { ConversationPage } from "./pages/Conversation/ConversationPage.tsx";
@@ -93,9 +94,11 @@ export function App(): React.JSX.Element {
 	const [confirmDelete, setConfirmDelete] = useState<string | undefined>(undefined);
 	const [panelTab, setPanelTab] = useState<"board" | "files" | "judgments">("board");
 	const [quickOpen, setQuickOpen] = useState(false);
+	const [panelsOpen, setPanelsOpen] = useState(readPanelsOpen);
 	const [openFile, setOpenFile] = useState<{ readonly path: string; readonly nonce: number } | undefined>(undefined);
 	const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
 	const zoom = useRef(0);
+	const panelsRef = usePanelRef();
 	const [modelBusy, setModelBusy] = useState(false);
 
 	const report = useCallback((message: string) => {
@@ -145,7 +148,7 @@ export function App(): React.JSX.Element {
 	useEffect(() => {
 		const onKeyDown = (event: KeyboardEvent): void => {
 			if (!(event.ctrlKey || event.metaKey)) return;
-			if (event.key.toLowerCase() === "p") {
+			if (event.key.toLowerCase() === "p" || event.key.toLowerCase() === "k") {
 				event.preventDefault();
 				setQuickOpen((open) => !open);
 				return;
@@ -165,6 +168,12 @@ export function App(): React.JSX.Element {
 		window.addEventListener("keydown", onKeyDown);
 		return () => window.removeEventListener("keydown", onKeyDown);
 	}, [api]);
+
+	// The group is only mounted once the first run is done; fold a remembered-closed panel before it paints.
+	useLayoutEffect(() => {
+		if (!panelsOpen) panelsRef.current?.collapse();
+		// `onboarded` is the moment the layout mounts; `panelsOpen` is read from that same render.
+	}, [onboarded]);
 
 	useEffect(() => {
 		if (api === undefined) return;
@@ -536,6 +545,72 @@ export function App(): React.JSX.Element {
 		)
 		.slice(0, 20);
 
+	const setPanels = (open: boolean): void => {
+		if (open) panelsRef.current?.expand();
+		else panelsRef.current?.collapse();
+		setPanelsOpen(open);
+		rememberPanelsOpen(open);
+	};
+
+	/** The separator can fold the panel too; keep the header and the palette in step with what it did. */
+	const syncPanels = (): void => {
+		const open = panelsRef.current?.isCollapsed() !== true;
+		if (open === panelsOpen) return;
+		setPanelsOpen(open);
+		rememberPanelsOpen(open);
+	};
+
+	const paletteItems: PaletteItem[] = [
+		{
+			id: "action:new-task",
+			label: text("app.newTask"),
+			icon: <Plus />,
+			group: "action",
+			run: () => void newConversation(),
+		},
+		{
+			id: "action:workspace",
+			label: text("app.chooseWorkspace"),
+			icon: <FolderOpen />,
+			group: "action",
+			run: () => void chooseWorkspace(),
+		},
+		{
+			id: "action:settings",
+			label: text("nav.settings"),
+			icon: <Settings />,
+			group: "action",
+			run: () => setView("settings"),
+		},
+		{
+			id: "action:restart",
+			label: status.state === "failed" ? text("app.retry") : text("app.restart"),
+			icon: <RotateCw />,
+			group: "action",
+			run: () => void restart(),
+		},
+		{
+			id: "action:panels",
+			label: panelsOpen ? text("app.hidePanels") : text("app.showPanels"),
+			icon: panelsOpen ? <PanelRightClose /> : <PanelRightOpen />,
+			group: "action",
+			run: () => setPanels(!panelsOpen),
+		},
+		...allSessions
+			.filter((session) => session.path !== snapshot?.sessionFile)
+			.slice(0, 40)
+			.map((session) => ({
+				id: `session:${session.path}`,
+				label: session.title,
+				hint: `${projectName(session.cwd)} · ${session.updatedAt.slice(0, 10)}`,
+				group: "session" as const,
+				run: () => {
+					if (session.cwd.replace(/[\\/]+$/, "").toLowerCase() === here) void openSession(session.path);
+					else void openSessionAcross(session.path);
+				},
+			})),
+	];
+
 	return (
 		<TooltipProvider delayDuration={350}>
 			<div className="shell">
@@ -828,6 +903,21 @@ export function App(): React.JSX.Element {
 							</Select>
 						</div>
 					)}
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-sm"
+								aria-label={panelsOpen ? text("app.hidePanels") : text("app.showPanels")}
+								onClick={() => setPanels(!panelsOpen)}
+								data-testid="toggle-panels"
+							>
+								{panelsOpen ? <PanelRightClose /> : <PanelRightOpen />}
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>{panelsOpen ? text("app.hidePanels") : text("app.showPanels")}</TooltipContent>
+					</Tooltip>
 				</header>
 
 			{status.state === "failed" ? (
@@ -852,8 +942,18 @@ export function App(): React.JSX.Element {
 								/>
 							</Panel>
 							<Separator className="w-1.5 shrink-0 bg-transparent transition-colors hover:bg-primary/30 data-[resize-handle-state=drag]:bg-primary/50" />
-							<Panel defaultSize="32" minSize="22" maxSize="48" className="min-h-0 min-w-0">
-								<aside className="panels h-full">
+							<Panel
+								defaultSize="32"
+								minSize="22"
+								maxSize="48"
+								collapsible
+								collapsedSize="0"
+								panelRef={panelsRef}
+								onResize={syncPanels}
+								className="min-h-0 min-w-0 overflow-hidden"
+								data-testid="right-panel"
+							>
+								<aside className="panels h-full overflow-x-hidden">
 									{view === "conversation" ? (
 										<Panels
 											store={store}
@@ -874,6 +974,7 @@ export function App(): React.JSX.Element {
 				<QuickOpen
 					api={api}
 					text={text}
+					items={paletteItems}
 					onClose={() => setQuickOpen(false)}
 					onOpen={(path) => {
 						setOpenFile({ path, nonce: Date.now() });
