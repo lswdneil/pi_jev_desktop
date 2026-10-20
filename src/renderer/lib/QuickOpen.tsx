@@ -10,7 +10,9 @@
  */
 
 import { Command } from "cmdk";
+import { FileText, MessageSquare, Search } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 import type { FileHit, SpecApi } from "../../shared/api.ts";
 
 /** Typing is cheaper than walking a checkout; wait for a pause before asking. */
@@ -20,6 +22,7 @@ export interface PaletteItem {
 	readonly id: string;
 	readonly label: string;
 	readonly hint?: string;
+	readonly shortcut?: string;
 	readonly icon?: ReactNode;
 	readonly group: "action" | "session";
 	readonly run: () => void;
@@ -89,96 +92,117 @@ export function QuickOpen({
 	};
 
 	return (
-		<div className="quick-open-backdrop" onMouseDown={onClose}>
-			<div
-				role="dialog"
-				aria-modal="true"
-				aria-label={text("quickOpen.title")}
-				onMouseDown={(event) => event.stopPropagation()}
-			>
-				<Command
-					shouldFilter={false}
-					value={selected}
-					onValueChange={setSelected}
-					className="quick-open"
-					data-testid="quick-open"
-					onKeyDown={(event) => {
-						if (event.key === "Escape") {
-							event.preventDefault();
-							onClose();
-						}
+		<Dialog.Root
+			open
+			onOpenChange={(open) => {
+				if (!open) onClose();
+			}}
+		>
+			<Dialog.Portal>
+				<Dialog.Overlay
+					className="quick-open-backdrop"
+					// Own the backdrop gesture: Radix's deferred outside-click can miss after keyboard focus moves.
+					onPointerDown={(event) => {
+						event.preventDefault();
+						onClose();
 					}}
-				>
-					<Command.Input
-						autoFocus
-						value={query}
-						onValueChange={setQuery}
-						placeholder={text("quickOpen.placeholder")}
-						aria-label={text("quickOpen.placeholder")}
-						data-testid="quick-open-input"
-					/>
-					{error === "" ? null : <p className="line-error">{error}</p>}
-					<Command.List className="quick-open-list" aria-label={text("quickOpen.results")}>
-						<Command.Empty>
-							<p className="muted">{text("quickOpen.empty")}</p>
-						</Command.Empty>
-						{actions.length === 0 ? null : (
-							<Command.Group heading={text("quickOpen.actions")}>
-								{actions.map((item) => (
-									<Command.Item
-										key={item.id}
-										value={item.id}
-										onSelect={() => select(item.run)}
-										className="quick-open-row cursor-pointer data-[selected=true]:border-primary data-[selected=true]:bg-secondary"
-										data-testid="quick-open-action"
-									>
-										<span className="quick-open-name flex items-center gap-2">
-											{item.icon}
-											{item.label}
-										</span>
-										{item.hint === undefined ? null : <span className="quick-open-path">{item.hint}</span>}
-									</Command.Item>
-								))}
-							</Command.Group>
-						)}
-						{sessions.length === 0 ? null : (
-							<Command.Group heading={text("quickOpen.sessions")}>
-								{sessions.map((item) => (
-									<Command.Item
-										key={item.id}
-										value={item.id}
-										onSelect={() => select(item.run)}
-										className="quick-open-row cursor-pointer data-[selected=true]:border-primary data-[selected=true]:bg-secondary"
-										data-testid="quick-open-session"
-									>
-										<span className="quick-open-name">{item.label}</span>
-										{item.hint === undefined ? null : <span className="quick-open-path">{item.hint}</span>}
-									</Command.Item>
-								))}
-							</Command.Group>
-						)}
-						{hits.length === 0 ? null : (
-							<Command.Group heading={text("quickOpen.files")}>
-								{hits.map((hit) => (
-									<Command.Item
-										key={hit.path}
-										value={`file:${hit.path}`}
-										onSelect={() => select(() => onOpen(hit.path))}
-										className="quick-open-row cursor-pointer data-[selected=true]:border-primary data-[selected=true]:bg-secondary"
-										data-testid="quick-open-hit"
-									>
-										<span className="quick-open-name">{hit.name}</span>
-										<span className="quick-open-path">{hit.path}</span>
-									</Command.Item>
-								))}
-							</Command.Group>
-						)}
-					</Command.List>
-					<p className="quick-open-footer" data-testid="quick-open-hint" aria-hidden="true">
-						{text("quickOpen.hint")}
-					</p>
-				</Command>
-			</div>
-		</div>
+				/>
+				<Dialog.Content className="quick-open" data-testid="quick-open">
+					<Dialog.Title className="sr-only">{text("quickOpen.title")}</Dialog.Title>
+					<Dialog.Description className="sr-only">{text("quickOpen.placeholder")}</Dialog.Description>
+					<Command shouldFilter={false} value={selected} onValueChange={setSelected} className="quick-open-command">
+						<div className="quick-open-search">
+							<Search aria-hidden="true" />
+							<Command.Input
+								autoFocus
+								value={query}
+								onValueChange={setQuery}
+								placeholder={text("quickOpen.placeholder")}
+								aria-label={text("quickOpen.placeholder")}
+								data-testid="quick-open-input"
+							/>
+						</div>
+						{error === "" ? null : <p className="line-error">{error}</p>}
+						<Command.List className="quick-open-list" aria-label={text("quickOpen.results")}>
+							<Command.Empty>
+								<p className="muted">{text("quickOpen.empty")}</p>
+							</Command.Empty>
+							{actions.length === 0 ? null : (
+								<Command.Group heading={text("quickOpen.actions")}>
+									{actions.map((item) => (
+										<Command.Item
+											key={item.id}
+											value={item.id}
+											onSelect={() => select(item.run)}
+											className="quick-open-row"
+											data-testid="quick-open-action"
+										>
+											<span className="quick-open-text">
+												<span className="quick-open-name">
+													{item.icon}
+													{item.label}
+												</span>
+												{item.hint === undefined ? null : <span className="quick-open-path">{item.hint}</span>}
+											</span>
+											{item.shortcut === undefined ? null : (
+												<span className="quick-open-shortcut">{item.shortcut}</span>
+											)}
+										</Command.Item>
+									))}
+								</Command.Group>
+							)}
+							{sessions.length === 0 ? null : (
+								<Command.Group heading={text("quickOpen.sessions")}>
+									{sessions.map((item) => (
+										<Command.Item
+											key={item.id}
+											value={item.id}
+											onSelect={() => select(item.run)}
+											className="quick-open-row"
+											data-testid="quick-open-session"
+										>
+											<span className="quick-open-text">
+												<span className="quick-open-name">
+													<MessageSquare aria-hidden="true" />
+													{item.label}
+												</span>
+												{item.hint === undefined ? null : <span className="quick-open-path">{item.hint}</span>}
+											</span>
+											{item.shortcut === undefined ? null : (
+												<span className="quick-open-shortcut">{item.shortcut}</span>
+											)}
+										</Command.Item>
+									))}
+								</Command.Group>
+							)}
+							{hits.length === 0 ? null : (
+								<Command.Group heading={text("quickOpen.files")}>
+									{hits.map((hit) => (
+										<Command.Item
+											key={hit.path}
+											value={`file:${hit.path}`}
+											onSelect={() => select(() => onOpen(hit.path))}
+											className="quick-open-row"
+											data-testid="quick-open-hit"
+										>
+											<span className="quick-open-text">
+												<span className="quick-open-name">
+													<FileText aria-hidden="true" />
+													{hit.name}
+												</span>
+												<span className="quick-open-path">{hit.path}</span>
+											</span>
+										</Command.Item>
+									))}
+								</Command.Group>
+							)}
+						</Command.List>
+						<p className="quick-open-footer" data-testid="quick-open-hint" aria-hidden="true">
+							{text("quickOpen.hint")}
+						</p>
+					</Command>
+				</Dialog.Content>
+			</Dialog.Portal>
+		</Dialog.Root>
 	);
 }

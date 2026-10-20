@@ -628,7 +628,7 @@ export function App(): React.JSX.Element {
 			{
 				id: "action:new-task",
 				label: text("app.newTask"),
-				hint: `${ACCELERATOR}N`,
+				shortcut: `${ACCELERATOR}N`,
 				icon: <Plus />,
 				group: "action",
 				run: () => void newConversation(),
@@ -636,7 +636,7 @@ export function App(): React.JSX.Element {
 			{
 				id: "action:workspace",
 				label: text("app.chooseWorkspace"),
-				hint: `${ACCELERATOR}O`,
+				shortcut: `${ACCELERATOR}O`,
 				icon: <FolderOpen />,
 				group: "action",
 				run: () => void chooseWorkspace(),
@@ -644,7 +644,7 @@ export function App(): React.JSX.Element {
 			{
 				id: "action:settings",
 				label: text("nav.settings"),
-				hint: `${ACCELERATOR},`,
+				shortcut: `${ACCELERATOR},`,
 				icon: <Settings />,
 				group: "action",
 				run: () => setView("settings"),
@@ -660,7 +660,7 @@ export function App(): React.JSX.Element {
 				id: "action:panels",
 				label: panelsOpen ? text("app.hidePanels") : text("app.showPanels"),
 				icon: panelsOpen ? <PanelRightClose /> : <PanelRightOpen />,
-				hint: `${ACCELERATOR}B`,
+				shortcut: `${ACCELERATOR}B`,
 				group: "action",
 				run: togglePanels,
 			},

@@ -190,6 +190,30 @@ test("the palette reaches a session in another project", async () => {
 	}
 });
 
+test("the palette traps focus and closes from the backdrop", async () => {
+	const profile = await launchApp();
+	try {
+		const { page } = profile;
+		await completeFirstRun(page);
+		await page.keyboard.press("Control+K");
+		await expect(page.getByTestId("quick-open")).toBeVisible();
+
+		const inside = () =>
+			page.evaluate(() => document.activeElement?.closest('[data-testid="quick-open"]') !== null);
+		await expect.poll(inside).toBe(true);
+		await page.keyboard.press("Tab");
+		await page.keyboard.press("Tab");
+		expect(await inside()).toBe(true);
+
+		// A point below the panel: the very edges of a frameless window can swallow a click.
+		const viewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
+		await page.mouse.click(viewport.width / 2, viewport.height - 8);
+		await expect(page.getByTestId("quick-open")).toHaveCount(0);
+	} finally {
+		await profile.close();
+	}
+});
+
 test("folds the right panel away without losing the draft, and remembers the choice", async () => {
 	const profileDir = mkdtempSync(join(tmpdir(), "spec-e2e-panels-"));
 	const first = await launchApp({ profileDir });
