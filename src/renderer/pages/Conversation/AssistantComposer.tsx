@@ -10,8 +10,8 @@
  */
 
 import { AttachmentPrimitive, ComposerPrimitive, useAui, useAuiState } from "@assistant-ui/react";
-import { ArrowUp, Paperclip, Square, X } from "lucide-react";
-import { useRef } from "react";
+import { ArrowUp, ImagePlus, Paperclip, Square, X } from "lucide-react";
+import { type DragEvent, useRef, useState } from "react";
 import { MAX_PROMPT_IMAGES, PROMPT_IMAGE_TYPES } from "../../../shared/api.ts";
 import { Button } from "../../ui/button.tsx";
 
@@ -50,6 +50,31 @@ export function AssistantComposer({
 	const aui = useAui();
 	const hasAttachments = useAuiState((state) => state.composer.attachments.length > 0);
 	const fileInput = useRef<HTMLInputElement | null>(null);
+	const [dragging, setDragging] = useState(false);
+	const dragDepth = useRef(0);
+
+	const hasFiles = (event: DragEvent<HTMLElement>): boolean =>
+		Array.from(event.dataTransfer.types).includes("Files");
+	const onDragEnter = (event: DragEvent<HTMLElement>): void => {
+		if (!hasFiles(event)) return;
+		event.preventDefault();
+		dragDepth.current += 1;
+		setDragging(true);
+	};
+	const onDragOver = (event: DragEvent<HTMLElement>): void => {
+		if (!hasFiles(event)) return;
+		event.preventDefault();
+		event.dataTransfer.dropEffect = "copy";
+	};
+	const onDragLeave = (event: DragEvent<HTMLElement>): void => {
+		if (!hasFiles(event)) return;
+		dragDepth.current = Math.max(0, dragDepth.current - 1);
+		if (dragDepth.current === 0) setDragging(false);
+	};
+	const onDrop = (): void => {
+		dragDepth.current = 0;
+		setDragging(false);
+	};
 
 	const addFiles = (files: FileList | null): void => {
 		if (files === null) return;
@@ -74,7 +99,19 @@ export function AssistantComposer({
 
 	return (
 		<>
-			<ComposerPrimitive.Root className="composer-drop flex flex-col gap-2">
+			<ComposerPrimitive.Root
+				className="composer-drop flex flex-col gap-2"
+				onDragEnter={onDragEnter}
+				onDragOver={onDragOver}
+				onDragLeave={onDragLeave}
+				onDrop={onDrop}
+			>
+				{dragging ? (
+					<div className="composer-dropzone" data-testid="composer-dropzone" aria-hidden="true">
+						<ImagePlus />
+						{text("conversation.dropImages")}
+					</div>
+				) : null}
 				<ComposerPrimitive.AttachmentDropzone className="flex flex-col gap-2">
 					{hasAttachments ? (
 						<div className="flex flex-wrap gap-2" data-testid="attachments">

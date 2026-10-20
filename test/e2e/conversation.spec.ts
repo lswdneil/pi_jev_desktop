@@ -63,6 +63,37 @@ test.describe("conversation", () => {
 		}
 	});
 
+	test("shows a drop target and attaches a dropped image", async () => {
+		const profile = await launchApp();
+		const { page } = profile;
+		try {
+			await completeFirstRun(page);
+			await expect(page.locator(".chip")).toContainText("running", { timeout: 60_000 });
+			await expect(page.getByTestId("composer")).toBeVisible();
+
+			await page.evaluate(() => {
+				const target = document.querySelector('[data-testid="composer"]');
+				if (target === null) throw new Error("no composer");
+				const data = new DataTransfer();
+				data.items.add(new File([new Uint8Array([137, 80, 78, 71])], "pixel.png", { type: "image/png" }));
+				(window as unknown as { dropped?: DataTransfer }).dropped = data;
+				target.dispatchEvent(new DragEvent("dragenter", { bubbles: true, cancelable: true, dataTransfer: data }));
+			});
+			await expect(page.getByTestId("composer-dropzone")).toBeVisible();
+
+			await page.evaluate(() => {
+				const target = document.querySelector('[data-testid="composer"]');
+				const data = (window as unknown as { dropped?: DataTransfer }).dropped;
+				if (target === null || data === undefined) throw new Error("no drop data");
+				target.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: data }));
+			});
+			await expect(page.getByTestId("composer-dropzone")).toHaveCount(0);
+			await expect(page.locator('[data-testid="attachment"]')).toHaveCount(1);
+		} finally {
+			await profile.close();
+		}
+	});
+
 	test("shows an answer as it arrives, and stops when asked", async () => {
 		const profile = await launchApp();
 		const { page } = profile;
