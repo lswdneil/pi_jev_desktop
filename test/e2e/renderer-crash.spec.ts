@@ -2,7 +2,21 @@
 // Copyright (c) 2025-2026 the mu authors
 
 import { expect, test, type Page } from "@playwright/test";
-import { completeFirstRun, launchApp } from "./helpers/app.ts";
+import { completeFirstRun, launchApp, type Profile } from "./helpers/app.ts";
+
+/** `forcefullyCrashRenderer` can return before the process is gone; make the log the signal, not the call. */
+async function crashUntil(profile: Profile, crash: () => Promise<void>, expected: number): Promise<void> {
+	for (let attempt = 0; attempt < 5; attempt++) {
+		await crash();
+		const deadline = Date.now() + 10_000;
+		while (Date.now() < deadline) {
+			const seen = (profile.shellLog() ?? "").match(/error a renderer process is gone/g)?.length ?? 0;
+			if (seen >= expected) return;
+			await new Promise((resolve) => setTimeout(resolve, 100));
+		}
+	}
+	throw new Error(`the renderer did not crash after five attempts (wanted ${expected} log lines)`);
+}
 
 /**
  * A renderer that dies while the app is running.
@@ -25,9 +39,15 @@ test.describe("a crashed renderer", () => {
 			await expect(page.locator(".chip")).toContainText("running", { timeout: 60_000 });
 
 			// A CDP Page.crash call can stay pending after its target is destroyed; trigger from the surviving process.
-			await app.evaluate(({ BrowserWindow }) => {
-				BrowserWindow.getAllWindows()[0]?.webContents.forcefullyCrashRenderer();
-			});
+			await crashUntil(
+				profile,
+				async () => {
+					await app.evaluate(({ BrowserWindow }) => {
+						BrowserWindow.getAllWindows()[0]?.webContents.forcefullyCrashRenderer();
+					});
+				},
+				1,
+			);
 
 			// The log is the evidence: the crash, then the replacement, in that order.
 			await expect.poll(() => profile.shellLog() ?? "", { timeout: 20_000 }).toContain("a renderer process is gone");
@@ -88,7 +108,7 @@ test.describe("a crash that keeps happening", () => {
 			for (const recovery of [1, 2]) {
 				// Listen before crashing: the replacement window is announced as it opens.
 				const announced = app.waitForEvent("window", { timeout: 30_000 });
-				await crash();
+				await crashUntil(profile, crash, recovery);
 				current = await announced;
 				await expect(current.locator(".chip")).toContainText("running", { timeout: 60_000 });
 				await expect
@@ -113,7 +133,7 @@ test.describe("a crash that keeps happening", () => {
 				};
 				(dialog as unknown as { showMessageBox: typeof record }).showMessageBox = record;
 			});
-			await crash();
+			await crashUntil(profile, crash, 3);
 			await expect.poll(() => profile.shellLog() ?? "", { timeout: 20_000 }).toContain("not being replaced again");
 			await new Promise((resolve) => setTimeout(resolve, 2_000));
 			const log = profile.shellLog() ?? "";
