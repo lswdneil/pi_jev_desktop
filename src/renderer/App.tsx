@@ -11,7 +11,14 @@ import type { ConversationEvent } from "../shared/conversation.ts";
 import { ConversationStore } from "./lib/conversation-store.ts";
 import { hasOnboarded, markOnboarded, useLanguage } from "./lib/i18n.ts";
 import { QuickOpen, type PaletteItem } from "./lib/QuickOpen.tsx";
-import { readPanelsOpen, rememberPanelsOpen } from "./lib/panel-visibility.ts";
+import { readRecentPalette, rememberPaletteUse } from "./lib/palette-recent.ts";
+import {
+	readPanelTab,
+	readPanelsOpen,
+	rememberPanelTab,
+	rememberPanelsOpen,
+	type PanelTab,
+} from "./lib/panel-visibility.ts";
 import { forgetWorkspace, readRecentWorkspaces, rememberWorkspace } from "./lib/recent-workspaces.ts";
 import { cn } from "./lib/utils.ts";
 import { ConversationPage } from "./pages/Conversation/ConversationPage.tsx";
@@ -40,6 +47,9 @@ type View = "conversation" | "settings";
 
 /** Stable ids: the saved layout is keyed by them, and a fresh array every render would re-read storage. */
 const WORKSPACE_PANEL_IDS = ["chat", "panels"];
+
+/** The modifier every shortcut below uses: Command on macOS, Control everywhere else. */
+const ACCELERATOR = /Mac/i.test(navigator.platform) ? "⌘" : "Ctrl+";
 
 /** The chip in the rail's footer. `layout` stays as it is: it names where spec.ai.jev came from, which is the diagnostic. */
 function statusLabel(status: HarnessStatus, text: (key: string) => string): string {
@@ -95,9 +105,10 @@ export function App(): React.JSX.Element {
 	const [renaming, setRenaming] = useState(false);
 	const [sessionName, setSessionName] = useState("");
 	const [confirmDelete, setConfirmDelete] = useState<string | undefined>(undefined);
-	const [panelTab, setPanelTab] = useState<"board" | "files" | "judgments">("board");
+	const [panelTab, setPanelTab] = useState<PanelTab>(readPanelTab);
 	const [quickOpen, setQuickOpen] = useState(false);
 	const [panelsOpen, setPanelsOpen] = useState(readPanelsOpen);
+	const [recentPalette, setRecentPalette] = useState<string[]>(readRecentPalette);
 	const [openFile, setOpenFile] = useState<{ readonly path: string; readonly nonce: number } | undefined>(undefined);
 	const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
 	const zoom = useRef(0);
@@ -147,6 +158,13 @@ export function App(): React.JSX.Element {
 		setPanels(!open);
 	}, [panelsOpen, setPanels]);
 
+	const choosePanelTab = useCallback((tab: PanelTab) => {
+		setPanelTab(tab);
+		rememberPanelTab(tab);
+	}, []);
+
+	const touchPalette = useCallback((id: string) => setRecentPalette(rememberPaletteUse(id)), []);
+
 	// Settings and the first run are full-window screens; a native view over them would be a panel nobody can close.
 	useEffect(() => {
 		if (view !== "conversation" && previewUrl !== undefined) closePreview();
@@ -165,36 +183,6 @@ export function App(): React.JSX.Element {
 			alive = false;
 		};
 	}, [api]);
-
-	// Ctrl+P / Ctrl+K open the palette, Ctrl+B folds the panels, Ctrl+= / Ctrl+- / Ctrl+0 are the ones every window has.
-	useEffect(() => {
-		const onKeyDown = (event: KeyboardEvent): void => {
-			if (!(event.ctrlKey || event.metaKey)) return;
-			if (event.key.toLowerCase() === "p" || event.key.toLowerCase() === "k") {
-				event.preventDefault();
-				setQuickOpen((open) => !open);
-				return;
-			}
-			if (event.key.toLowerCase() === "b") {
-				event.preventDefault();
-				togglePanels();
-				return;
-			}
-			if (event.key === "=" || event.key === "+" || event.key === "-" || event.key === "0") {
-				if (api === undefined) return;
-				event.preventDefault();
-				const next = event.key === "0" ? 0 : event.key === "-" ? zoom.current - 0.5 : zoom.current + 0.5;
-				void api.app
-					.setZoom(next)
-					.then((level) => {
-						zoom.current = level;
-					})
-					.catch(() => {});
-			}
-		};
-		window.addEventListener("keydown", onKeyDown);
-		return () => window.removeEventListener("keydown", onKeyDown);
-	}, [api, togglePanels]);
 
 	// The group is only mounted once the first run is done; fold a remembered-closed panel before it paints.
 	useLayoutEffect(() => {
@@ -472,6 +460,56 @@ export function App(): React.JSX.Element {
 		[api, store, report],
 	);
 
+	// The shell's own keys: palette, panels, new task, project, settings, and the window's zoom.
+	useEffect(() => {
+		const onKeyDown = (event: KeyboardEvent): void => {
+			if (!(event.ctrlKey || event.metaKey)) return;
+			const key = event.key.toLowerCase();
+			if (key === "p" || key === "k") {
+				event.preventDefault();
+				setQuickOpen((open) => !open);
+				return;
+			}
+			if (key === "b") {
+				event.preventDefault();
+				setQuickOpen(false);
+				togglePanels();
+				return;
+			}
+			if (key === "n") {
+				event.preventDefault();
+				setQuickOpen(false);
+				void newConversation();
+				return;
+			}
+			if (key === "o") {
+				event.preventDefault();
+				setQuickOpen(false);
+				void chooseWorkspace();
+				return;
+			}
+			if (event.key === ",") {
+				event.preventDefault();
+				setQuickOpen(false);
+				setView("settings");
+				return;
+			}
+			if (event.key === "=" || event.key === "+" || event.key === "-" || event.key === "0") {
+				if (api === undefined) return;
+				event.preventDefault();
+				const next = event.key === "0" ? 0 : event.key === "-" ? zoom.current - 0.5 : zoom.current + 0.5;
+				void api.app
+					.setZoom(next)
+					.then((level) => {
+						zoom.current = level;
+					})
+					.catch(() => {});
+			}
+		};
+		window.addEventListener("keydown", onKeyDown);
+		return () => window.removeEventListener("keydown", onKeyDown);
+	}, [api, togglePanels, newConversation, chooseWorkspace]);
+
 	const renameSession = useCallback(
 		async (name: string) => {
 			if (api === undefined || operation.current) return;
@@ -580,57 +618,76 @@ export function App(): React.JSX.Element {
 		rememberPanelsOpen(open);
 	};
 
-	const paletteItems: PaletteItem[] = [
-		{
-			id: "action:new-task",
-			label: text("app.newTask"),
-			icon: <Plus />,
-			group: "action",
-			run: () => void newConversation(),
-		},
-		{
-			id: "action:workspace",
-			label: text("app.chooseWorkspace"),
-			icon: <FolderOpen />,
-			group: "action",
-			run: () => void chooseWorkspace(),
-		},
-		{
-			id: "action:settings",
-			label: text("nav.settings"),
-			icon: <Settings />,
-			group: "action",
-			run: () => setView("settings"),
-		},
-		{
-			id: "action:restart",
-			label: status.state === "failed" ? text("app.retry") : text("app.restart"),
-			icon: <RotateCw />,
-			group: "action",
-			run: () => void restart(),
-		},
-		{
-			id: "action:panels",
-			label: panelsOpen ? text("app.hidePanels") : text("app.showPanels"),
-			icon: panelsOpen ? <PanelRightClose /> : <PanelRightOpen />,
-			hint: "Ctrl+B",
-			group: "action",
-			run: togglePanels,
-		},
-		...allSessions
-			.filter((session) => session.path !== snapshot?.sessionFile)
-			.slice(0, 40)
-			.map((session) => ({
-				id: `session:${session.path}`,
-				label: session.title,
-				hint: `${projectName(session.cwd)} · ${session.updatedAt.slice(0, 10)}`,
-				group: "session" as const,
-				run: () => {
-					if (session.cwd.replace(/[\\/]+$/, "").toLowerCase() === here) void openSession(session.path);
-					else void openSessionAcross(session.path);
-				},
-			})),
-	];
+	const paletteRank = (id: string): number => {
+		const at = recentPalette.indexOf(id);
+		return at === -1 ? Number.MAX_SAFE_INTEGER : at;
+	};
+
+	const paletteItems: PaletteItem[] = (
+		[
+			{
+				id: "action:new-task",
+				label: text("app.newTask"),
+				hint: `${ACCELERATOR}N`,
+				icon: <Plus />,
+				group: "action",
+				run: () => void newConversation(),
+			},
+			{
+				id: "action:workspace",
+				label: text("app.chooseWorkspace"),
+				hint: `${ACCELERATOR}O`,
+				icon: <FolderOpen />,
+				group: "action",
+				run: () => void chooseWorkspace(),
+			},
+			{
+				id: "action:settings",
+				label: text("nav.settings"),
+				hint: `${ACCELERATOR},`,
+				icon: <Settings />,
+				group: "action",
+				run: () => setView("settings"),
+			},
+			{
+				id: "action:restart",
+				label: status.state === "failed" ? text("app.retry") : text("app.restart"),
+				icon: <RotateCw />,
+				group: "action",
+				run: () => void restart(),
+			},
+			{
+				id: "action:panels",
+				label: panelsOpen ? text("app.hidePanels") : text("app.showPanels"),
+				icon: panelsOpen ? <PanelRightClose /> : <PanelRightOpen />,
+				hint: `${ACCELERATOR}B`,
+				group: "action",
+				run: togglePanels,
+			},
+			...allSessions
+				.filter((session) => session.path !== snapshot?.sessionFile)
+				.slice(0, 40)
+				.map((session) => ({
+					id: `session:${session.path}`,
+					label: session.title,
+					hint: `${projectName(session.cwd)} · ${session.updatedAt.slice(0, 10)}`,
+					group: "session" as const,
+					run: () => {
+						if (session.cwd.replace(/[\\/]+$/, "").toLowerCase() === here) void openSession(session.path);
+						else void openSessionAcross(session.path);
+					},
+				})),
+		] satisfies PaletteItem[]
+	)
+		// Recent items rise inside their own group; the group order itself stays fixed.
+		.sort((left, right) => paletteRank(left.id) - paletteRank(right.id))
+		.map((item) => ({
+			...item,
+			run: () => {
+				touchPalette(item.id);
+				item.run();
+			},
+		}));
 
 	return (
 		<TooltipProvider delayDuration={350}>
@@ -991,7 +1048,7 @@ export function App(): React.JSX.Element {
 											api={api}
 											text={text}
 											tab={panelTab}
-											onTab={setPanelTab}
+											onTab={choosePanelTab}
 											openFile={openFile}
 										/>
 									) : null}
@@ -1009,7 +1066,7 @@ export function App(): React.JSX.Element {
 					onClose={() => setQuickOpen(false)}
 					onOpen={(path) => {
 						setOpenFile({ path, nonce: Date.now() });
-						setPanelTab("files");
+						choosePanelTab("files");
 						setQuickOpen(false);
 					}}
 				/>

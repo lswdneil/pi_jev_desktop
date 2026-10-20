@@ -2,7 +2,12 @@
 // Copyright (c) 2026 the spec.ai.jev authors
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { readPanelsOpen, rememberPanelsOpen } from "../../src/renderer/lib/panel-visibility.ts";
+import {
+	readPanelTab,
+	readPanelsOpen,
+	rememberPanelTab,
+	rememberPanelsOpen,
+} from "../../src/renderer/lib/panel-visibility.ts";
 
 let stored: string | null = null;
 
@@ -37,5 +42,13 @@ describe("panel visibility", () => {
 		});
 		expect(readPanelsOpen()).toBe(true);
 		expect(() => rememberPanelsOpen(false)).not.toThrow();
+	});
+
+	it("remembers the panel tab and ignores a value it does not know", () => {
+		expect(readPanelTab()).toBe("board");
+		rememberPanelTab("judgments");
+		expect(readPanelTab()).toBe("judgments");
+		stored = "not-a-tab";
+		expect(readPanelTab()).toBe("board");
 	});
 });

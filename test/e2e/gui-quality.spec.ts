@@ -142,6 +142,12 @@ test("Ctrl+K opens the palette and runs an action", async () => {
 		await page.getByTestId("quick-open-action").filter({ hasText: "Settings" }).click();
 		await expect(page.getByTestId("settings")).toBeVisible();
 		await expect(page.getByTestId("quick-open")).toHaveCount(0);
+
+		// What was just run comes first the next time the palette opens.
+		await page.keyboard.press("Control+K");
+		await expect(page.getByTestId("quick-open-action").first()).toContainText("Settings");
+		await page.keyboard.press("Escape");
+		await expect(page.getByTestId("quick-open")).toHaveCount(0);
 	} finally {
 		await profile.close();
 	}
@@ -245,6 +251,47 @@ test("Ctrl+B folds the panels and puts them back", async () => {
 		await expect(page.getByTestId("toggle-panels")).toHaveAttribute("aria-label", "Hide panels");
 	} finally {
 		await profile.close();
+	}
+});
+
+test("Control+, opens settings and Control+N starts a task", async () => {
+	const profile = await launchApp();
+	try {
+		const { page } = profile;
+		await completeFirstRun(page);
+		await expect(page.locator(".message")).toHaveCount(2);
+
+		await page.keyboard.press("Control+,");
+		await expect(page.getByTestId("settings")).toBeVisible();
+
+		await page.getByTestId("nav-conversation").click();
+		await page.keyboard.press("Control+N");
+		await expect(page.getByRole("heading", { name: "What are we building?" })).toBeVisible();
+		await expect(page.locator(".message")).toHaveCount(0);
+	} finally {
+		await profile.close();
+	}
+});
+
+test("remembers which panel tab was open", async () => {
+	const profileDir = mkdtempSync(join(tmpdir(), "spec-e2e-tab-"));
+	const first = await launchApp({ profileDir });
+	try {
+		const { page } = first;
+		await completeFirstRun(page);
+		await page.getByTestId("tab-judgments").click();
+		await expect(page.getByTestId("tab-judgments")).toHaveAttribute("aria-selected", "true");
+	} finally {
+		await first.close();
+	}
+
+	const second = await launchApp({ profileDir });
+	try {
+		await expect(second.page.getByTestId("composer")).toBeVisible();
+		await expect(second.page.getByTestId("tab-judgments")).toHaveAttribute("aria-selected", "true");
+	} finally {
+		await second.close();
+		rmSync(profileDir, { recursive: true, force: true });
 	}
 });
 
