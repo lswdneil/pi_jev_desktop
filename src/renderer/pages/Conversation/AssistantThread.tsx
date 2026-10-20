@@ -14,10 +14,23 @@ import {
 	useExternalStoreRuntime,
 	useThreadMessages,
 } from "@assistant-ui/core/react";
-import type { MessageState, ThreadMessageLike, ToolCallMessagePart } from "@assistant-ui/core";
+import {
+	SimpleImageAttachmentAdapter,
+	type AppendMessage,
+	type AttachmentAdapter,
+	type CompleteAttachment,
+	type MessageState,
+	type PendingAttachment,
+	type ThreadMessageLike,
+	type ToolCallMessagePart,
+} from "@assistant-ui/core";
+import { ThreadPrimitive } from "@assistant-ui/react";
 import { useLayoutEffect, useMemo, useRef } from "react";
+import { MAX_PROMPT_IMAGES, PROMPT_IMAGE_TYPES, type PromptImage } from "../../../shared/api.ts";
 import { type ConversationState, visibleMessages } from "../../../shared/conversation.ts";
 import { Markdown } from "../../lib/markdown-view.tsx";
+import logo from "../../assets/logo.png";
+import { AssistantComposer } from "./AssistantComposer.tsx";
 
 function toThreadMessages(state: ConversationState): readonly ThreadMessageLike[] {
 	const rows: ThreadMessageLike[] = visibleMessages(state).map((message) =>
@@ -66,6 +79,53 @@ function toolOf(message: MessageState): ToolCallMessagePart | undefined {
 	return message.content.find((part): part is ToolCallMessagePart => part.type === "tool-call");
 }
 
+function promptImages(message: AppendMessage): readonly PromptImage[] {
+	const images: PromptImage[] = [];
+	for (const attachment of message.attachments ?? []) {
+		for (const part of attachment.content) {
+			if (part.type !== "image") continue;
+			const comma = part.image.indexOf(",");
+			if (comma < 0) continue;
+			const header = part.image.slice(0, comma);
+			const mimeType = header.slice(header.indexOf(":") + 1).split(";")[0] || attachment.contentType || "image/png";
+			images.push({ mimeType, data: part.image.slice(comma + 1) });
+		}
+	}
+	return images;
+}
+
+class SpecImageAttachmentAdapter implements AttachmentAdapter {
+	readonly accept = PROMPT_IMAGE_TYPES.join(",");
+	private readonly inner = new SimpleImageAttachmentAdapter();
+	private readonly onError: (message: string) => void;
+	private readonly text: (key: string) => string;
+
+	constructor(onError: (message: string) => void, text: (key: string) => string) {
+		this.onError = onError;
+		this.text = text;
+	}
+
+	add({ file }: { file: File }): Promise<PendingAttachment> {
+		if (!(PROMPT_IMAGE_TYPES as readonly string[]).includes(file.type)) {
+			this.onError(this.text("conversation.imageType"));
+			return Promise.reject(new Error("unsupported image type"));
+		}
+		if (file.size > 5 * 1024 * 1024) {
+			this.onError(this.text("conversation.imageTooLarge"));
+			return Promise.reject(new Error("image is too large"));
+		}
+		return this.inner.add({ file });
+	}
+
+	send(attachment: PendingAttachment, options?: { signal?: AbortSignal }): Promise<CompleteAttachment> {
+		return this.inner.send(attachment, options);
+	}
+
+	remove(): Promise<void> {
+		return this.inner.remove();
+	}
+}
+
 function ThreadRow({
 	message,
 	text,
@@ -112,36 +172,89 @@ export function AssistantThread({
 	onOpenLink,
 	onSend,
 	onStop,
+	onError,
 	disabled,
+	canStop,
 	active,
+	empty,
+	queued,
 }: {
 	readonly state: ConversationState;
 	readonly text: (key: string) => string;
 	readonly onOpenLink: (url: string) => void;
-	readonly onSend: (text: string) => void;
+	readonly onSend: (text: string, images: readonly PromptImage[]) => void;
 	readonly onStop: () => void;
+	readonly onError: (message: string) => void;
 	readonly disabled: boolean;
+	readonly canStop: boolean;
 	readonly active: boolean;
+	readonly empty: boolean;
+	readonly queued: number;
 }): React.JSX.Element {
 	const messages = useMemo(() => toThreadMessages(state), [state]);
+	const attachments = useMemo(() => new SpecImageAttachmentAdapter(onError, text), [onError, text]);
 	const runtime = useExternalStoreRuntime({
 		messages,
 		convertMessage: (message) => message,
-		isRunning: state.streaming !== undefined,
+		isRunning: state.running || state.streaming !== undefined,
 		isSendDisabled: disabled,
+		adapters: { attachments },
 		onNew: async (message) => {
 			const prompt = message.content
 				.map((part) => (part.type === "text" ? part.text : ""))
 				.join("\n")
 				.trim();
-			if (prompt !== "") onSend(prompt);
+			if (prompt === "") return;
+			const images = promptImages(message);
+			if (images.length > MAX_PROMPT_IMAGES) {
+				onError(text("conversation.imageLimit"));
+				return;
+			}
+			onSend(prompt, images);
 		},
 		onCancel: async () => onStop(),
 	});
 
 	return (
 		<AssistantRuntimeProvider runtime={runtime}>
-			<Transcript text={text} onOpenLink={onOpenLink} streaming={state.streaming !== undefined} active={active} />
+			{empty ? (
+				<section className="workspace-home">
+					<img className="hero-mark" src={logo} alt="" />
+					<p className="hero-eyebrow">{text("conversation.eyebrow")}</p>
+					<h1>{text("conversation.hero")}</h1>
+					<p className="hero-copy">{text("conversation.heroBody")}</p>
+					<div className="composer-hero">
+						<ThreadPrimitive.ViewportProvider>
+							<AssistantComposer
+								text={text}
+								disabled={disabled}
+							canStop={canStop}
+							onStop={onStop}
+							onError={onError}
+								queued={queued}
+								large
+								suggestions={["conversation.suggest1", "conversation.suggest2", "conversation.suggest3"]}
+							/>
+						</ThreadPrimitive.ViewportProvider>
+					</div>
+				</section>
+			) : (
+				<>
+					<Transcript text={text} onOpenLink={onOpenLink} streaming={state.streaming !== undefined} active={active} />
+					<section className="panel">
+						<ThreadPrimitive.ViewportProvider>
+						<AssistantComposer
+							text={text}
+							disabled={disabled}
+							canStop={canStop}
+							onStop={onStop}
+							onError={onError}
+							queued={queued}
+						/>
+						</ThreadPrimitive.ViewportProvider>
+					</section>
+				</>
+			)}
 		</AssistantRuntimeProvider>
 	);
 }

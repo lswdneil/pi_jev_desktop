@@ -11,14 +11,12 @@
  */
 
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import logo from "../../assets/logo.png";
-import { MAX_PROMPT_IMAGES, type SpecApi, PROMPT_IMAGE_TYPES } from "../../../shared/api.ts";
+import type { PromptImage, SpecApi } from "../../../shared/api.ts";
 import { type ConversationEvent, type ConversationState, visibleMessages } from "../../../shared/conversation.ts";
 import type { ConversationStore } from "../../lib/conversation-store.ts";
 import { presentationText } from "../../../shared/presentation.ts";
 import { shellText } from "../../lib/shell-strings.ts";
 import { ApprovalCard } from "./ApprovalCard.tsx";
-import { type AttachedImage, Composer } from "./Composer.tsx";
 
 const AssistantThread = lazy(() => import("./AssistantThread.tsx").then((module) => ({ default: module.AssistantThread })));
 
@@ -50,8 +48,6 @@ export function ConversationPage({
 	readonly language: string;
 }): React.JSX.Element {
 	const state: ConversationState = useSyncExternalStore(store.subscribe, store.getSnapshot);
-	const [draft, setDraft] = useState("");
-	const [images, setImages] = useState<readonly AttachedImage[]>([]);
 	const [busy, setBusy] = useState(false);
 	const sending = useRef(false);
 	const text = (key: string): string => shellText(language, key);
@@ -78,20 +74,13 @@ export function ConversationPage({
 		};
 	}, [api, store, running]);
 
-	const send = (value: string = draft): void => {
+	const send = (value: string, images: readonly PromptImage[]): void => {
 		const message = value.trim();
 		if (message === "" || sending.current || !running) return;
 		sending.current = true;
 		setBusy(true);
 		void api.harness
-			.prompt(
-				message,
-				images.map((image) => ({ mimeType: image.mimeType, data: image.data })),
-			)
-			.then(() => {
-				setDraft("");
-				setImages([]);
-			})
+			.prompt(message, images)
 			.catch((error: unknown) => onError(error instanceof Error ? error.message : String(error)))
 			.finally(() => {
 				sending.current = false;
@@ -103,85 +92,21 @@ export function ConversationPage({
 		void api.harness.abort().catch((error: unknown) => onError(error instanceof Error ? error.message : String(error)));
 	};
 
-	/**
-	 * Read images into the draft. The bridge checks all of this again — this is the part that can say why on screen
-	 * before a round trip, not the part that makes it safe.
-	 */
-	const addImages = (files: readonly File[]): void => {
-		const room = MAX_PROMPT_IMAGES - images.length;
-		if (room <= 0) {
-			onError(text("conversation.imageLimit"));
-			return;
-		}
-		if (files.length > room) onError(text("conversation.imageLimit"));
-		for (const file of files.slice(0, room)) {
-			if (!(PROMPT_IMAGE_TYPES as readonly string[]).includes(file.type)) {
-				onError(text("conversation.imageType"));
-				continue;
-			}
-			if (file.size > 5 * 1024 * 1024) {
-				onError(text("conversation.imageTooLarge"));
-				continue;
-			}
-			const reader = new FileReader();
-			reader.onload = () => {
-				const result = typeof reader.result === "string" ? reader.result : "";
-				const data = result.slice(result.indexOf(",") + 1);
-				if (data === "") return;
-				const id = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-				setImages((current) =>
-					current.length >= MAX_PROMPT_IMAGES ? current : [...current, { id, name: file.name, mimeType: file.type, data }],
-				);
-			};
-			reader.readAsDataURL(file);
-		}
-	};
-
 	return (
 		<div className="conversation" data-testid="conversation" lang={language}>
-			{empty ? (
-				<section className="workspace-home">
-					<img className="hero-mark" src={logo} alt="" />
-					<p className="hero-eyebrow">{text("conversation.eyebrow")}</p>
-					<h1>{text("conversation.hero")}</h1>
-					<p className="hero-copy">{text("conversation.heroBody")}</p>
-					<div className="composer-hero">
-						<Composer
-							draft={draft}
-							images={images}
-							onAddImages={addImages}
-							onRemoveImage={(id) => setImages((current) => current.filter((image) => image.id !== id))}
-							onDraftChange={setDraft}
-							onSend={() => send()}
-							onStop={stop}
-							running={running}
-							busy={busy}
-							queued={state.queue.steering + state.queue.followUp}
-							text={text}
-							large
-						/>
-					</div>
-					<div className="hero-suggestions">
-						{["conversation.suggest1", "conversation.suggest2", "conversation.suggest3"].map((key) => (
-							<button key={key} type="button" className="hero-suggestion" onClick={() => setDraft(text(key))}>
-								{text(key)}
-							</button>
-						))}
-					</div>
-				</section>
-			) : null}
-
-			{empty ? null : (
-				<>
 			<Suspense fallback={<div className="panel messages" data-testid="messages" />}>
 				<AssistantThread
 					state={state}
 					text={text}
 					onOpenLink={onOpenLink}
-					onSend={() => send()}
+					onSend={send}
 					onStop={stop}
+					onError={onError}
 					disabled={!running || busy}
+					canStop={running}
 					active={active}
+					empty={empty}
+					queued={state.queue.steering + state.queue.followUp}
 				/>
 			</Suspense>
 
@@ -223,24 +148,6 @@ export function ConversationPage({
 						))}
 					</ul>
 				</details>
-			)}
-
-			<section className="panel">
-				<Composer
-					draft={draft}
-					images={images}
-					onAddImages={addImages}
-					onRemoveImage={(id) => setImages((current) => current.filter((image) => image.id !== id))}
-					onDraftChange={setDraft}
-					onSend={() => send()}
-					onStop={stop}
-					running={running}
-					busy={busy}
-					queued={state.queue.steering + state.queue.followUp}
-					text={text}
-				/>
-			</section>
-				</>
 			)}
 		</div>
 	);

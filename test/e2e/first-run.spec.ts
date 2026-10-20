@@ -41,7 +41,7 @@ test.describe("first run", () => {
 			await expect(page.locator(".brand")).toBeVisible();
 			// The wizard was walked in Traditional Chinese, so the rail's own chrome is Chinese now.
 			await expect(page.locator(".chip")).toContainText("執行中", { timeout: 60_000 });
-			await expect(page.locator("textarea")).toBeEnabled();
+			await expect(page.getByTestId("composer")).toBeEnabled();
 			await expect(page.locator(".failure")).toHaveCount(0);
 			expect(profile.consent()).toBeUndefined();
 		} finally {

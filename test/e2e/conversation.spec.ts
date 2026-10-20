@@ -25,9 +25,11 @@ test.describe("conversation", () => {
 				"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
 				"base64",
 			);
-			await page.locator('[data-testid="attach-input"]').setInputFiles({ name: "pixel.png", mimeType: "image/png", buffer: png });
+			const chooser = page.waitForEvent("filechooser");
+			await page.getByTestId("attach").click();
+			await (await chooser).setFiles({ name: "pixel.png", mimeType: "image/png", buffer: png });
 
-			await expect(page.locator('[data-testid="attachments"] img')).toHaveCount(1);
+			await expect(page.locator('[data-testid="attachment"]')).toHaveCount(1);
 			await page.locator('[data-testid="composer"]').fill("what is this");
 			await page.locator('[data-testid="send"]').click();
 
@@ -49,9 +51,9 @@ test.describe("conversation", () => {
 			await completeFirstRun(page);
 			await expect(page.locator(".chip")).toContainText("running", { timeout: 60_000 });
 
-			await page
-				.locator('[data-testid="attach-input"]')
-				.setInputFiles({ name: "notes.svg", mimeType: "image/svg+xml", buffer: Buffer.from("<svg/>") });
+			const chooser = page.waitForEvent("filechooser");
+			await page.getByTestId("attach").click();
+			await (await chooser).setFiles({ name: "notes.svg", mimeType: "image/svg+xml", buffer: Buffer.from("<svg/>") });
 
 			await expect(page.locator('[data-testid="error"]')).toContainText(/PNG, JPEG, WebP and GIF/);
 			await expect(page.locator('[data-testid="attachments"]')).toHaveCount(0);
