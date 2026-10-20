@@ -1,0 +1,50 @@
+name: Bench
+
+# Micro-benchmarks for the three hot paths in the judgment kernel: log segmentation, the rules-only plan for a
+# test log, and the chunking that feeds a batched admission request. The gate fails only on a regression past the
+# limit recorded in packages/kyrn-judge/bench/baseline.json, and only on the same Node major (see
+# docs/plans/production-readiness/04-CONVENTIONS.md, C6).
+#
+# It runs on windows-latest because the committed baseline was measured on win32-x64. A different platform is
+# reported by the gate, not failed, but a separate runner gives the comparison its best chance of meaning
+# something.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "packages/kyrn-judge/**"
+      - "packages/coding-agent/src/core/extensions/**"
+      - "packages/coding-agent/src/core/process-guard.ts"
+      - "scripts/bench-gate.mjs"
+      - "scripts/bench-gate.test.mjs"
+      - ".github/workflows/bench.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bench-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hot-paths:
+    name: Hot paths · micro-benchmarks
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      # Offline, no provider, no judge: `segmentTestLog`, `planTestLogRules`, and `chunkLines` on a fixed log.
+      - name: Bench gate
+        run: npm run bench

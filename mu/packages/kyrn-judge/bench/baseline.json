@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"generatedAt": "2026-10-18T14:58:08.404Z",
+	"node": "v24.13.0",
+	"platform": "win32-x64",
+	"tolerance": 0.2,
+	"metrics": {
+		"segmentTestLog": {
+			"unit": "ms",
+			"p50": 4.186,
+			"p95": 4.879,
+			"samples": 20,
+			"budget": 5.023
+		},
+		"planTestLogRules": {
+			"unit": "ms",
+			"p50": 3.633,
+			"p95": 4.412,
+			"samples": 20,
+			"budget": 4.36
+		},
+		"chunkLines": {
+			"unit": "ms",
+			"p50": 1.844,
+			"p95": 3.829,
+			"samples": 20,
+			"budget": 2.213
+		}
+	}
+}

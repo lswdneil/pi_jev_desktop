@@ -1,0 +1,15 @@
+{
+	"name": "@kyrn/judge-evals",
+	"version": "0.1.0",
+	"private": true,
+	"license": "MIT",
+	"description": "Offline replay of the judgment kernel's test-log admission arms, with the thresholds a change has to pass",
+	"type": "module",
+	"scripts": {
+		"replay": "node --experimental-strip-types src/cli.ts",
+		"test": "vitest --run"
+	},
+	"devDependencies": {
+		"vitest": "4.1.11"
+	}
+}

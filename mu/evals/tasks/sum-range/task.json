@@ -1,0 +1,12 @@
+{
+	"id": "sum-range",
+	"title": "Off-by-one in a range sum",
+	"prompt": "`npm test` fails in this repository. Find the bug and make the tests pass.",
+	"judge": {
+		"command": "node",
+		"args": [
+			"--test"
+		],
+		"timeoutMs": 60000
+	}
+}

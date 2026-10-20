@@ -1,0 +1,12 @@
+{
+	"id": "guard-empty",
+	"title": "A validator that accepts empty input",
+	"prompt": "The validator should reject an empty name. Its tests describe the expected error; make them pass.",
+	"judge": {
+		"command": "node",
+		"args": [
+			"--test"
+		],
+		"timeoutMs": 60000
+	}
+}

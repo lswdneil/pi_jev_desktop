@@ -1,0 +1,49 @@
+# Dependency updates, once a month and in one pull request per ecosystem.
+#
+# Every dependency here is an exact version and every lockfile change is reviewed, so the updates arrive as
+# reviewed PRs rather than as ranges: `versioning-strategy: increase` moves the pinned number without widening
+# the specifier. The check in `scripts/check-pinned-deps.mjs` fails any range that a PR introduces, which means
+# a dependabot PR that widens instead of bumping is caught before merge.
+#
+# `desktop/` (the frozen AionUi shell) is not listed: it is not maintained here, and its 158 existing ranges
+# are whitelisted precisely so that nobody adds more.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
+    labels: ["dependencies"]
+    commit-message:
+      prefix: chore
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    versioning-strategy: increase
+    open-pull-requests-limit: 1
+    groups:
+      harness:
+        patterns: ["*"]
+    labels: ["dependencies"]
+    commit-message:
+      prefix: chore
+
+  # The new shell (U19) keeps its own lockfile; until that directory exists this entry finds nothing and
+  # reports nothing.
+  - package-ecosystem: bun
+    directory: /desktop-next
+    schedule:
+      interval: monthly
+    versioning-strategy: increase
+    open-pull-requests-limit: 1
+    groups:
+      desktop:
+        patterns: ["*"]
+    labels: ["dependencies"]
+    commit-message:
+      prefix: chore

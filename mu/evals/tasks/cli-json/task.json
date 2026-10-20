@@ -1,0 +1,12 @@
+{
+	"id": "cli-json",
+	"title": "A CLI that ignores its JSON flag",
+	"prompt": "`node src/cli.js --json` should print JSON, not text. The test runs the command; make it pass.",
+	"judge": {
+		"command": "node",
+		"args": [
+			"--test"
+		],
+		"timeoutMs": 60000
+	}
+}

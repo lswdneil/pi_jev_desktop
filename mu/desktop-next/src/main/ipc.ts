@@ -1,0 +1,195 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2025-2026 the mu authors
+
+/**
+ * The main-process half of the bridge: one function per channel, no channel the page can name.
+ *
+ * `ipcMain.handle` is registered for exactly the channels in `INVOKE_CHANNELS` (`main/index.ts`), and every one of
+ * them lands in `dispatch`. The dispatcher is a plain function of its dependencies, so the allow-list, the payload
+ * checks, and the error mapping are all testable without Electron.
+ */
+
+import { type ApiFailure, type ApiResult, INVOKE_CHANNELS, type InvokeChannel, type UiAnswer } from "../shared/api.ts";
+import type { SettingsChange } from "../shared/settings.ts";
+import { NotRunningError } from "./supervisor.ts";
+
+/** What the handlers need. Narrow on purpose: a test passes a few functions, not an app. */
+export interface ApiDependencies {
+	readonly version: string;
+	readonly platform: string;
+	readonly supervisor: {
+		getStatus(): unknown;
+		restart(): Promise<unknown>;
+		stop(): Promise<void>;
+		prompt(message: string): Promise<unknown>;
+		abort(): Promise<void>;
+		snapshot(): Promise<unknown>;
+		history(): Promise<unknown>;
+		newSession(): Promise<void>;
+		models(): Promise<unknown>;
+		setModel(provider: string, modelId: string): Promise<void>;
+		respond(answer: UiAnswer): void;
+	};
+	/** The update feed, read on demand; `install` downloads, proves and starts what it offers. */
+	readonly update: {
+		check(): Promise<unknown>;
+		install(): Promise<unknown>;
+	};
+	/** The last decisions from mu's ledger, read through the harness's own `ledger --json`. */
+	readonly judgments: {
+		recent(): Promise<unknown>;
+	};
+	/** The harness's manifest and the settings in effect; `write` validates against the manifest before saving. */
+	readonly settings: {
+		snapshot(): Promise<unknown>;
+		write(change: SettingsChange): Promise<unknown>;
+	};
+	readonly consent: {
+		status(): Promise<unknown>;
+		grant(): Promise<unknown>;
+		revoke(): Promise<unknown>;
+	};
+	readonly preview: {
+		open(url: string): Promise<void>;
+		close(): Promise<void>;
+	};
+}
+
+class InvalidPayloadError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = "InvalidPayloadError";
+	}
+}
+
+/** A prompt longer than this is not a prompt; it is a pasted file. The agent gets one either way, off the bridge. */
+const MAX_PROMPT_CHARS = 200_000;
+
+function promptOf(payload: unknown): string {
+	const message = field(payload, "message");
+	if (typeof message !== "string" || message.trim() === "") throw new InvalidPayloadError("a prompt needs a message");
+	if (message.length > MAX_PROMPT_CHARS) {
+		throw new InvalidPayloadError(`a prompt may be at most ${MAX_PROMPT_CHARS} characters`);
+	}
+	return message;
+}
+
+function urlOf(payload: unknown): string {
+	const url = field(payload, "url");
+	if (typeof url !== "string" || !/^https?:\/\//i.test(url)) {
+		throw new InvalidPayloadError("a preview needs an http or https URL");
+	}
+	return url;
+}
+
+/** A change names a feature and an option; whether the value is allowed is the settings layer's question. */
+function changeOf(payload: unknown): SettingsChange {
+	const feature = field(payload, "feature");
+	const option = field(payload, "option");
+	if (typeof feature !== "string" || feature === "") throw new InvalidPayloadError("a change needs a feature");
+	if (typeof option !== "string" || option === "") throw new InvalidPayloadError("a change needs an option");
+	if (!("value" in (payload as Record<string, unknown>))) throw new InvalidPayloadError("a change needs a value");
+	return { feature, option, value: field(payload, "value") };
+}
+
+function modelOf(payload: unknown): { provider: string; modelId: string } {
+	const provider = field(payload, "provider");
+	const modelId = field(payload, "modelId");
+	if (typeof provider !== "string" || provider === "") throw new InvalidPayloadError("a model needs a provider");
+	if (typeof modelId !== "string" || modelId === "") throw new InvalidPayloadError("a model needs an id");
+	return { provider, modelId };
+}
+
+/** An answer: exactly one of a value, a confirmation, or a cancellation, and always an id. */
+function answerOf(payload: unknown): UiAnswer {
+	const id = field(payload, "id");
+	if (typeof id !== "string" || id === "") throw new InvalidPayloadError("an answer needs the id of the request");
+	const value = field(payload, "value");
+	const confirmed = field(payload, "confirmed");
+	const cancelled = field(payload, "cancelled");
+	if (cancelled === true) return { id, cancelled: true };
+	if (typeof confirmed === "boolean") return { id, confirmed };
+	if (typeof value === "string") return { id, value };
+	throw new InvalidPayloadError("an answer needs a value, a confirmation or a cancellation");
+}
+
+function field(payload: unknown, name: string): unknown {
+	if (typeof payload !== "object" || payload === null) return undefined;
+	return (payload as Record<string, unknown>)[name];
+}
+
+function failure(code: ApiFailure["code"], message: string): ApiResult<never> {
+	return { ok: false, error: { code, message } };
+}
+
+export interface Api {
+	readonly channels: typeof INVOKE_CHANNELS;
+	dispatch(channel: string, payload: unknown): Promise<ApiResult<unknown>>;
+}
+
+export function createApi(deps: ApiDependencies): Api {
+	const handlers: Record<InvokeChannel, (payload: unknown) => Promise<unknown>> = {
+		"app:version": async () => deps.version,
+		"app:platform": async () => deps.platform,
+		"harness:status": async () => deps.supervisor.getStatus(),
+		"harness:restart": async () => deps.supervisor.restart(),
+		"harness:stop": async () => {
+			await deps.supervisor.stop();
+			return deps.supervisor.getStatus();
+		},
+		"harness:prompt": async (payload) => deps.supervisor.prompt(promptOf(payload)),
+		"harness:abort": async () => {
+			await deps.supervisor.abort();
+			return undefined;
+		},
+		"harness:snapshot": async () => deps.supervisor.snapshot(),
+		"harness:history": async () => deps.supervisor.history(),
+		"harness:new-session": async () => {
+			await deps.supervisor.newSession();
+			return undefined;
+		},
+		"harness:models": async () => deps.supervisor.models(),
+		"harness:set-model": async (payload) => {
+			const model = modelOf(payload);
+			await deps.supervisor.setModel(model.provider, model.modelId);
+			return undefined;
+		},
+		"harness:ui-response": async (payload) => {
+			deps.supervisor.respond(answerOf(payload));
+			return undefined;
+		},
+		"judgments:recent": async () => deps.judgments.recent(),
+		"update:check": async () => deps.update.check(),
+		"update:install": async () => deps.update.install(),
+		"settings:snapshot": async () => deps.settings.snapshot(),
+		"settings:write": async (payload) => deps.settings.write(changeOf(payload)),
+		"consent:status": async () => deps.consent.status(),
+		"consent:grant": async () => deps.consent.grant(),
+		"consent:revoke": async () => deps.consent.revoke(),
+		"preview:open": async (payload) => {
+			await deps.preview.open(urlOf(payload));
+			return undefined;
+		},
+		"preview:close": async () => {
+			await deps.preview.close();
+			return undefined;
+		},
+	};
+
+	return {
+		channels: INVOKE_CHANNELS,
+		async dispatch(channel: string, payload: unknown): Promise<ApiResult<unknown>> {
+			if (!(INVOKE_CHANNELS as readonly string[]).includes(channel)) {
+				return failure("unknown-channel", `there is no handler for ${channel}`);
+			}
+			const handler = handlers[channel as InvokeChannel];
+			try {
+				return { ok: true, value: await handler(payload) };
+			} catch (error) {
+				if (error instanceof InvalidPayloadError) return failure("invalid-payload", error.message);
+				if (error instanceof NotRunningError) return failure("not-running", error.message);
+				return failure("failed", error instanceof Error ? error.message : String(error));
+			}
+		},
+	};
+}

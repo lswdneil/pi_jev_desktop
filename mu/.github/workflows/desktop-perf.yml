@@ -1,0 +1,49 @@
+name: Desktop perf
+
+# Phase 1 of the performance budget: the costs a shell switch could change and a shell switch cannot, measured
+# without a desktop app. Transcript codecs (JSONL against CBOR), one message's markdown render cost and
+# streaming batching — the numbers behind docs/performance-budget.md.
+#
+# Phase 2 (cold start, idle RSS, scroll cost, input latency, installer size) needs a built shell and arrives
+# with U19/U22; this workflow says so rather than measuring nothing.
+#
+# Like the kernel benchmarks it runs on windows-latest, the platform the baseline was recorded on.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "bench/desktop/**"
+      - "packages/protocol/src/cbor/**"
+      - "packages/tui/src/components/markdown.ts"
+      - "scripts/perf-budget.mjs"
+      - "scripts/perf-budget.test.mjs"
+      - ".github/workflows/desktop-perf.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-perf-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  probes:
+    name: Phase 1 · shell-independent costs
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Performance budget
+        run: npm run perf

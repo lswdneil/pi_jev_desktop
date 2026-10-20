@@ -1,0 +1,74 @@
+[
+	{
+		"name": "openai style key in a stack frame",
+		"input": "Error: request failed\n    at run (file:///app/dist/core.js:4:2)\n    key sk-proj-AbCdEf0123456789AbCdEf0123456789",
+		"forbidden": ["sk-proj-AbCdEf0123456789AbCdEf0123456789"],
+		"required": ["[redacted]"]
+	},
+	{
+		"name": "github token",
+		"input": "fatal: push failed with token ghp_0123456789abcdefghijklmnopqrstuvwxyz",
+		"forbidden": ["ghp_0123456789abcdefghijklmnopqrstuvwxyz"],
+		"required": ["[redacted]"]
+	},
+	{
+		"name": "aws access key",
+		"input": "credential AKIAIOSFODNN7EXAMPLE could not be used",
+		"forbidden": ["AKIAIOSFODNN7EXAMPLE"],
+		"required": ["[redacted]"]
+	},
+	{
+		"name": "json web token",
+		"input": "header eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U rejected",
+		"forbidden": ["eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"],
+		"required": ["[redacted]"]
+	},
+	{
+		"name": "bearer header keeps the scheme",
+		"input": "Authorization: Bearer abcdef1234567890xyz failed",
+		"forbidden": ["abcdef1234567890xyz"],
+		"required": ["Bearer", "[redacted]"]
+	},
+	{
+		"name": "password inside a url keeps user and host",
+		"input": "fetching https://build:hunter2secret@artifacts.internal/pkg.tgz",
+		"forbidden": ["hunter2secret"],
+		"required": ["build", "artifacts.internal"]
+	},
+	{
+		"name": "environment line",
+		"input": "env: OPENROUTER_API_KEY=sk-or-v1-0123456789abcdef0123456789abcdef",
+		"forbidden": ["sk-or-v1-0123456789abcdef0123456789abcdef"],
+		"required": ["OPENROUTER_API_KEY=", "[redacted]"]
+	},
+	{
+		"name": "quoted value under a credential key",
+		"input": "config {\"apiKey\": \"0123456789abcdef\"} loaded",
+		"forbidden": ["0123456789abcdef"],
+		"required": ["[redacted]"]
+	},
+	{
+		"name": "yaml line",
+		"input": "server:\n  password: correcthorsebatterystaple\n  port: 8080",
+		"forbidden": ["correcthorsebatterystaple"],
+		"required": ["password:", "port: 8080"]
+	},
+	{
+		"name": "private key block",
+		"input": "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmU=\n-----END OPENSSH PRIVATE KEY-----",
+		"forbidden": ["b3BlbnNzaC1rZXktdjEAAAAABG5vbmU="],
+		"required": ["[redacted]"]
+	},
+	{
+		"name": "ordinary words about a password stay",
+		"input": "the password reset flow sends a token by mail",
+		"forbidden": ["[redacted]"],
+		"required": ["password reset flow"]
+	},
+	{
+		"name": "a short setting value is not a credential",
+		"input": "MAX_TOKENS=4096 and DEBUG=true",
+		"forbidden": ["[redacted]"],
+		"required": ["MAX_TOKENS=4096", "DEBUG=true"]
+	}
+]

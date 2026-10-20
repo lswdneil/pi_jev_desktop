@@ -1,0 +1,116 @@
+name: Task benchmark
+
+# Two jobs, one file, because they share the corpus: the faux arm runs on every push and proves the machinery (and the
+# tasks' honesty), and the real arms run nightly with a budget. A benchmark that only runs by hand is a benchmark that
+# stops being true.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eval-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  self-check:
+    name: Tasks 路 judge is red before and green after
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+
+      - name: Install
+        run: npm ci --ignore-scripts
+
+      - name: Every task must fail its judge, then pass it
+        run: node --experimental-strip-types packages/evals/src/tasks/cli.ts --self-check
+
+      - name: The runner's own tests
+        run: npm test -w @earendil-works/pi-evals -- test/tasks.test.ts test/runner.test.ts
+
+  faux:
+    name: Tasks 路 four arms, faux executor
+    needs: self-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+
+      - name: Install
+        run: npm ci --ignore-scripts
+
+      - name: Run all four arms
+        run: node --experimental-strip-types packages/evals/src/tasks/cli.ts --executor faux --arm all --out evals-out
+
+      - name: Keep the report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: task-benchmark-faux
+          path: evals-out
+
+  nightly:
+    name: Tasks 路 real model, budgeted
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    # A key is the owner's to provide: without the secret the job is skipped, not failed.
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      MU_TASK_MODEL: ${{ vars.MU_TASK_MODEL }}
+      MU_TASK_BUDGET_USD: ${{ vars.MU_TASK_BUDGET_USD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+
+      - name: Install
+        run: npm ci --ignore-scripts
+
+      - name: Build (the arms run the real command line)
+        run: npm run build
+
+      - name: Run the arms
+        if: env.ANTHROPIC_API_KEY != ''
+        run: |
+          node --experimental-strip-types packages/evals/src/tasks/cli.ts \
+            --executor agent \
+            --arm all \
+            --model "${MU_TASK_MODEL:-anthropic/claude-sonnet-4}" \
+            --budget "${MU_TASK_BUDGET_USD:-5}" \
+            --out evals-out
+
+      - name: Say why nothing ran
+        if: env.ANTHROPIC_API_KEY == ''
+        # A colon in an unquoted scalar makes YAML read a nested mapping and GitHub reject the whole file — which is
+        # how this step was caught (`scripts/check-workflows.test.mjs`).
+        run: echo "no ANTHROPIC_API_KEY secret set, so the real arms did not run (the faux job still did)"
+
+      - name: Keep the report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: task-benchmark-nightly
+          path: evals-out

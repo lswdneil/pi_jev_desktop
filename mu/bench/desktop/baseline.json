@@ -1,0 +1,72 @@
+{
+	"schemaVersion": 1,
+	"generatedAt": "2026-10-18T15:30:21.339Z",
+	"node": "v24.13.0",
+	"platform": "win32-x64",
+	"tolerance": 0.3,
+	"metrics": {
+		"transcript.jsonl.encode": {
+			"unit": "ms",
+			"p50": 10.867,
+			"p95": 13.46,
+			"samples": 20,
+			"budget": 14.127
+		},
+		"transcript.jsonl.decode": {
+			"unit": "ms",
+			"p50": 8.974,
+			"p95": 10.392,
+			"samples": 20,
+			"budget": 11.666
+		},
+		"transcript.cbor.encode": {
+			"unit": "ms",
+			"p50": 56.651,
+			"p95": 58.689,
+			"samples": 20,
+			"budget": 73.646
+		},
+		"transcript.cbor.decode": {
+			"unit": "ms",
+			"p50": 11.705,
+			"p95": 15.615,
+			"samples": 20,
+			"budget": 15.217
+		},
+		"message.markdown.render": {
+			"unit": "ms",
+			"p50": 1.086,
+			"p95": 1.655,
+			"samples": 20,
+			"budget": 1.412
+		},
+		"stream.render.per-byte": {
+			"unit": "ms",
+			"p50": 18.416,
+			"p95": 22.787,
+			"samples": 20,
+			"budget": 23.941
+		},
+		"stream.render.chunks-of-64": {
+			"unit": "ms",
+			"p50": 0.278,
+			"p95": 0.319,
+			"samples": 20,
+			"budget": 0.361
+		},
+		"transcript.jsonl.bytes": {
+			"unit": "bytes",
+			"p50": 10495587,
+			"p95": 10495587,
+			"samples": 1,
+			"budget": 13644263.1
+		},
+		"transcript.cbor.bytes": {
+			"unit": "bytes",
+			"p50": 10071664,
+			"p95": 10071664,
+			"samples": 1,
+			"budget": 13093163.2
+		}
+	}
+}

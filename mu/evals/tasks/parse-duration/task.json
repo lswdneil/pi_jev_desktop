@@ -1,0 +1,12 @@
+{
+	"id": "parse-duration",
+	"title": "A duration parser drops the milliseconds unit",
+	"prompt": "The duration parser mishandles the `ms` suffix and the package's tests say so. Fix it.",
+	"judge": {
+		"command": "node",
+		"args": [
+			"--test"
+		],
+		"timeoutMs": 60000
+	}
+}

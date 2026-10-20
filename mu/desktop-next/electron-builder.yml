@@ -1,0 +1,78 @@
+# Packaging. `npm run build` produces `out/`; electron-builder turns that into an installable app.
+#
+# The judgment layer ships inside `resources/harness/mu-agent` (the shell's resolver looks there first in a packaged
+# app, see `src/main/harness.ts`). The release pipeline stages that folder before calling electron-builder, so a local
+# `electron-builder --dir` without staging it produces an app that reports "mu was not found" — which is the error
+# screen working, not a packaging bug.
+appId: ai.spec.jev
+productName: spec.ai.jev
+copyright: Copyright (c) 2025-2026 the spec.ai.jev authors
+
+directories:
+  output: dist
+  buildResources: build
+
+# What goes into the asar: the build, its manifest, and nothing else. The sources are not shipped.
+files:
+  - out/**/*
+  - package.json
+  - LICENSE
+  - NOTICE
+
+# Beside the asar, so the harness is a real folder with its own node_modules rather than a path inside an archive.
+# The source is the folder that *holds* `mu-agent`, not `mu-agent` itself: electron-builder never copies the root
+# `node_modules` of a source folder (it skips it unconditionally, see `createFilter` in app-builder-lib), and the
+# harness cannot load its own judge extension without `jiti`. Copying the parent puts the dependencies one level
+# down, where they are copied, and lands the package at `harness/mu-agent` — the path `bundledHarnessRoot` resolves.
+extraResources:
+  - from: ../.artifacts/desktop-harness
+    to: harness
+    filter:
+      - "**/*"
+      - "!**/*.map"
+
+asar: true
+compression: normal
+# The menus and the auto-updater policy belong to the app, not to the installer.
+removePackageScripts: true
+
+win:
+  # No `arch` here on purpose: a target that lists two architectures makes electron-builder build one combined
+  # installer that carries both, 237 MB instead of 117 MB, and the update feed's `path` then points every user at the
+  # combined one. The arch comes from the command line instead — one build, one installer, one feed (`--win --x64`).
+  target:
+    - target: nsis
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+
+mac:
+  target:
+    - target: dmg
+    - target: zip
+  category: public.app-category.developer-tools
+  # Signing, notarization and stapling are the release job's (`.github/workflows/desktop-package.yml`), and U10 wires
+  # the Windows certificate. Without them the build is still runnable, and the app says so instead of failing to start.
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  # The entitlements in `build/entitlements.mac.plist`; the helper processes get the same set.
+  entitlementsInherit: build/entitlements.mac.plist
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Development
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+# The feed the updater reads (`src/shared/update.ts`). The shell only accepts https on a release host, and this is the
+# host it accepts; a fork changes this line and `DEFAULT_FEED` together.
+publish:
+  provider: github
+  owner: lswdneil
+  repo: pi_jev_desktop
+  releaseType: draft

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+	The entitlements the signed macOS app carries, and the ones its helper processes inherit
+	(`entitlementsInherit` in electron-builder.yml reads this file).
+
+	A hardened runtime refuses to start Electron without these: V8 needs a JIT, and Electron loads its framework
+	building blocks from inside the bundle, which the library validation would otherwise block. They are the same
+	three entitlements electron-builder's own template carries, no more: an entitlement that is not needed weakens
+	the runtime for no gain.
+
+	Signing and notarization happen in `.github/workflows/desktop-package.yml` when the Apple credentials are
+	configured; an unsigned build is still installable and the app says so.
+-->
+<plist version="1.0">
+  <dict>
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+  </dict>
+</plist>

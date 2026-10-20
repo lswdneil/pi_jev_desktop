@@ -1,0 +1,48 @@
+name: Licenses
+
+# The third-party inventory and the licence headers are only useful if they cannot go stale: a dependency added
+# without refreshing the list, or a new file without a header, fails here.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: licenses-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  licenses:
+    name: Licenses · headers, manifests and notices
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # The header check needs the base commit to list the files this change adds.
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+
+      - name: Check the licences this repository declares
+        run: node scripts/license-check.mjs
+
+      - name: Check the headers of the files this change adds
+        if: github.event_name == 'pull_request'
+        run: |
+          base="origin/${{ github.base_ref }}"
+          new_files=$(git diff --diff-filter=A --name-only "$base"...HEAD)
+          echo "added files: ${new_files:-none}"
+          node scripts/license-check.mjs --new $new_files
+
+      - name: Run the licence script's own tests
+        run: node --test scripts/license-check.test.mjs

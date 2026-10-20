@@ -1,0 +1,273 @@
+name: Desktop package
+
+# Builds the installable app for the three platforms, on tags and on demand. The artifacts are unsigned until the
+# release credentials are configured (U10 wires Windows; macOS signing is the existing desktop.yml recipe); an unsigned
+# build is still installable, and every build here is something a person can run and report on.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Upload the artifacts to the release (needs the signing secrets)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Package · ${{ matrix.platform }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: arm64
+          - os: macos-latest
+            platform: mac
+            arch: x64
+          - os: macos-latest
+            platform: mac
+            arch: arm64
+          - os: windows-latest
+            platform: win
+            arch: x64
+          - os: windows-latest
+            platform: win
+            arch: arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+
+      - name: Install the shell's dependencies
+        working-directory: desktop-next
+        # From the committed lockfile: the packager is a dependency like any other, so the version that runs here is
+        # the version that was reviewed, not whatever `npx` resolves on the day.
+        run: npm ci --ignore-scripts
+
+      - name: Download Electron
+        working-directory: desktop-next
+        run: npm rebuild electron
+
+      # electron-vite bundles with esbuild, which strips types instead of checking them: a shell that does not typecheck
+      # still builds, signs and ships. The check therefore runs on the job that produces the installers, not only on the
+      # end-to-end job (which skips itself for a change that touches nothing shell-facing). The unit tests are here for
+      # the same reason: they need no Electron and take seconds, and the alternative is shipping an installer for a shell
+      # whose tests were never run on the commit that produced it.
+      - name: Typecheck the shell
+        working-directory: desktop-next
+        run: npm run typecheck
+
+      - name: Unit tests
+        working-directory: desktop-next
+        run: npm run test
+
+      # electron-builder validates its configuration against a schema before it builds anything: one key it does not
+      # know (a misspelling in electron-builder.yml) rejects the whole file on every platform. The check runs here,
+      # with the packager installed, so a typo fails in seconds instead of after a build.
+      - name: The packaging configuration is one electron-builder accepts
+        run: node scripts/check-packaging.mjs
+
+      - name: Build the shell
+        working-directory: desktop-next
+        run: npm run build
+
+      - name: The build fits its size budget
+        working-directory: desktop-next
+        run: npm run budget
+
+      # The harness the app starts: the npm package built from this repository, staged where electron-builder looks
+      # (`extraResources`). `build.mjs` writes `.artifacts/npm/mu-agent`; electron-builder reads the folder that holds
+      # it, `.artifacts/desktop-harness`, so the package is moved rather than built twice.
+      - name: Stage the harness
+        run: |
+          node kyrn/npm/build.mjs
+          mkdir -p .artifacts/desktop-harness
+          mv .artifacts/npm/mu-agent .artifacts/desktop-harness/mu-agent
+        shell: bash
+
+      # The harness's own dependencies (`jiti` loads the judge extension, `chord`, `photon-node`): the npm package
+      # declares them and a `mu-agent` install gets them from npm, but the app carries a folder, so they are installed
+      # into the folder here. Without this the packaged agent exits with "Cannot find module 'jiti'".
+      - name: Install the harness's dependencies
+        working-directory: .artifacts/desktop-harness/mu-agent
+        run: npm install --omit=dev --ignore-scripts --no-package-lock --no-audit --no-fund
+
+      - name: Package
+        working-directory: desktop-next
+        env:
+          # electron-builder signs when these are present; without them the build is still installable, and the
+          # release notes say the installers are unsigned.
+          CSC_LINK: ${{ secrets.WINDOWS_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        # `--publish never` is in the script: the upload is a separate, deliberate step, and a tag push is not a
+        # decision to publish. `npm run` uses the packager from `node_modules`, never a download.
+        run: npm run package -- --${{ matrix.platform }} --${{ matrix.arch }}
+
+      - name: Verify the Windows signature
+        # `signtool verify` is the gate U10 asks for: a release whose installer does not verify must not be uploaded.
+        # Skipped, loudly, when no certificate is configured (the owner's purchase).
+        if: matrix.platform == 'win' && secrets.WINDOWS_CERTIFICATE != ''
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem desktop-next/dist/*.exe | Select-Object -First 1
+          if ($null -eq $installer) { throw "no installer was produced" }
+          $tool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" | Sort-Object FullName -Descending | Select-Object -First 1
+          & $tool.FullName verify /pa /v $installer.FullName
+          if ($LASTEXITCODE -ne 0) { throw "signtool verify failed for $($installer.Name)" }
+
+      - name: Say the installers are unsigned
+        if: matrix.platform == 'win' && secrets.WINDOWS_CERTIFICATE == ''
+        run: echo "no WINDOWS_CERTIFICATE secret set, so the installers are unsigned; the release notes must say so"
+
+      - name: Sign the installers for the updater
+        # The app refuses an update whose detached Ed25519 signature does not verify against the public key compiled
+        # into it (`src/main/update-install.ts`), so a release without `.sig` files beside its installers is a release
+        # that cannot update. The private key is the owner's; without it this says so instead of failing, and the app
+        # cannot update anyway while `UPDATE_PUBLIC_KEY` is empty.
+        env:
+          MU_UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+        shell: bash
+        run: |
+          if [ -z "${MU_UPDATE_SIGNING_KEY}" ]; then
+            echo "::warning::no UPDATE_SIGNING_KEY secret, so no installer carries an update signature"
+          else
+            node scripts/sign-installers.mjs desktop-next/dist
+          fi
+
+      - name: Check the package before it is uploaded
+        # What the archive holds, and that the harness is really in there with its dependencies: the shell has no
+        # runtime dependencies, so a large app.asar means a toolchain was packed by mistake, a missing harness means
+        # the app has nothing to start, and a harness without its node_modules starts and then dies.
+        # (`check-artifacts.mjs` scans test artifacts; the Electron runtime is not a place secrets are set.)
+        run: node scripts/check-package.mjs desktop-next/dist --require-harness --require-installer
+
+      - name: The packaged app starts its agent
+        # Static checks cannot see a window that opens and then reports "the agent exited with code 1". This runs the
+        # artifact that is about to be uploaded, on the one platform whose runner can show a window here.
+        if: matrix.platform == 'win' && matrix.arch == 'x64'
+        working-directory: desktop-next
+        run: npm run smoke:package
+
+      - name: Keep the installers
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: mu-desktop-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            desktop-next/dist/*.exe
+            desktop-next/dist/*.dmg
+            desktop-next/dist/*.zip
+            desktop-next/dist/*.AppImage
+            desktop-next/dist/*.deb
+            desktop-next/dist/*.yml
+            desktop-next/dist/*.sig
+          if-no-files-found: error
+          retention-days: 14
+
+  # The proofs a person can check without trusting this repository: a checksum file over what was built, an SBOM, a
+  # keyless Sigstore signature over the checksums, and a build-provenance attestation for every artifact — and then the
+  # same verifier a downloader runs, with `--require-proof --strict`, so a release that does not verify fails here
+  # instead of on someone's machine.
+  #
+  # It does not publish. Whether the new shell takes over `releases/latest` is the release-ownership decision
+  # (docs/plans/production-readiness/07-RELEASE-OWNERSHIP.md); until that is answered this job leaves the proofs and the
+  # files they cover as a workflow artifact.
+  #
+  # Only on a tag, and only when every package job succeeded: proofs over a partial set of installers would certify a
+  # release that does not exist. The tag pattern is shared with the old shell's `desktop.yml` today; a separate
+  # namespace for the new shell (`shell-v*`) changes this one line when that decision is made.
+  proofs:
+    name: Proofs
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/') && needs.package.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      # The signature and the attestations are made with this run's OIDC identity, never with a stored key.
+      id-token: write
+      attestations: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+
+      - name: Download the installers
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: mu-desktop-*
+          path: artifacts
+
+      # `release/` is what the checksums cover; the update feed the app reads to find its next installer goes to
+      # `feeds/`, because `--strict` fails a release folder that carries a file nobody verifies. The old shell's
+      # release job makes the same split, for the same reason.
+      - name: Separate what a downloader runs from the update feed
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release feeds
+          for directory in artifacts/*/; do
+            find "$directory" -maxdepth 1 -type f \
+              \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.AppImage' -o -name '*.deb' \) \
+              -exec cp {} release/ \;
+            find "$directory" -maxdepth 1 -type f \( -name '*.yml' -o -name '*.blockmap' -o -name '*.sig' \) \
+              -exec cp {} feeds/ \;
+          done
+          ls -lh release feeds
+
+      - name: Checksums and SBOM, then verify them the way a downloader would
+        run: node scripts/release-proofs.mjs release --version "${GITHUB_REF_NAME#v}" --commit "$GITHUB_SHA"
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
+
+      - name: Sign the checksums
+        run: cosign sign-blob --yes --bundle release/SHA256SUMS.sigstore.json release/SHA256SUMS
+
+      - name: Attest the build and its SBOM
+        uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1
+        with:
+          subject-path: |
+            release/*.exe
+            release/*.dmg
+            release/*.zip
+            release/*.AppImage
+            release/*.deb
+            release/sbom.cdx.json
+          sbom-path: release/sbom.cdx.json
+
+      # The verifier a downloader runs, on the folder about to be published: checksums, signature identity, and one
+      # attestation per file. `gh` is on the runner; the token is only for reading the attestation back.
+      - name: Verify the proofs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/verify-release.mjs release --repo "$GITHUB_REPOSITORY" --require-proof --strict
+
+      - name: Keep the proofs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: mu-desktop-proofs
+          path: |
+            release/SHA256SUMS
+            release/SHA256SUMS.sigstore.json
+            release/sbom.cdx.json
+            feeds/*
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,12 @@
+{
+	"id": "sort-stable",
+	"title": "A sort that is not stable",
+	"prompt": "Sorting by score should keep equal scores in their original order. The tests fail; fix the sort.",
+	"judge": {
+		"command": "node",
+		"args": [
+			"--test"
+		],
+		"timeoutMs": 60000
+	}
+}

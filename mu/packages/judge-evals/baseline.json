@@ -1,0 +1,64 @@
+{
+	"schemaVersion": 1,
+	"generatedAt": "2026-10-18T15:16:06.069Z",
+	"node": "v24.13.0",
+	"platform": "win32-x64",
+	"metrics": {
+		"full.requiredLoss": {
+			"unit": "lines",
+			"p50": 0,
+			"budget": 0
+		},
+		"full.netSavedPct": {
+			"unit": "%",
+			"p50": 0
+		},
+		"full.fallbacks": {
+			"unit": "cases",
+			"p50": 0,
+			"budget": 0
+		},
+		"rules.requiredLoss": {
+			"unit": "lines",
+			"p50": 0,
+			"budget": 0
+		},
+		"rules.netSavedPct": {
+			"unit": "%",
+			"p50": 0,
+			"floor": -1
+		},
+		"rules.fallbacks": {
+			"unit": "cases",
+			"p50": 0,
+			"budget": 0
+		},
+		"ceiling.requiredLoss": {
+			"unit": "lines",
+			"p50": 15
+		},
+		"ceiling.netSavedPct": {
+			"unit": "%",
+			"p50": 61.6
+		},
+		"ceiling.fallbacks": {
+			"unit": "cases",
+			"p50": 0
+		},
+		"oracle.requiredLoss": {
+			"unit": "lines",
+			"p50": 0,
+			"budget": 0
+		},
+		"oracle.netSavedPct": {
+			"unit": "%",
+			"p50": 51,
+			"floor": 50
+		},
+		"oracle.fallbacks": {
+			"unit": "cases",
+			"p50": 0,
+			"budget": 0
+		}
+	}
+}

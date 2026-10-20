@@ -1,0 +1,112 @@
+name: Desktop e2e
+
+# The desktop shell's end-to-end tests, on a real Linux desktop (xvfb), for the pull requests that touch the shell or the
+# harness it drives. A shell that is only tested on its author's machine is a shell that breaks on everyone else's.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: Shell 路 e2e (shard ${{ matrix.shard }}/2)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ["1/2", "2/2"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+
+      - name: Check whether this change touches the shell
+        id: scope
+        run: |
+          # The shell has its own dependency tree and its own build; the rest of the repository does not need this job.
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          if git diff --name-only "origin/${{ github.base_ref }}...HEAD" | grep -Eq '^(desktop-next/|packages/(coding-agent|ai|agent|protocol|telemetry|tui)/|vitest\.base\.ts)'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "no shell-facing change: skipping the desktop e2e job"
+          fi
+
+      - name: Install the shell's dependencies
+        if: steps.scope.outputs.run == 'true'
+        working-directory: desktop-next
+        # From the lockfile: the end-to-end run has to exercise the dependency versions the release will ship, not
+        # whatever npm resolves today.
+        run: npm ci --ignore-scripts
+
+      - name: Download Electron
+        if: steps.scope.outputs.run == 'true'
+        working-directory: desktop-next
+        run: npm rebuild electron
+
+      - name: Typecheck
+        if: steps.scope.outputs.run == 'true'
+        working-directory: desktop-next
+        run: npm run typecheck
+
+      - name: Unit tests
+        if: steps.scope.outputs.run == 'true'
+        working-directory: desktop-next
+        run: npm run test
+
+      - name: Build
+        if: steps.scope.outputs.run == 'true'
+        working-directory: desktop-next
+        run: npm run build
+
+      - name: The build fits its size budget
+        if: steps.scope.outputs.run == 'true'
+        working-directory: desktop-next
+        run: npm run budget
+
+      - name: The app becomes usable in time
+        if: steps.scope.outputs.run == 'true'
+        working-directory: desktop-next
+        # Startup is the number a user feels before doing anything; the probe launches the built app three times.
+        run: npm run startup
+
+      - name: End-to-end (shard)
+        if: steps.scope.outputs.run == 'true'
+        id: e2e
+        working-directory: desktop-next
+        # `xvfb-run` gives Electron a display; `--shard` splits by file, so two shards never share a fixture directory.
+        run: |
+          xvfb-run --auto-servernum --server-args="-screen 0 1280x800x24" \
+            npx playwright test test/e2e --shard=${{ matrix.shard }} --reporter=list
+
+      - name: Check the artifacts for secrets before they leave the runner
+        if: always() && steps.scope.outputs.run == 'true'
+        run: node scripts/check-artifacts.mjs desktop-next/test-results desktop-next/playwright-report
+
+      - name: Keep the trace and the report
+        if: failure() && steps.scope.outputs.run == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: desktop-e2e-${{ strategy.job-index }}
+          path: |
+            desktop-next/test-results
+            desktop-next/playwright-report
+          retention-days: 7

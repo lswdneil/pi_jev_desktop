@@ -1,0 +1,12 @@
+{
+	"id": "rename-symbol",
+	"title": "A rename that stopped half way",
+	"prompt": "The entry point imports a name the config module no longer exports. Make the tests pass.",
+	"judge": {
+		"command": "node",
+		"args": [
+			"--test"
+		],
+		"timeoutMs": 60000
+	}
+}

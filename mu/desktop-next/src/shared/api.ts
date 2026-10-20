@@ -1,0 +1,234 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2025-2026 the mu authors
+
+/**
+ * The wire between the renderer, the preload script, and the main process.
+ *
+ * Every capability is a named method: there is no generic `invoke(channel, payload)`, because a generic bridge
+ * turns any renderer-side bug into arbitrary main-process code. The main process keeps the same list as its
+ * allow-list of IPC channels (`src/main/ipc.ts`), and the preload is the only place that touches `ipcRenderer`.
+ *
+ * These types are also what the renderer sees as `window.mu`; `declare global` here keeps the three sides on one
+ * definition instead of three near-copies.
+ */
+
+import type { HistoryMessage } from "./conversation.ts";
+import type { SettingsChange, SettingsSnapshot } from "./settings.ts";
+import type { UpdateCheck, UpdateInstallOutcome } from "./update.ts";
+
+/** What the app knows about the agent process. `failed` is the one that shows an error screen. */
+export type HarnessStatus =
+	| { readonly state: "stopped" }
+	| { readonly state: "starting" }
+	| {
+			readonly state: "running";
+			readonly root: string;
+			readonly layout: "repo" | "package";
+			readonly pid: number | undefined;
+	  }
+	| {
+			readonly state: "restarting";
+			readonly attempt: number;
+			readonly of: number;
+			readonly delayMs: number;
+			readonly reason: string;
+	  }
+	| {
+			readonly state: "failed";
+			readonly reason: string;
+			/** Where mu should have been, so the screen can say what to do. */
+			readonly expected: { readonly root: string; readonly layout: "repo" | "package" };
+			/** The tail of the agent's stderr, newest last. */
+			readonly stderr: readonly string[];
+	  };
+
+/** One line of the agent's stdout that is not a response to us: it is an event, passed through unchanged. */
+export interface AgentEvent {
+	readonly type: string;
+	readonly [key: string]: unknown;
+}
+
+/**
+ * What a prompt was accepted as. pi's `PromptDisposition` (`core/agent-session.ts:301`) is `"started" | "handled" |
+ * "queued"`; `"handled"` means no run started, so the UI must not wait for the turn to settle.
+ */
+export type PromptDisposition = "started" | "queued" | "handled";
+
+export interface PromptResult {
+	readonly disposition: PromptDisposition;
+}
+
+/** A loaded agent session, as the renderer needs it. */
+export interface SessionSnapshot {
+	readonly sessionId: string;
+	readonly model: string | undefined;
+	readonly thinkingLevel: string;
+	readonly isStreaming: boolean;
+	readonly messageCount: number;
+}
+
+export type Unsubscribe = () => void;
+
+/** A model the harness says it can use, as the first-run screen offers it. */
+export interface ModelChoice {
+	readonly provider: string;
+	readonly id: string;
+}
+
+/** The answer to a pending UI request: one of a value, a confirmation, or a cancellation. */
+export interface UiAnswer {
+	readonly id: string;
+	readonly value?: string;
+	readonly confirmed?: boolean;
+	readonly cancelled?: true;
+}
+
+/** One decision from mu's ledger, as `mu ledger --json` prints it. */
+export interface JudgmentRecord {
+	readonly id: string;
+	readonly specId: string;
+	readonly mode: string;
+	readonly providerId: string;
+	readonly timestamp?: string;
+	readonly source?: string;
+	readonly userMessage?: string;
+}
+
+/** The judge's consent, as the kernel stores it. `fromEnvironment` means `MU_JUDGE_CONSENT=1` for this run. */
+export interface ConsentState {
+	readonly granted: boolean;
+	readonly fromEnvironment: boolean;
+	readonly agreedAt: string | undefined;
+	readonly file: string;
+}
+
+/** The capabilities the preload exposes. Anything not here does not exist for the page. */
+export interface MuApi {
+	readonly app: {
+		version(): Promise<string>;
+		platform(): Promise<string>;
+	};
+	readonly harness: {
+		status(): Promise<HarnessStatus>;
+		onStatus(listener: (status: HarnessStatus) => void): Unsubscribe;
+		/** Restart the agent after the user fixed something the failure screen pointed at. */
+		restart(): Promise<HarnessStatus>;
+		stop(): Promise<void>;
+		prompt(message: string): Promise<PromptResult>;
+		abort(): Promise<void>;
+		snapshot(): Promise<SessionSnapshot>;
+		/** The session's existing messages, so a window that opens into a running session is not blank. */
+		history(): Promise<readonly HistoryMessage[]>;
+		/** Start a fresh session, which is what "new conversation" means to the harness. */
+		newSession(): Promise<void>;
+		models(): Promise<readonly ModelChoice[]>;
+		setModel(provider: string, modelId: string): Promise<void>;
+		/** Answer a request the harness is blocked on (an approval, a select, an input). */
+		respond(answer: UiAnswer): Promise<void>;
+		onEvent(listener: (event: AgentEvent) => void): Unsubscribe;
+	};
+	readonly judgments: {
+		/** The last decisions from mu's ledger, newest last. Its own data source: `mu ledger --json`. */
+		recent(): Promise<readonly JudgmentRecord[]>;
+	};
+	readonly update: {
+		/** Ask the configured feed whether a newer build exists, and say what stopped it if not. */
+		check(): Promise<UpdateCheck>;
+		/** Download, prove and start the installer. Refuses with a sentence when it cannot prove the artifact. */
+		install(): Promise<UpdateInstallOutcome>;
+	};
+	readonly settings: {
+		/** The harness's manifest, the settings in effect, and where a change would be written. */
+		snapshot(): Promise<SettingsSnapshot>;
+		write(change: SettingsChange): Promise<SettingsSnapshot>;
+	};
+	readonly consent: {
+		status(): Promise<ConsentState>;
+		/** Grant through the harness's own command, so the file is written by the code that reads it. */
+		grant(): Promise<ConsentState>;
+		revoke(): Promise<ConsentState>;
+	};
+	readonly preview: {
+		open(url: string): Promise<void>;
+		close(): Promise<void>;
+	};
+}
+
+/** The exact channel names, in one place: main registers them, preload calls them, a test compares both lists. */
+export const IPC_CHANNELS = {
+	appVersion: "app:version",
+	appPlatform: "app:platform",
+	harnessStatus: "harness:status",
+	harnessRestart: "harness:restart",
+	harnessStop: "harness:stop",
+	harnessPrompt: "harness:prompt",
+	harnessAbort: "harness:abort",
+	harnessSnapshot: "harness:snapshot",
+	harnessHistory: "harness:history",
+	harnessNewSession: "harness:new-session",
+	harnessModels: "harness:models",
+	harnessSetModel: "harness:set-model",
+	harnessUiResponse: "harness:ui-response",
+	judgmentsRecent: "judgments:recent",
+	updateCheck: "update:check",
+	updateInstall: "update:install",
+	settingsSnapshot: "settings:snapshot",
+	settingsWrite: "settings:write",
+	consentStatus: "consent:status",
+	consentGrant: "consent:grant",
+	consentRevoke: "consent:revoke",
+	previewOpen: "preview:open",
+	previewClose: "preview:close",
+	/** Main → renderer. */
+	harnessStatusEvent: "harness:status-changed",
+	harnessAgentEvent: "harness:agent-event",
+} as const;
+
+/** The channels a page may call. The status/event channels are main → renderer only. */
+export const INVOKE_CHANNELS = [
+	IPC_CHANNELS.appVersion,
+	IPC_CHANNELS.appPlatform,
+	IPC_CHANNELS.harnessStatus,
+	IPC_CHANNELS.harnessRestart,
+	IPC_CHANNELS.harnessStop,
+	IPC_CHANNELS.harnessPrompt,
+	IPC_CHANNELS.harnessAbort,
+	IPC_CHANNELS.harnessSnapshot,
+	IPC_CHANNELS.harnessHistory,
+	IPC_CHANNELS.harnessNewSession,
+	IPC_CHANNELS.harnessModels,
+	IPC_CHANNELS.harnessSetModel,
+	IPC_CHANNELS.harnessUiResponse,
+	IPC_CHANNELS.judgmentsRecent,
+	IPC_CHANNELS.updateCheck,
+	IPC_CHANNELS.updateInstall,
+	IPC_CHANNELS.settingsSnapshot,
+	IPC_CHANNELS.settingsWrite,
+	IPC_CHANNELS.consentStatus,
+	IPC_CHANNELS.consentGrant,
+	IPC_CHANNELS.consentRevoke,
+	IPC_CHANNELS.previewOpen,
+	IPC_CHANNELS.previewClose,
+] as const;
+
+export type InvokeChannel = (typeof INVOKE_CHANNELS)[number];
+
+/** The channels main pushes to the page. */
+export const EVENT_CHANNELS = [IPC_CHANNELS.harnessStatusEvent, IPC_CHANNELS.harnessAgentEvent] as const;
+
+export type EventChannel = (typeof EVENT_CHANNELS)[number];
+
+/** Why a call failed, in a shape the renderer can branch on instead of parsing messages. */
+export interface ApiFailure {
+	readonly code: "unknown-channel" | "invalid-payload" | "not-running" | "failed";
+	readonly message: string;
+}
+
+export type ApiResult<T> = { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: ApiFailure };
+
+declare global {
+	interface Window {
+		/** Injected by the preload; absent in any page that is not ours. */
+		readonly mu: MuApi;
+	}
+}
