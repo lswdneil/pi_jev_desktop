@@ -10,6 +10,8 @@
  */
 
 import { useState } from "react";
+import { Button } from "../../ui/button.tsx";
+import { Input } from "../../ui/input.tsx";
 import type { SpecApi } from "../../../shared/api.ts";
 import type { PendingApproval } from "../../../shared/conversation.ts";
 
@@ -47,44 +49,45 @@ export function ApprovalCard({
 			{approval.message === undefined ? null : <p className="muted">{approval.message}</p>}
 
 			{approval.method === "confirm" ? (
-				<div className="row">
-					<button type="button" data-testid="approval-allow" disabled={sending} onClick={() => answer({ confirmed: true })}>
+				<div className="flex flex-wrap items-center gap-2">
+					<Button type="button" data-testid="approval-allow" disabled={sending} onClick={() => answer({ confirmed: true })}>
 						{text("approval.allow")}
-					</button>
-					<button type="button" data-testid="approval-deny" disabled={sending} onClick={() => answer({ confirmed: false })}>
+					</Button>
+					<Button type="button" variant="outline" data-testid="approval-deny" disabled={sending} onClick={() => answer({ confirmed: false })}>
 						{text("approval.deny")}
-					</button>
+					</Button>
 				</div>
 			) : null}
 
 			{approval.method === "select" ? (
-				<div className="row">
+				<div className="flex flex-wrap items-center gap-2">
 					{(approval.options ?? []).map((option) => (
-						<button key={option} type="button" data-testid="approval-option" disabled={sending} onClick={() => answer({ value: option })}>
+						<Button key={option} type="button" variant="secondary" data-testid="approval-option" disabled={sending} onClick={() => answer({ value: option })}>
 							{option}
-						</button>
+						</Button>
 					))}
-					<button type="button" data-testid="approval-cancel" disabled={sending} onClick={() => answer({ cancelled: true })}>
+					<Button type="button" variant="ghost" data-testid="approval-cancel" disabled={sending} onClick={() => answer({ cancelled: true })}>
 						{text("approval.cancel")}
-					</button>
+					</Button>
 				</div>
 			) : null}
 
 			{approval.method === "input" || approval.method === "editor" ? (
-				<div className="row">
-					<input
+				<div className="flex flex-wrap items-center gap-2">
+					<Input
 						type="text"
 						value={answerText}
 						placeholder={approval.placeholder ?? text("approval.placeholder")}
 						onChange={(event) => setAnswerText(event.target.value)}
+						className="min-w-[14rem] flex-1"
 						data-testid="approval-input"
 					/>
-					<button type="button" data-testid="approval-submit" disabled={sending} onClick={() => answer({ value: answerText })}>
+					<Button type="button" data-testid="approval-submit" disabled={sending} onClick={() => answer({ value: answerText })}>
 						{text("approval.send")}
-					</button>
-					<button type="button" data-testid="approval-cancel" disabled={sending} onClick={() => answer({ cancelled: true })}>
+					</Button>
+					<Button type="button" variant="ghost" data-testid="approval-cancel" disabled={sending} onClick={() => answer({ cancelled: true })}>
 						{text("approval.cancel")}
-					</button>
+					</Button>
 				</div>
 			) : null}
 		</section>

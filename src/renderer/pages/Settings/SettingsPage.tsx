@@ -11,11 +11,14 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { Check, RefreshCw, X } from "lucide-react";
 import type { ConsentState, ModelChoice, SpecApi } from "../../../shared/api.ts";
 import { localized, MANIFEST_LANGUAGES, applyChange, type SettingsSnapshot } from "../../../shared/settings.ts";
 import { fill } from "../../../shared/presentation.ts";
 import type { UpdateCheckResult, UpdateInstallOutcome } from "../../../shared/update.ts";
 import { OptionControl } from "../../lib/manifest-renderer.tsx";
+import { Button } from "../../ui/button.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select.tsx";
 
 export function SettingsPage({
 	api,
@@ -130,27 +133,27 @@ export function SettingsPage({
 				<p className="muted">
 					{text("settings.file")}: <code>{path}</code>
 				</p>
-				<p className="row">
+				<div className="flex flex-wrap items-center gap-2">
 					<label htmlFor="settings-language">{text("settings.language")}</label>
-					<select
-						id="settings-language"
-						value={language}
-						onChange={(event) => setLanguage(event.target.value)}
-						data-testid="settings-language"
-					>
-						{MANIFEST_LANGUAGES.map((code) => (
-							<option key={code} value={code}>
-								{code}
-							</option>
-						))}
-					</select>
+					<Select value={language} onValueChange={setLanguage}>
+						<SelectTrigger id="settings-language" className="w-[9rem]" data-testid="settings-language" aria-label={text("settings.language")}>
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							{MANIFEST_LANGUAGES.map((code) => (
+								<SelectItem key={code} value={code}>
+									{code}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
 					<span className="grow" />
 					{saved === "" ? null : (
 						<span className="chip chip-running" data-testid="settings-saved">
 							{saved}
 						</span>
 					)}
-				</p>
+				</div>
 				{problems.length === 0 ? null : (
 					<div className="line-error" data-testid="settings-problems">
 						<p>{text("settings.problems")}</p>
@@ -172,8 +175,8 @@ export function SettingsPage({
 						{consent.fromEnvironment ? ` — ${text("consent.fromEnvironment")}` : ""}
 					</p>
 				)}
-				<p className="row">
-					<button
+				<div className="flex flex-wrap items-center gap-2">
+					<Button
 						type="button"
 						data-testid="consent-grant"
 						disabled={consent?.granted === true}
@@ -184,10 +187,12 @@ export function SettingsPage({
 								.catch((failure: unknown) => setError(failure instanceof Error ? failure.message : String(failure)));
 						}}
 					>
+						<Check />
 						{text("consent.grant")}
-					</button>
-					<button
+					</Button>
+					<Button
 						type="button"
+						variant="outline"
 						data-testid="consent-revoke"
 						disabled={consent?.granted !== true}
 						onClick={() => {
@@ -197,9 +202,10 @@ export function SettingsPage({
 								.catch((failure: unknown) => setError(failure instanceof Error ? failure.message : String(failure)));
 						}}
 					>
+						<X />
 						{text("consent.decline")}
-					</button>
-				</p>
+					</Button>
+				</div>
 			</section>
 
 			<section className="panel" data-testid="settings-features">
@@ -245,24 +251,24 @@ export function SettingsPage({
 			{models.length === 0 ? null : (
 				<section className="panel" data-testid="settings-models">
 					<h2>{text("firstRun.model")}</h2>
-					<label className="settings-model">
+					<div className="flex flex-wrap items-center gap-2">
 						<span className="muted">{text("settings.model")}</span>
-						<select
-							value={currentModel}
-							onChange={(event) => void chooseModel(event.target.value)}
-							disabled={modelBusy}
-							data-testid="settings-model-picker"
-						>
-							{models.map((model) => {
-								const value = `${model.provider}/${model.id}`;
-								return (
-									<option key={value} value={value}>
-										{value}
-									</option>
-								);
-							})}
-						</select>
-					</label>
+						<Select value={currentModel} onValueChange={(value) => void chooseModel(value)} disabled={modelBusy}>
+							<SelectTrigger className="w-[min(28rem,100%)]" data-testid="settings-model-picker" aria-label={text("settings.model")}>
+								<SelectValue placeholder={text("app.chooseModel")} />
+							</SelectTrigger>
+							<SelectContent>
+								{models.map((model) => {
+									const value = `${model.provider}/${model.id}`;
+									return (
+										<SelectItem key={value} value={value}>
+											{value}
+										</SelectItem>
+									);
+								})}
+							</SelectContent>
+						</Select>
+					</div>
 				</section>
 			)}
 
@@ -316,21 +322,22 @@ function UpdateSection({ api, text }: { readonly api: SpecApi; readonly text: (k
 	return (
 		<section className="panel" data-testid="update">
 			<h2>{text("update.title")}</h2>
-			<p className="row">
-				<button type="button" data-testid="update-check" disabled={busy} onClick={check}>
+			<div className="flex flex-wrap items-center gap-2">
+				<Button type="button" variant="outline" data-testid="update-check" disabled={busy} onClick={check}>
+					<RefreshCw />
 					{text("update.check")}
-				</button>
+				</Button>
 				{line === "" ? null : (
 					<span className="muted" data-testid="update-status">
 						{line}
 					</span>
 				)}
-			</p>
+			</div>
 			{status?.status.state === "available" ? (
-				<p className="row">
-					<button type="button" data-testid="update-install" disabled={busy} onClick={runInstall}>
+				<div className="flex flex-wrap items-center gap-2">
+					<Button type="button" data-testid="update-install" disabled={busy} onClick={runInstall}>
 						{text("update.install")}
-					</button>
+					</Button>
 					{install === undefined ? null : (
 						<span className="muted" data-testid="update-install-outcome">
 							{install.state === "installed"
@@ -338,7 +345,7 @@ function UpdateSection({ api, text }: { readonly api: SpecApi; readonly text: (k
 								: fill(text("update.refused"), { reason: install.reason })}
 						</span>
 					)}
-				</p>
+				</div>
 			) : null}
 			{status?.status.state === "available" && !status.canInstall ? (
 				<p className="muted" data-testid="update-not-installed">

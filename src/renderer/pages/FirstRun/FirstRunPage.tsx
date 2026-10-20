@@ -11,11 +11,28 @@
  */
 
 import { useEffect, useState } from "react";
+import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
 import type { ModelChoice, SpecApi } from "../../../shared/api.ts";
 import { MANIFEST_LANGUAGES } from "../../../shared/settings.ts";
-import { shellText } from "../../lib/i18n.ts";
+import { Button } from "../../ui/button.tsx";
 
 type Step = "language" | "consent" | "model";
+
+const LANGUAGE_NAMES: Readonly<Record<string, string>> = {
+	en: "English",
+	zh: "简体中文",
+	"zh-TW": "繁體中文",
+	"ja-JP": "日本語",
+	"ko-KR": "한국어",
+	"de-DE": "Deutsch",
+	"fr-FR": "Français",
+	"es-ES": "Español",
+	"pt-BR": "Português",
+	"ru-RU": "Русский",
+	"uk-UA": "Українська",
+	"tr-TR": "Türkçe",
+	"fa-IR": "فارسی",
+};
 
 export function FirstRunPage({
 	api,
@@ -104,17 +121,18 @@ export function FirstRunPage({
 			{step === "language" ? (
 				<section>
 					<h2>{text("firstRun.language")}</h2>
-					<div className="languages">
+					<div className="flex flex-wrap gap-2">
 						{MANIFEST_LANGUAGES.map((code) => (
-							<button
+							<Button
 								key={code}
 								type="button"
-								className={code === language ? "active" : ""}
+								variant={code === language ? "default" : "outline"}
 								data-language={code}
 								onClick={() => setLanguage(code)}
 							>
-								{shellText(code, "nav.settings")} · {code}
-							</button>
+								{LANGUAGE_NAMES[code] ?? code}
+								<span className="opacity-60">{code}</span>
+							</Button>
 						))}
 					</div>
 				</section>
@@ -124,14 +142,16 @@ export function FirstRunPage({
 				<section data-testid="first-run-consent">
 					<h2>{text("consent.title")}</h2>
 					<p className="muted">{text("consent.body")}</p>
-					<p className="row">
-						<button type="button" data-testid="first-run-grant" disabled={busy} onClick={() => grant(true)}>
+					<div className="flex flex-wrap items-center gap-2">
+						<Button type="button" data-testid="first-run-grant" disabled={busy} onClick={() => grant(true)}>
+							<Check />
 							{text("consent.grant")}
-						</button>
-						<button type="button" data-testid="first-run-decline" disabled={busy} onClick={() => grant(false)}>
+						</Button>
+						<Button type="button" variant="outline" data-testid="first-run-decline" disabled={busy} onClick={() => grant(false)}>
+							<X />
 							{text("consent.decline")}
-						</button>
-					</p>
+						</Button>
+					</div>
 				</section>
 			) : null}
 
@@ -166,26 +186,28 @@ export function FirstRunPage({
 					<p className="muted" data-testid="first-run-key-hint">
 						{text("firstRun.keyHint")}
 					</p>
-					<p className="row">
-						<button type="button" data-testid="first-run-finish" disabled={busy} onClick={finish}>
+					<div className="flex flex-wrap items-center gap-2">
+						<Button type="button" data-testid="first-run-finish" disabled={busy} onClick={finish}>
 							{text("firstRun.finish")}
-						</button>
-					</p>
+						</Button>
+					</div>
 				</section>
 			) : null}
 
-			<p className="row">
+			<div className="flex flex-wrap items-center gap-2">
 				{step === "language" ? (
-					<button type="button" data-testid="first-run-next" onClick={() => setStep("consent")}>
+					<Button type="button" data-testid="first-run-next" onClick={() => setStep("consent")}>
 						{text("firstRun.next")}
-					</button>
+						<ArrowRight />
+					</Button>
 				) : null}
 				{step === "model" ? (
-					<button type="button" data-testid="first-run-back" onClick={() => setStep("consent")}>
+					<Button type="button" variant="ghost" data-testid="first-run-back" onClick={() => setStep("consent")}>
+						<ArrowLeft />
 						{text("firstRun.back")}
-					</button>
+					</Button>
 				) : null}
-			</p>
+			</div>
 		</main>
 	);
 }

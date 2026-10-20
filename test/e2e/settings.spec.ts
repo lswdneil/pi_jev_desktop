@@ -77,7 +77,8 @@ test.describe("settings from the manifest", () => {
 			await openSettings(profile);
 			await expect(profile.page.locator('[data-feature="fixtureFeature"] summary')).toContainText("Fixture feature");
 
-			await profile.page.locator('[data-testid="settings-language"]').selectOption("zh-TW");
+			await profile.page.getByTestId("settings-language").click();
+			await profile.page.getByRole("option", { name: "zh-TW", exact: true }).click();
 
 			await expect(profile.page.locator('[data-feature="fixtureFeature"] summary')).toContainText("夾具功能");
 			await expect(profile.page.locator('[data-option="fixtureFeature.flag"] .option-label')).toHaveText("夾具開關");

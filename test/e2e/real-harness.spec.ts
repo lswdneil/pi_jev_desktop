@@ -295,18 +295,22 @@ test.describe("a real harness with a stub provider", () => {
 			await expect(page.locator('[data-testid="settings"]')).toBeVisible({ timeout: 60_000 });
 			await expect(page.locator('[data-testid="settings-error"]')).toHaveCount(0);
 			await expect(page.locator('[data-testid="settings-problems"]')).toHaveCount(0);
-			expect(await page.locator('[data-testid="settings-language"] option').count()).toBe(13);
+			await page.getByTestId("settings-language").click();
+			expect(await page.getByRole("option").count()).toBe(13);
+			await page.keyboard.press("Escape");
 			expect(await page.locator('[data-testid="settings-features"] .feature').count()).toBeGreaterThan(20);
 			await expect(page.locator('[data-testid="settings-features"]')).toContainText("admission");
 
-			await page.locator('[data-testid="settings-language"]').selectOption("zh");
+			await page.getByTestId("settings-language").click();
+			await page.getByRole("option", { name: "zh", exact: true }).click();
 			// The shell's own words and the manifest's words both change.
 			await expect(page.locator('[data-testid="settings-features"]')).toContainText("消息预判");
 			await expect(page.locator('[data-testid="settings-error"]')).toHaveCount(0);
 
 			// A language the shell has no words for: the manifest text is still translated and the shell's own chrome
 			// falls back to English — "the useful half", as the module says.
-			await page.locator('[data-testid="settings-language"]').selectOption("ja-JP");
+			await page.getByTestId("settings-language").click();
+			await page.getByRole("option", { name: "ja-JP", exact: true }).click();
 			await expect(page.locator('[data-testid="settings-features"]')).toContainText(/[\u3040-\u30ff]/);
 			await expect(page.locator('[data-testid="nav-conversation"]')).toHaveText("Conversation");
 			await expect(page.locator('[data-testid="settings-error"]')).toHaveCount(0);

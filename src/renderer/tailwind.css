@@ -1,0 +1,28 @@
+@layer theme, base, components, legacy, utilities;
+
+/* No preflight: the shell already has its own reset, and shadcn primitives only need the utilities. */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "./styles.css" layer(legacy);
+
+@theme inline {
+	--color-background: var(--surface);
+	--color-foreground: var(--text);
+	--color-card: var(--panel);
+	--color-card-foreground: var(--text);
+	--color-popover: var(--panel);
+	--color-popover-foreground: var(--text);
+	--color-primary: var(--accent);
+	--color-primary-foreground: #071006;
+	--color-secondary: var(--panel-2);
+	--color-secondary-foreground: var(--text);
+	--color-muted: var(--panel-2);
+	--color-muted-foreground: var(--muted);
+	--color-accent: var(--surface-hover);
+	--color-accent-foreground: var(--text);
+	--color-destructive: var(--bad);
+	--color-destructive-foreground: #ffffff;
+	--color-border: var(--line);
+	--color-input: var(--edge);
+	--color-ring: var(--accent);
+}

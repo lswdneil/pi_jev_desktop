@@ -2,6 +2,7 @@
 // Copyright (c) 2025-2026 the mu authors
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { FolderOpen, MessageSquare, Plus, RotateCw, Search, Settings, X } from "lucide-react";
 import logo from "./assets/logo.png";
 import type { AgentEvent, HarnessStatus, ModelChoice, SpecApi, SessionSnapshot, SessionSummary, Unsubscribe } from "../shared/api.ts";
 import type { ConversationEvent } from "../shared/conversation.ts";
@@ -9,12 +10,17 @@ import { ConversationStore } from "./lib/conversation-store.ts";
 import { hasOnboarded, markOnboarded, useLanguage } from "./lib/i18n.ts";
 import { QuickOpen } from "./lib/QuickOpen.tsx";
 import { forgetWorkspace, readRecentWorkspaces, rememberWorkspace } from "./lib/recent-workspaces.ts";
+import { cn } from "./lib/utils.ts";
 import { ConversationPage } from "./pages/Conversation/ConversationPage.tsx";
 import { FirstRunPage } from "./pages/FirstRun/FirstRunPage.tsx";
 import { SettingsPage } from "./pages/Settings/SettingsPage.tsx";
 import { BoardPanel } from "./panels/Board/BoardPanel.tsx";
 import { FilesPanel } from "./panels/Files/FilesPanel.tsx";
 import { JudgmentsPanel } from "./panels/Judgments/JudgmentsPanel.tsx";
+import { Button } from "./ui/button.tsx";
+import { Input } from "./ui/input.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select.tsx";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip.tsx";
 
 /**
  * The window: the conversation, three panels around it, the settings screen, and the two screens that come before the
@@ -526,7 +532,8 @@ export function App(): React.JSX.Element {
 		.slice(0, 20);
 
 	return (
-		<div className="shell">
+		<TooltipProvider delayDuration={350}>
+			<div className="shell">
 			<aside className="rail">
 				<div className="rail-brand brand">
 					<img src={logo} alt="spec.ai.jev" />
@@ -536,28 +543,34 @@ export function App(): React.JSX.Element {
 					</div>
 				</div>
 
-				<button
+				<Button
 					type="button"
-					className="rail-primary"
+					size="lg"
+					className="w-full"
 					onClick={() => void newConversation()}
 					disabled={!running || busy}
 					data-testid="new-conversation"
 				>
-					+ {text("app.newTask")}
-				</button>
+					<Plus />
+					{text("app.newTask")}
+				</Button>
 
 				<section className="rail-section">
 					<h2>{text("app.workspace")}</h2>
-					<button
+					<Button
 						type="button"
-						className="workspace-card"
+						variant="secondary"
+						className="h-auto w-full flex-col items-start gap-1 px-3 py-2.5 text-left"
 						onClick={() => void chooseWorkspace()}
 						disabled={busy}
 						title={workspacePath === "" ? text("app.chooseWorkspace") : workspacePath}
 					>
-						<span className="workspace-name">{workspaceName === "" ? text("app.chooseWorkspace") : workspaceName}</span>
+						<span className="workspace-name flex items-center gap-2 font-semibold">
+							<FolderOpen className="text-primary" />
+							{workspaceName === "" ? text("app.chooseWorkspace") : workspaceName}
+						</span>
 						<span className="muted">{text("app.openProject")}</span>
-					</button>
+					</Button>
 				</section>
 
 				{recentWorkspaces.length === 0 ? null : (
@@ -578,17 +591,18 @@ export function App(): React.JSX.Element {
 											<span className="recent-name">{name}</span>
 											<span className="recent-path">{path}</span>
 										</button>
-										<button
+										<Button
 											type="button"
-											className="recent-forget"
+											variant="ghost"
+											size="icon-sm"
 											data-testid="recent-forget"
 											aria-label={`${text("app.forgetProject")}: ${name}`}
 											title={text("app.forgetProject")}
 											onClick={() => setRecentWorkspaces(forgetWorkspace(path))}
 											disabled={busy}
 										>
-											×
-										</button>
+											<X />
+										</Button>
 									</div>
 								);
 							})}
@@ -598,14 +612,17 @@ export function App(): React.JSX.Element {
 
 				<section className="rail-section rail-session">
 					<h2>{text("app.sessions")}</h2>
-					<input
-						type="search"
-						className="session-search"
-						value={sessionQuery}
-						onChange={(event) => setSessionQuery(event.target.value)}
-						placeholder={text("app.searchSessions")}
-						aria-label={text("app.searchSessions")}
-					/>
+					<div className="relative">
+						<Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+						<Input
+							type="search"
+							className="pl-8"
+							value={sessionQuery}
+							onChange={(event) => setSessionQuery(event.target.value)}
+							placeholder={text("app.searchSessions")}
+							aria-label={text("app.searchSessions")}
+						/>
+					</div>
 					<div className="session-card">
 						<span>
 							{snapshot?.sessionName ??
@@ -623,7 +640,7 @@ export function App(): React.JSX.Element {
 								void renameSession(sessionName);
 							}}
 						>
-							<input
+							<Input
 								type="text"
 								value={sessionName}
 								onChange={(event) => setSessionName(event.target.value)}
@@ -631,17 +648,18 @@ export function App(): React.JSX.Element {
 								aria-label={text("app.rename")}
 								autoFocus
 							/>
-							<button type="submit" disabled={busy || sessionName.trim() === ""}>
+							<Button type="submit" size="sm" disabled={busy || sessionName.trim() === ""}>
 								{text("app.save")}
-							</button>
-							<button type="button" onClick={() => setRenaming(false)} disabled={busy}>
+							</Button>
+							<Button type="button" size="sm" variant="ghost" onClick={() => setRenaming(false)} disabled={busy}>
 								{text("app.cancel")}
-							</button>
+							</Button>
 						</form>
 					) : (
-						<button
+						<Button
 							type="button"
-							className="session-rename-trigger"
+							variant="ghost"
+							size="sm"
 							onClick={() => {
 								setSessionName(snapshot?.sessionName ?? "");
 								setRenaming(true);
@@ -649,7 +667,7 @@ export function App(): React.JSX.Element {
 							disabled={!running || busy}
 						>
 							{text("app.rename")}
-						</button>
+						</Button>
 					)}
 					{sessions.length === 0 ? <p className="muted session-empty">{text("app.noSessions")}</p> : null}
 					{sessions.length > 0 && listedSessions.length === 0 ? (
@@ -671,30 +689,33 @@ export function App(): React.JSX.Element {
 										</button>
 										{confirmDelete === session.path ? (
 											<span className="session-confirm">
-												<button
+												<Button
 													type="button"
+													size="sm"
+													variant="destructive"
 													data-testid="session-delete-confirm"
 													disabled={busy}
 													onClick={() => void removeSession(session.path)}
 												>
 													{text("app.delete")}
-												</button>
-												<button type="button" disabled={busy} onClick={() => setConfirmDelete(undefined)}>
+												</Button>
+												<Button type="button" size="sm" variant="ghost" disabled={busy} onClick={() => setConfirmDelete(undefined)}>
 													{text("app.cancel")}
-												</button>
+												</Button>
 											</span>
 										) : (
-											<button
+											<Button
 												type="button"
-												className="session-forget"
+												variant="ghost"
+												size="icon-sm"
 												data-testid="session-delete"
 												aria-label={`${text("app.deleteSession")}: ${session.title}`}
 												title={text("app.deleteSession")}
 												disabled={busy}
 												onClick={() => setConfirmDelete(session.path)}
 											>
-												×
-											</button>
+												<X />
+											</Button>
 										)}
 									</div>
 								))}
@@ -726,24 +747,28 @@ export function App(): React.JSX.Element {
 				</section>
 
 				<nav className="rail-nav">
-					<button
+					<Button
 						type="button"
-						className={view === "conversation" ? "active" : ""}
+						variant={view === "conversation" ? "secondary" : "ghost"}
+						className={cn("w-full justify-start", view === "conversation" && "bg-primary/10 text-primary hover:bg-primary/15")}
 						aria-current={view === "conversation" ? "page" : undefined}
 						onClick={() => setView("conversation")}
 						data-testid="nav-conversation"
 					>
+						<MessageSquare />
 						{text("nav.conversation")}
-					</button>
-					<button
+					</Button>
+					<Button
 						type="button"
-						className={view === "settings" ? "active" : ""}
+						variant={view === "settings" ? "secondary" : "ghost"}
+						className={cn("w-full justify-start", view === "settings" && "bg-primary/10 text-primary hover:bg-primary/15")}
 						aria-current={view === "settings" ? "page" : undefined}
 						onClick={() => setView("settings")}
 						data-testid="nav-settings"
 					>
+						<Settings />
 						{text("nav.settings")}
-					</button>
+					</Button>
 				</nav>
 
 				<div className="rail-footer">
@@ -753,9 +778,10 @@ export function App(): React.JSX.Element {
 						</span>
 						{version === "" ? null : <span className="muted">v{version}</span>}
 					</div>
-					<button type="button" onClick={() => void restart()} disabled={busy} data-testid="restart">
+					<Button type="button" variant="outline" size="sm" className="w-full" onClick={() => void restart()} disabled={busy} data-testid="restart">
+						<RotateCw />
 						{status.state === "failed" ? text("app.retry") : text("app.restart")}
-					</button>
+					</Button>
 				</div>
 			</aside>
 
@@ -767,30 +793,35 @@ export function App(): React.JSX.Element {
 					{previewUrl === undefined ? null : (
 						<span className="preview-chip" data-testid="preview-status">
 							<code>{hostOf(previewUrl)}</code>
-							<button type="button" data-testid="close-preview" onClick={closePreview}>
-								{text("preview.close")}
-							</button>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button type="button" variant="ghost" size="icon-sm" data-testid="close-preview" onClick={closePreview} aria-label={text("preview.close")}>
+										<X />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>{text("preview.close")}</TooltipContent>
+							</Tooltip>
 						</span>
 					)}
 					{models.length === 0 ? null : (
-						<label className="model-select">
+						<div className="flex items-center gap-2">
 							<span className="muted">{text("app.model")}</span>
-							<select
-								value={snapshot?.model ?? ""}
-								onChange={(event) => void chooseModel(event.target.value)}
-								disabled={!running || modelBusy}
-								data-testid="model-picker"
-							>
-								{models.map((model) => {
-									const value = `${model.provider}/${model.id}`;
-									return (
-										<option key={value} value={value}>
-											{value}
-										</option>
-									);
-								})}
-							</select>
-						</label>
+							<Select value={snapshot?.model ?? ""} onValueChange={(value) => void chooseModel(value)} disabled={!running || modelBusy}>
+								<SelectTrigger className="w-[min(22rem,42vw)]" data-testid="model-picker" aria-label={text("app.model")}>
+									<SelectValue placeholder={text("app.chooseModel")} />
+								</SelectTrigger>
+								<SelectContent>
+									{models.map((model) => {
+										const value = `${model.provider}/${model.id}`;
+										return (
+											<SelectItem key={value} value={value}>
+												{value}
+											</SelectItem>
+										);
+									})}
+								</SelectContent>
+							</Select>
+						</div>
 					)}
 				</header>
 
@@ -799,9 +830,14 @@ export function App(): React.JSX.Element {
 					<p className="line-error" data-testid="error">
 						{error}
 					</p>
-					<button type="button" aria-label={text("app.dismiss")} onClick={() => setError("")}>
-						×
-					</button>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button type="button" variant="ghost" size="icon-sm" aria-label={text("app.dismiss")} onClick={() => setError("")}>
+								<X />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>{text("app.dismiss")}</TooltipContent>
+					</Tooltip>
 				</div>
 			)}
 
@@ -850,8 +886,9 @@ export function App(): React.JSX.Element {
 					}}
 				/>
 			) : null}
-			</main>
-		</div>
+				</main>
+			</div>
+		</TooltipProvider>
 	);
 }
 
@@ -938,9 +975,10 @@ function Failure({
 					<pre>{status.stderr.join("\n")}</pre>
 				</>
 			)}
-			<button type="button" onClick={onRetry}>
+			<Button type="button" className="w-fit" onClick={onRetry}>
+				<RotateCw />
 				{retryLabel}
-			</button>
+			</Button>
 		</main>
 	);
 }

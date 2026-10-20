@@ -26,3 +26,10 @@ Freebuff is Apache-2.0. No Freebuff application code is bundled; only color valu
 The mu/pi runtime source is vendored under `spec.ai.jev/` (MIT, `spec.ai.jev/LICENSE`), together with its
 `packages/`, `kyrn/`, `scripts/` and `docs/` trees. It is maintained in this repository from 2026-10-20 onward; the app
 launches the built harness and speaks its JSONL RPC protocol. The vendored tree keeps its upstream license and headers.
+
+## Desktop UI
+
+The renderer's base controls follow the shadcn/ui patterns (MIT) and use Radix UI primitives (MIT). Tailwind CSS
+(MIT) provides the utility layer, `class-variance-authority` (Apache-2.0), `clsx` (MIT) and `tailwind-merge` (MIT)
+build the component variants, and `lucide-react` (ISC) supplies the icons. The copied shadcn files live in
+`src/renderer/ui/` and keep a source comment at the top.

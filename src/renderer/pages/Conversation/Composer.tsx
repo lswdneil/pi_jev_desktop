@@ -2,6 +2,9 @@
 // Copyright (c) 2026 the spec.ai.jev authors
 
 import { useRef, useState, type KeyboardEvent } from "react";
+import { ArrowUp, Paperclip, Square, X } from "lucide-react";
+import { Button } from "../../ui/button.tsx";
+import { Textarea } from "../../ui/textarea.tsx";
 
 /** An image the composer holds before it is sent. `data` is base64 without the `data:` prefix. */
 export interface AttachedImage {
@@ -73,7 +76,7 @@ export function Composer({
 					onAddImages([...event.dataTransfer.files]);
 				}}
 			>
-				<textarea
+				<Textarea
 					value={draft}
 					onChange={(event) => onDraftChange(event.target.value)}
 					onKeyDown={onKeyDown}
@@ -81,7 +84,7 @@ export function Composer({
 					placeholder={text("conversation.placeholder")}
 					aria-label={text("conversation.message")}
 					rows={large ? 5 : 4}
-					className={large ? "composer-large" : undefined}
+					className={large ? "min-h-[132px]" : "min-h-[96px]"}
 					disabled={!running || busy}
 					data-testid="composer"
 				/>
@@ -92,34 +95,40 @@ export function Composer({
 					{images.map((image) => (
 						<li key={image.id} className="attachment" title={image.name}>
 							<img src={`data:${image.mimeType};base64,${image.data}`} alt={image.name} />
-							<button
+							<Button
 								type="button"
+								variant="ghost"
+								size="icon-sm"
+								className="absolute -right-1.5 -top-1.5 rounded-full bg-[var(--panel)]"
 								aria-label={`${text("conversation.removeImage")}: ${image.name}`}
 								onClick={() => onRemoveImage(image.id)}
 							>
-								×
-							</button>
+								<X />
+							</Button>
 						</li>
 					))}
 				</ul>
 			)}
-			<div className="row">
-				<button type="button" data-testid="send" onClick={onSend} disabled={!running || busy || draft.trim() === ""}>
+			<div className="flex flex-wrap items-center gap-2 pt-1">
+				<Button type="button" data-testid="send" onClick={onSend} disabled={!running || busy || draft.trim() === ""}>
+					<ArrowUp />
 					{text("conversation.send")}
-				</button>
-				<button type="button" data-testid="stop" onClick={onStop} disabled={!running}>
+				</Button>
+				<Button type="button" data-testid="stop" variant="outline" onClick={onStop} disabled={!running}>
+					<Square />
 					{text("conversation.stop")}
-				</button>
-				<button
+				</Button>
+				<Button
 					type="button"
+					variant="ghost"
 					data-testid="attach"
-					className="attach"
 					onClick={() => fileInput.current?.click()}
 					disabled={!running || busy}
 					title={text("conversation.attach")}
 				>
-					+ {text("conversation.attach")}
-				</button>
+					<Paperclip />
+					{text("conversation.attach")}
+				</Button>
 				<input
 					ref={fileInput}
 					type="file"
