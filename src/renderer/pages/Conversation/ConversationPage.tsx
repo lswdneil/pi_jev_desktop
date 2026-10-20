@@ -10,16 +10,17 @@
  * are data.
  */
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import logo from "../../assets/logo.png";
 import { MAX_PROMPT_IMAGES, type SpecApi, PROMPT_IMAGE_TYPES } from "../../../shared/api.ts";
 import { type ConversationEvent, type ConversationState, visibleMessages } from "../../../shared/conversation.ts";
 import type { ConversationStore } from "../../lib/conversation-store.ts";
 import { presentationText } from "../../../shared/presentation.ts";
-import { Markdown } from "../../lib/markdown-view.tsx";
 import { shellText } from "../../lib/shell-strings.ts";
 import { ApprovalCard } from "./ApprovalCard.tsx";
 import { type AttachedImage, Composer } from "./Composer.tsx";
+
+const AssistantThread = lazy(() => import("./AssistantThread.tsx").then((module) => ({ default: module.AssistantThread })));
 
 /**
  * What the log says a person answered. The three words the card's buttons produce are codes so a language switch
@@ -52,8 +53,6 @@ export function ConversationPage({
 	const [draft, setDraft] = useState("");
 	const [images, setImages] = useState<readonly AttachedImage[]>([]);
 	const [busy, setBusy] = useState(false);
-	const listRef = useRef<HTMLDivElement | null>(null);
-	const followEnd = useRef(true);
 	const sending = useRef(false);
 	const text = (key: string): string => shellText(language, key);
 
@@ -79,14 +78,8 @@ export function ConversationPage({
 		};
 	}, [api, store, running]);
 
-	// Follow the end while the answer is being written; a person who scrolled up is not dragged back.
-	useLayoutEffect(() => {
-		const list = listRef.current;
-		if (active && list !== null && followEnd.current) list.scrollTop = list.scrollHeight;
-	}, [state.revision, active]);
-
-	const send = (): void => {
-		const message = draft.trim();
+	const send = (value: string = draft): void => {
+		const message = value.trim();
 		if (message === "" || sending.current || !running) return;
 		sending.current = true;
 		setBusy(true);
@@ -159,7 +152,7 @@ export function ConversationPage({
 							onAddImages={addImages}
 							onRemoveImage={(id) => setImages((current) => current.filter((image) => image.id !== id))}
 							onDraftChange={setDraft}
-							onSend={send}
+							onSend={() => send()}
 							onStop={stop}
 							running={running}
 							busy={busy}
@@ -180,45 +173,17 @@ export function ConversationPage({
 
 			{empty ? null : (
 				<>
-			<div
-				className="panel messages"
-				ref={listRef}
-				data-testid="messages"
-				onScroll={(event) => {
-					const list = event.currentTarget;
-					followEnd.current = list.scrollHeight - list.scrollTop - list.clientHeight < 120;
-				}}
-			>
-				{visible.length === 0 ? <p className="muted">{text("conversation.empty")}</p> : null}
-				{visible.map((message) =>
-					message.tool === undefined ? (
-						<article key={message.id} className={`message message-${message.role}`} data-role={message.role}>
-							<span className="who">{text(`role.${message.role}`)}</span>
-							<div className="text">
-								<Markdown text={message.text} onOpenLink={onOpenLink} />
-							</div>
-						</article>
-					) : (
-						<article key={message.id} className={`message message-tool tool-${message.tool.status}`} data-role="tool">
-							<span className="who">{message.tool.name}</span>
-							<p className="text">
-								<code>{message.tool.summary}</code> <span className="muted">({message.tool.status})</span>
-							</p>
-							{message.tool.output === undefined ? null : (
-								<details className="tool-output" data-testid="tool-output">
-									<summary>{text("conversation.output")}</summary>
-									<pre>{message.tool.output}</pre>
-								</details>
-							)}
-						</article>
-					),
-				)}
-				{state.streaming === undefined ? null : (
-					<span className="cursor" data-testid="streaming" aria-hidden="true">
-						▍
-					</span>
-				)}
-			</div>
+			<Suspense fallback={<div className="panel messages" data-testid="messages" />}>
+				<AssistantThread
+					state={state}
+					text={text}
+					onOpenLink={onOpenLink}
+					onSend={() => send()}
+					onStop={stop}
+					disabled={!running || busy}
+					active={active}
+				/>
+			</Suspense>
 
 			{state.approval === undefined ? null : (
 				<ApprovalCard
@@ -267,7 +232,7 @@ export function ConversationPage({
 					onAddImages={addImages}
 					onRemoveImage={(id) => setImages((current) => current.filter((image) => image.id !== id))}
 					onDraftChange={setDraft}
-					onSend={send}
+					onSend={() => send()}
 					onStop={stop}
 					running={running}
 					busy={busy}

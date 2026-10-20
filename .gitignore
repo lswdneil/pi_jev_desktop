@@ -6,6 +6,9 @@ playwright-report/
 test-results/
 *.log
 
+# Local scratch scripts and notes; never part of a build.
+.tmp/
+
 # Where `npm run metrics` and `npm run render-probes` write the numbers they measured; they depend on the machine, so the
 # record of them lives in docs/performance-budget.md rather than in a file that would be stale the moment another machine
 # ran it.

@@ -33,3 +33,7 @@ The renderer's base controls follow the shadcn/ui patterns (MIT) and use Radix U
 (MIT) provides the utility layer, `class-variance-authority` (Apache-2.0), `clsx` (MIT) and `tailwind-merge` (MIT)
 build the component variants, and `lucide-react` (ISC) supplies the icons. The copied shadcn files live in
 `src/renderer/ui/` and keep a source comment at the top.
+
+The conversation runtime uses the assistant-ui core packages (`@assistant-ui/core`, `@assistant-ui/store`,
+`@assistant-ui/tap`, and `assistant-stream`; all MIT) for the external-store runtime and message model. Zustand (MIT)
+is their state store. The product keeps its own `ConversationStore`; assistant-ui only runs the view state.
