@@ -40,6 +40,24 @@ describe("blocks", () => {
 		expect(blocks[0]?.kind === "quote" ? blocks[0].spans.map((span) => span.text).join("") : "").toContain("and another");
 	});
 
+	it("reads a pipe table, its alignment and its rows", () => {
+		const blocks = parseMarkdown("| Task | Time |\n| :--- | ---: |\n| test | 2m |\n| build | 5m |");
+		expect(blocks).toHaveLength(1);
+		const table = blocks[0];
+		if (table?.kind !== "table") throw new Error("expected a table");
+		const text = (spans: readonly { readonly text: string }[]): string => spans.map((span) => span.text).join("");
+		expect(table.align).toEqual(["left", "right"]);
+		expect(table.headers.map(text)).toEqual(["Task", "Time"]);
+		expect(table.rows.map((row) => row.map(text))).toEqual([
+			["test", "2m"],
+			["build", "5m"],
+		]);
+	});
+
+	it("leaves a pipe line alone when there is no separator row", () => {
+		expect(parseMarkdown("a | b\nc | d").map((block) => block.kind)).toEqual(["paragraph"]);
+	});
+
 	it("treats markup as text, because nothing here produces HTML", () => {
 		const blocks = parseMarkdown('<script>alert("x")</script>');
 		expect(blocks[0]).toMatchObject({ kind: "paragraph" });

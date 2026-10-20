@@ -174,6 +174,8 @@ test.describe("conversation", () => {
 			await expect(answer.getByTestId("copy-code")).toBeVisible();
 			await answer.getByTestId("copy-code").click();
 			await expect(answer.getByTestId("copy-code")).toContainText("Copied");
+			await expect(answer.locator("table.md-table th")).toHaveText(["Task", "Time"]);
+			await expect(answer.locator("table.md-table td")).toHaveText(["test", "2m"]);
 			// And the source backticks are gone from the rendered text.
 			await expect(answer).not.toContainText("```");
 		} finally {

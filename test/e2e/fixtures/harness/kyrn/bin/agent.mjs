@@ -188,9 +188,11 @@ function runPrompt(text) {
 
 	if (text.includes("markdown")) {
 		const link = process.env.SPEC_AI_JEV_FIXTURE_LINK_URL ?? "https://example.com/docs";
-		const answer = `## Result\n\nUse \`npm test\`.\n\n\`\`\`sh\nnpm test -- --run\n\`\`\`\n\nSee [the build](${link}).`;
+		const table = "\n\n| Task | Time |\n| :--- | ---: |\n| test | 2m |";
+		const answer = `## Result\n\nUse \`npm test\`.\n\n\`\`\`sh\nnpm test -- --run\n\`\`\`${table}\n\nSee [the build](${link}).`;
 		emit({ type: "message_start", message: assistant("") });
 		for (const chunk of ["## Result\n\nUse `npm test`.", "\n\n```sh\nnpm test -- --run\n```"]) emit(delta(chunk));
+		emit(delta(table));
 		emit(delta(`\n\nSee [the build](${link}).`));
 		finish(answer);
 		return;

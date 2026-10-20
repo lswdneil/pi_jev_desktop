@@ -1079,16 +1079,63 @@ button:disabled {
 }
 
 .markdown blockquote {
-	margin: 6px 0;
-	padding-left: 10px;
-	border-left: 2px solid var(--surface-hover);
+	margin: 8px 0;
+	padding: 6px 10px;
+	border-left: 2px solid var(--accent);
+	border-radius: 0 6px 6px 0;
+	background: color-mix(in srgb, var(--accent) 5%, transparent);
 	color: var(--muted);
 }
 
 .markdown ul,
 .markdown ol {
-	margin: 4px 0 6px;
+	margin: 6px 0 8px;
 	padding-left: 20px;
+}
+
+.markdown li {
+	margin: 2px 0;
+}
+
+.md-table-wrap {
+	margin: 8px 0;
+	overflow-x: auto;
+	border: 1px solid var(--line);
+	border-radius: 10px;
+	background: #171b21;
+	scrollbar-width: thin;
+	scrollbar-color: var(--edge) transparent;
+}
+
+.md-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 12.5px;
+}
+
+.md-table th,
+.md-table td {
+	padding: 7px 10px;
+	border-bottom: 1px solid var(--line);
+	vertical-align: top;
+}
+
+.md-table th {
+	background: var(--panel-2);
+	color: var(--muted);
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.md-table th:not(:last-child),
+.md-table td:not(:last-child) {
+	border-right: 1px solid var(--line);
+}
+
+.md-table tbody tr:last-child td {
+	border-bottom: 0;
 }
 
 .markdown a {

@@ -64,6 +64,33 @@ function BlockView({
 					<Spans spans={block.spans} onOpenLink={onOpenLink} />
 				</blockquote>
 			);
+		case "table":
+			return (
+				<div className="md-table-wrap">
+					<table className="md-table">
+						<thead>
+							<tr>
+								{block.headers.map((cell, cellIndex) => (
+									<th key={cellIndex} style={{ textAlign: block.align[cellIndex] }}>
+										<Spans spans={cell} onOpenLink={onOpenLink} />
+									</th>
+								))}
+							</tr>
+						</thead>
+						<tbody>
+							{block.rows.map((row, rowIndex) => (
+								<tr key={rowIndex}>
+									{row.map((cell, cellIndex) => (
+										<td key={cellIndex} style={{ textAlign: block.align[cellIndex] }}>
+											<Spans spans={cell} onOpenLink={onOpenLink} />
+										</td>
+									))}
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+			);
 		case "list":
 			return block.ordered ? (
 				<ol data-block="list">

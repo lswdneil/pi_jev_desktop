@@ -24,7 +24,15 @@ export type Block =
 	| { readonly kind: "heading"; readonly level: number; readonly spans: readonly InlineSpan[] }
 	| { readonly kind: "code"; readonly language: string; readonly text: string }
 	| { readonly kind: "list"; readonly ordered: boolean; readonly items: readonly (readonly InlineSpan[])[] }
-	| { readonly kind: "quote"; readonly spans: readonly InlineSpan[] };
+	| { readonly kind: "quote"; readonly spans: readonly InlineSpan[] }
+	| {
+			readonly kind: "table";
+			readonly headers: readonly (readonly InlineSpan[])[];
+			readonly align: readonly TableAlign[];
+			readonly rows: readonly (readonly (readonly InlineSpan[])[])[];
+	  };
+
+export type TableAlign = "left" | "center" | "right";
 
 /** Inline spans, longest-delimiter first so `**bold**` does not become two italics. */
 export function inlineSpans(text: string): InlineSpan[] {
@@ -78,6 +86,39 @@ export function inlineSpans(text: string): InlineSpan[] {
 	return spans;
 }
 
+function splitTableRow(line: string): string[] {
+	const trimmed = line.trim();
+	const body = trimmed.startsWith("|") ? trimmed.slice(1) : trimmed;
+	const withoutEnd = body.endsWith("|") ? body.slice(0, -1) : body;
+	return withoutEnd.split("|").map((cell) => cell.trim());
+}
+
+function tableAligns(line: string): readonly TableAlign[] | null {
+	if (!line.includes("-")) return null;
+	const cells = splitTableRow(line);
+	if (cells.length === 0) return null;
+	const aligns: TableAlign[] = [];
+	for (const cell of cells) {
+		const match = /^(:)?-{3,}(:)?$/.exec(cell);
+		if (match === null) return null;
+		aligns.push(match[1] === ":" && match[2] === ":" ? "center" : match[2] === ":" ? "right" : "left");
+	}
+	return aligns;
+}
+
+function tableAt(
+	lines: readonly string[],
+	index: number,
+): { readonly headers: readonly string[]; readonly align: readonly TableAlign[] } | null {
+	const header = lines[index] ?? "";
+	if (!header.includes("|")) return null;
+	const align = tableAligns(lines[index + 1] ?? "");
+	if (align === null) return null;
+	const headers = splitTableRow(header);
+	if (headers.length !== align.length) return null;
+	return { headers, align };
+}
+
 /** The blocks of a message. Fenced code keeps everything inside it, including blank lines and backticks. */
 export function parseMarkdown(text: string): Block[] {
 	const blocks: Block[] = [];
@@ -109,6 +150,26 @@ export function parseMarkdown(text: string): Block[] {
 		if (heading !== null) {
 			blocks.push({ kind: "heading", level: (heading[1] ?? "#").length, spans: inlineSpans(heading[2] ?? "") });
 			index++;
+			continue;
+		}
+
+		const table = tableAt(lines, index);
+		if (table !== null) {
+			const rows: InlineSpan[][][] = [];
+			index += 2;
+			while (index < lines.length) {
+				const current = lines[index] ?? "";
+				if (current.trim() === "" || !current.includes("|")) break;
+				const cells = splitTableRow(current);
+				rows.push(table.headers.map((_, cellIndex) => inlineSpans(cells[cellIndex] ?? "")));
+				index++;
+			}
+			blocks.push({
+				kind: "table",
+				headers: table.headers.map((cell) => inlineSpans(cell)),
+				align: table.align,
+				rows,
+			});
 			continue;
 		}
 
@@ -149,6 +210,7 @@ export function parseMarkdown(text: string): Block[] {
 				current.trim() === "" ||
 				/^\s*```/.test(current) ||
 				/^#{1,6}\s+/.test(current) ||
+				tableAt(lines, index) !== null ||
 				/^>\s?/.test(current) ||
 				/^\s*([-*+]|\d+[.)])\s+/.test(current)
 			) {
