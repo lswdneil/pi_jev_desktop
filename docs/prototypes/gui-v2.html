@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="zh-CN" data-dir="studio" data-state="chat">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>spec.ai.jev · 桌面 GUI 评审稿</title>
+<style>
+	/* ========== 方向 token ========== */
+	:root {
+		--stage-bg: #07080a;
+		--fs: 14.5px;
+		--ui: "Aptos", "Segoe UI Variable", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+		--display: var(--ui);
+		--mono: "Cascadia Mono", "Consolas", "Microsoft YaHei", monospace;
+	}
+	html[data-dir="studio"] {
+		--bg: #131417; --rail: #0e0f12; --panel: #1b1d21; --panel-2: #23262b;
+		--line: #2b2f35; --edge: #3a3f46; --text: #f2f4f7; --muted: #a6adb8;
+		--accent: #9efc62; --accent-ink: #0b1405; --amber: #facc15; --code: #23282e;
+		--radius-lg: 20px; --radius-md: 14px; --radius-sm: 10px;
+		--shadow: 0 30px 80px rgb(0 0 0 / 55%);
+	}
+	html[data-dir="terminal"] {
+		--bg: #0a0b0d; --rail: #07080a; --panel: #101216; --panel-2: #161a1f;
+		--line: #1f262d; --edge: #2c353d; --text: #e6edf3; --muted: #8b98a5;
+		--accent: #b6f36a; --accent-ink: #06120a; --amber: #e8b84b; --code: #0f1419;
+		--radius-lg: 8px; --radius-md: 6px; --radius-sm: 4px;
+		--shadow: 0 30px 80px rgb(0 0 0 / 60%);
+		--fs: 12.5px;
+		--ui: "Cascadia Mono", "Consolas", "Microsoft YaHei", monospace;
+		--display: var(--ui);
+	}
+	html[data-dir="editorial"] {
+		--bg: #12100e; --rail: #0d0b09; --panel: #1a1714; --panel-2: #221e19;
+		--line: #322b23; --edge: #453b30; --text: #f3ede4; --muted: #a89e90;
+		--accent: #f5c451; --accent-ink: #1b1203; --amber: #f5c451; --code: #1d1915;
+		--radius-lg: 16px; --radius-md: 12px; --radius-sm: 8px;
+		--shadow: 0 34px 90px rgb(0 0 0 / 60%);
+		--fs: 14px;
+		--display: "Georgia", "Cambria", "Songti SC", "SimSun", serif;
+	}
+
+	* { box-sizing: border-box; }
+	[hidden] { display: none !important; }
+	html, body { height: 100%; margin: 0; }
+	body {
+		background: radial-gradient(1200px 800px at 50% -10%, #1a1d22 0%, var(--stage-bg) 62%);
+		color: var(--text);
+		font-family: var(--ui);
+		font-size: var(--fs);
+		-webkit-font-smoothing: antialiased;
+	}
+	button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+	input, textarea { font: inherit; color: inherit; }
+
+	/* ========== 评审工具条 ========== */
+	.stage { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 18px 20px 28px; min-height: 100%; }
+	.toolbar {
+		display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+		width: min(1180px, 100%);
+		padding: 8px 12px;
+		border: 1px solid #23262b; border-radius: 999px;
+		background: rgb(18 20 24 / 82%);
+		backdrop-filter: blur(14px);
+		color: #c8cdd4; font-size: 12px;
+	}
+	.toolbar-title { font-weight: 650; letter-spacing: 0.02em; }
+	.toolbar-spacer { flex: 1 1 auto; }
+	.seg { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid #2a2e34; border-radius: 999px; background: #101216; }
+	.seg button { padding: 4px 11px; border-radius: 999px; color: #9aa3ad; font-size: 11.5px; }
+	.seg button.on { background: #e9eef4; color: #111418; font-weight: 650; }
+	.hint { color: #737d88; font-size: 11px; }
+
+	/* ========== 窗口 ========== */
+	.frame-wrap { transform-origin: top center; }
+	.frame {
+		width: 1280px; height: 800px;
+		display: flex; flex-direction: column;
+		overflow: hidden;
+		border: 1px solid #2a2e34; border-radius: 12px;
+		background: var(--bg);
+		box-shadow: var(--shadow);
+	}
+	.titlebar {
+		display: flex; align-items: center; gap: 10px;
+		height: 36px; padding: 0 0 0 14px;
+		background: var(--rail);
+		border-bottom: 1px solid var(--line);
+		color: var(--muted); font-size: 11.5px;
+	}
+	.titlebar .mark { width: 16px; height: 16px; opacity: 0.85; }
+	.titlebar b { color: var(--text); font-weight: 600; letter-spacing: 0.01em; }
+	.win-controls { margin-left: auto; display: flex; height: 100%; }
+	.win-controls span { display: grid; place-items: center; width: 46px; color: var(--muted); }
+	.win-controls span:hover { background: var(--panel-2); color: var(--text); }
+	.win-controls .close:hover { background: #c42b1c; color: #fff; }
+
+	.app { display: flex; flex: 1 1 auto; min-height: 0; }
+
+	/* ========== 左栏 ========== */
+	.rail {
+		display: flex; flex-direction: column; gap: 18px;
+		width: 250px; flex: 0 0 250px;
+		padding: 18px 14px;
+		background: linear-gradient(180deg, var(--rail) 0%, color-mix(in srgb, var(--rail) 82%, var(--bg)) 100%);
+		border-right: 1px solid var(--line);
+		overflow: hidden;
+	}
+	.brand { display: flex; align-items: center; gap: 10px; }
+	.brand img { width: 40px; height: auto; }
+	.brand .name { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+	.brand .sub { color: var(--muted); font-size: 11px; }
+	.rail .primary {
+		display: flex; align-items: center; justify-content: center; gap: 8px;
+		width: 100%; padding: 10px 12px;
+		border-radius: var(--radius-md);
+		background: var(--accent); color: var(--accent-ink); font-weight: 700;
+	}
+	.rail .primary:hover { filter: brightness(0.94); }
+	.section { display: flex; flex-direction: column; gap: 7px; }
+	.section > h2 {
+		margin: 0; color: var(--muted);
+		font-size: 10px; font-weight: 650; letter-spacing: 0.12em; text-transform: uppercase;
+	}
+	html[data-dir="terminal"] .section > h2 { letter-spacing: 0.04em; }
+	.ws-card {
+		display: flex; flex-direction: column; gap: 2px;
+		padding: 9px 11px; text-align: left;
+		border: 1px solid var(--line); border-radius: var(--radius-sm);
+		background: color-mix(in srgb, var(--panel) 76%, transparent);
+	}
+	.ws-card b { font-size: 12.5px; }
+	.ws-card span { color: var(--muted); font-size: 10.5px; }
+	.recent { display: flex; flex-direction: column; gap: 1px; }
+	.recent button {
+		display: flex; flex-direction: column; gap: 1px;
+		padding: 6px 8px; border-radius: var(--radius-sm); text-align: left; color: var(--muted);
+	}
+	.recent button:hover { background: var(--panel-2); color: var(--text); }
+	.recent b { color: inherit; font-size: 11.5px; font-weight: 550; }
+	.recent span { font-size: 9.5px; opacity: 0.72; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.search {
+		display: flex; align-items: center; gap: 7px;
+		padding: 7px 9px;
+		border: 1px solid var(--line); border-radius: var(--radius-sm);
+		background: color-mix(in srgb, var(--panel) 60%, transparent);
+		color: var(--muted); font-size: 11.5px;
+	}
+	.session-current {
+		display: flex; flex-direction: column; gap: 3px;
+		padding: 8px 10px;
+		border-left: 2px solid var(--accent);
+		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+		background: color-mix(in srgb, var(--accent) 5%, transparent);
+	}
+	.session-current b { font-size: 12px; }
+	.session-current span { color: var(--muted); font-size: 10px; }
+	.session-row {
+		display: flex; align-items: center; gap: 4px;
+		padding: 6px 8px; border-radius: var(--radius-sm);
+	}
+	.session-row:hover { background: var(--panel-2); }
+	.session-row .t { flex: 1 1 auto; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+	.session-row b { font-size: 11.5px; font-weight: 550; }
+	.session-row span { color: var(--muted); font-size: 9.5px; }
+	.session-row .x { color: var(--muted); opacity: 0; }
+	.session-row:hover .x { opacity: 1; }
+	.other { border-top: 1px dashed var(--line); padding-top: 8px; }
+	.nav { display: flex; flex-direction: column; gap: 3px; margin-top: auto; }
+	.nav button {
+		display: flex; align-items: center; gap: 9px;
+		padding: 8px 10px; border-radius: var(--radius-sm); color: var(--muted); text-align: left;
+	}
+	.nav button:hover { background: var(--panel-2); color: var(--text); }
+	.nav button.on {
+		background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+		color: var(--text); font-weight: 600;
+		box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent);
+	}
+	.status {
+		display: flex; align-items: center; gap: 8px;
+		padding-top: 12px; border-top: 1px solid var(--line);
+		color: var(--muted); font-size: 10.5px;
+	}
+	.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent); }
+	.status .ver { margin-left: auto; font-family: var(--mono); font-size: 10px; }
+	.restart {
+		margin-top: 8px; padding: 7px 10px; width: 100%;
+		border: 1px solid var(--edge); border-radius: var(--radius-sm);
+		background: var(--panel-2); color: var(--text); font-size: 11px;
+	}
+
+	/* ========== 主区 ========== */
+	.main { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; }
+	.bar {
+		display: flex; align-items: center; gap: 12px;
+		padding: 14px 20px 12px;
+		border-bottom: 1px solid var(--line);
+	}
+	.bar .kicker { color: var(--muted); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+	.bar .title { font-size: 15px; font-weight: 650; }
+	.bar .grow { flex: 1 1 auto; }
+	.model {
+		display: flex; align-items: center; gap: 8px;
+		padding: 5px 10px; border: 1px solid var(--edge); border-radius: 999px;
+		background: var(--panel); font-size: 11.5px;
+	}
+	.model .lab { color: var(--muted); }
+	.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; padding: 16px 20px 18px; min-height: 0; flex: 1 1 auto; }
+
+	/* ========== 对话 ========== */
+	.conversation { display: flex; flex-direction: column; gap: 14px; min-height: 0; min-width: 0; }
+	.messages { display: flex; flex-direction: column; gap: 10px; flex: 1 1 auto; min-height: 0; overflow: hidden; padding-right: 4px; }
+	.messages > * { flex: 0 0 auto; }
+	.msg { display: flex; flex-direction: column; gap: 6px; }
+	.msg .who { color: var(--muted); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; }
+	.msg.user { align-self: flex-end; max-width: 74%; padding: 9px 14px; border-radius: var(--radius-md) var(--radius-md) 5px var(--radius-md); background: color-mix(in srgb, var(--accent) 8%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line)); }
+	.msg.user .who { color: color-mix(in srgb, var(--accent) 70%, var(--muted)); }
+	.msg.assistant { max-width: 96%; }
+	.msg.assistant .body { line-height: 1.68; }
+	.msg .body p { margin: 0 0 8px; }
+	.msg .body p:last-child { margin-bottom: 0; }
+	.cmd { display: inline-block; padding: 1px 5px; border-radius: 4px; background: var(--code); color: #ff9d5c; font-family: var(--mono); font-size: 0.92em; }
+	.code {
+		margin: 10px 0 0; border: 1px solid var(--line); border-radius: var(--radius-sm);
+		background: var(--code); overflow: hidden;
+	}
+	.code .head { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 10px; font-family: var(--mono); }
+	.code .head .copy { margin-left: auto; padding: 2px 7px; border: 1px solid var(--edge); border-radius: 5px; font-size: 10px; color: var(--muted); }
+	.code .head .copy:hover { color: var(--text); border-color: var(--accent); }
+	.code pre { margin: 0; padding: 10px 12px; overflow: auto; font-family: var(--mono); font-size: 11.5px; line-height: 1.6; color: #d7dee7; }
+	.code .k { color: #7dd3fc; } .code .s { color: #a5e08a; } .code .c { color: #7b8794; }
+	.tool {
+		border: 1px solid var(--line); border-radius: var(--radius-sm);
+		background: color-mix(in srgb, var(--panel) 55%, transparent);
+		overflow: hidden;
+	}
+	.tool .row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; }
+	.tool .name { font-family: var(--mono); font-size: 11px; color: var(--accent); }
+	.tool .arg { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+	.tool .ok { margin-left: auto; color: var(--ok, #22c55e); font-size: 10px; }
+	.tool details { border-top: 1px solid var(--line); }
+	.tool summary { padding: 6px 12px; color: var(--muted); font-size: 10.5px; cursor: pointer; }
+	.tool pre { margin: 0; padding: 0 12px 10px; color: var(--muted); font-family: var(--mono); font-size: 10.5px; line-height: 1.6; }
+	.approval {
+		border: 1px solid color-mix(in srgb, #ef4444 40%, var(--line));
+		border-radius: var(--radius-md);
+		background: color-mix(in srgb, #ef4444 6%, var(--panel));
+		padding: 10px 12px;
+	}
+	.approval h3 { margin: 0 0 4px; font-size: 13px; }
+	.approval p { margin: 0 0 10px; color: var(--muted); font-size: 11.5px; }
+	.approval .actions { display: flex; gap: 8px; }
+	.btn { padding: 6px 13px; border: 1px solid var(--edge); border-radius: 8px; background: var(--panel-2); font-size: 11.5px; }
+	.btn:hover { border-color: var(--accent); }
+	.btn.accent { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 700; }
+	.btn.ghost { background: transparent; }
+	.decisions { color: var(--muted); font-size: 11px; }
+	.decisions summary { cursor: pointer; }
+	.decisions p { margin: 6px 0 0; color: var(--text); }
+
+	/* ========== 输入区 ========== */
+	.composer {
+		border: 1px solid var(--line); border-radius: var(--radius-lg);
+		background: var(--panel); box-shadow: 0 18px 44px rgb(0 0 0 / 30%);
+		padding: 12px 14px 10px;
+	}
+	.chips { display: flex; gap: 8px; margin-bottom: 8px; }
+	.chip {
+		position: relative; display: flex; align-items: center; gap: 8px;
+		padding: 5px 9px 5px 5px; border: 1px solid var(--line); border-radius: 9px;
+		background: var(--panel-2); font-size: 10.5px; color: var(--muted);
+	}
+	.chip .thumb { width: 26px; height: 26px; border-radius: 5px; background: linear-gradient(135deg, #3d6b8f, #7fb3d5); }
+	.chip .x { color: var(--muted); }
+	.composer textarea {
+		width: 100%; min-height: 54px; resize: none; border: 0; outline: 0; background: transparent;
+		line-height: 1.6; padding: 4px 2px;
+	}
+	.composer textarea::placeholder { color: color-mix(in srgb, var(--muted) 70%, transparent); }
+	.composer .foot { display: flex; align-items: center; gap: 8px; padding-top: 6px; border-top: 1px solid var(--line); }
+	.iconbtn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 7px; color: var(--muted); font-size: 11px; }
+	.iconbtn:hover { background: var(--panel-2); color: var(--text); }
+	.composer .grow { flex: 1 1 auto; }
+	.kbd { padding: 1px 5px; border: 1px solid var(--edge); border-radius: 4px; font-family: var(--mono); font-size: 9.5px; color: var(--muted); }
+
+	/* ========== 空状态 ========== */
+	.home { display: none; flex: 1 1 auto; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 10px 40px; }
+	html[data-state="empty"] .messages { display: none; }
+	html[data-state="empty"] .conversation > .composer { display: none; }
+	html[data-state="empty"] .home { display: flex; }
+	.home .mark { width: 58px; margin-bottom: 18px; filter: drop-shadow(0 14px 34px color-mix(in srgb, var(--accent) 18%, transparent)); }
+	.home .eyebrow { margin: 0 0 10px; color: var(--accent); font-size: 10.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+	.home h1 { margin: 0; font-family: var(--display); font-size: 40px; line-height: 1.08; letter-spacing: -0.03em; }
+	.home .sub { margin: 12px auto 0; max-width: 480px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+	.home .composer { width: min(680px, 100%); margin-top: 26px; text-align: left; }
+	.suggest { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 16px; }
+	.suggest button { padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 11.5px; }
+	.suggest button:hover { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+
+	/* ========== 右栏 ========== */
+	.panels { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+	.tabs { display: inline-flex; align-self: flex-start; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: var(--radius-md); background: color-mix(in srgb, var(--panel) 70%, transparent); }
+	.tabs button { padding: 5px 13px; border-radius: calc(var(--radius-md) - 4px); color: var(--muted); font-size: 11.5px; }
+	.tabs button.on { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+	.panel { flex: 1 1 auto; min-height: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--panel); }
+	.panel .ph { padding: 14px 16px 6px; }
+	.panel h2 { margin: 0; font-size: 16px; font-weight: 650; }
+	.panel .count { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+	.rows { padding: 8px; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+	.jrow { padding: 8px 10px; border-radius: var(--radius-sm); border: 1px solid transparent; }
+	.jrow:hover { background: var(--panel-2); }
+	.jrow.on { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); background: var(--panel-2); }
+	.jrow .line { display: flex; align-items: center; gap: 8px; }
+	.jrow .spec { font-family: var(--mono); font-size: 11px; }
+	.jrow .mode { padding: 1px 7px; border-radius: 999px; font-size: 9.5px; border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line)); color: var(--accent); }
+	.jrow .prov { margin-left: auto; color: var(--muted); font-size: 9.5px; }
+	.jrow .ask { margin-top: 3px; color: var(--muted); font-size: 10.5px; }
+	.jdetail { margin: 0 8px 10px; padding: 10px 12px; border-left: 2px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; background: var(--panel-2); }
+	.jdetail dl { display: grid; grid-template-columns: 46px 1fr; gap: 5px 10px; margin: 0; font-size: 10.5px; }
+	.jdetail dt { color: var(--muted); }
+	.jdetail dd { margin: 0; overflow-wrap: anywhere; }
+	.jdetail .copy { margin-top: 8px; padding: 3px 8px; border: 1px solid var(--edge); border-radius: 6px; color: var(--muted); font-size: 10px; }
+	.jdetail .copy:hover { color: var(--text); border-color: var(--accent); }
+	.footnote { padding: 10px 16px 14px; color: var(--muted); font-size: 10px; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<div class="stage">
+	<div class="toolbar">
+		<span class="toolbar-title">spec.ai.jev · 桌面 GUI 评审稿</span>
+		<span class="hint">同一布局，三种视觉方向</span>
+		<span class="toolbar-spacer"></span>
+		<div class="seg" role="group" aria-label="视觉方向">
+			<button data-dir="studio" class="on">A · Studio</button>
+			<button data-dir="terminal">B · Terminal</button>
+			<button data-dir="editorial">C · Editorial</button>
+		</div>
+		<div class="seg" role="group" aria-label="画面状态">
+			<button data-state="chat" class="on">对话</button>
+			<button data-state="empty">空状态</button>
+		</div>
+	</div>
+
+	<div class="frame-wrap" id="wrap">
+	<div class="frame">
+		<div class="titlebar">
+			<img class="mark" src="../../src/renderer/assets/logo.png" alt="" onerror="this.style.display='none'">
+			<b>spec.ai.jev</b>
+			<span>agent workspace</span>
+			<div class="win-controls"><span>—</span><span>▢</span><span class="close">✕</span></div>
+		</div>
+
+		<div class="app">
+			<aside class="rail">
+				<div class="brand">
+					<img src="../../src/renderer/assets/logo.png" alt="" onerror="this.style.display='none'">
+					<div>
+						<div class="name">spec.ai.jev</div>
+						<div class="sub">Agent 工作台</div>
+					</div>
+				</div>
+
+				<button class="primary">＋ 新任务</button>
+
+				<section class="section">
+					<h2>工作区</h2>
+					<button class="ws-card">
+						<b>pi_jev_desktop</b>
+						<span>打开项目</span>
+					</button>
+				</section>
+
+				<section class="section">
+					<h2>最近项目</h2>
+					<div class="recent">
+						<button><b>mu-work</b><span>C:\Users\wd_al\Downloads\DSH-Beta\mu-work</span></button>
+						<button><b>zoetrope-fork</b><span>C:\Users\wd_al\Documents\SpecAi.No2.Agent\zoetrope-fork</span></button>
+					</div>
+				</section>
+
+				<section class="section">
+					<h2>会话记录</h2>
+					<div class="search">⌕ 搜索会话</div>
+					<div class="session-current">
+						<b>会话 · 01a1550c</b>
+						<span>anthropic/claude-opus-4-8</span>
+					</div>
+					<div class="session-row">
+						<div class="t"><b>你好</b><span>2026-10-19</span></div>
+						<span class="x">×</span>
+					</div>
+					<div class="section other">
+						<h2>其他项目</h2>
+						<div class="session-row">
+							<div class="t"><b>修复 flaky renderer 测试</b><span>mu-work · 2026-10-19</span></div>
+						</div>
+					</div>
+				</section>
+
+				<nav class="nav">
+					<button class="on">对话</button>
+					<button>设置</button>
+				</nav>
+
+				<div>
+					<div class="status"><span class="dot"></span>运行中 · package<span class="ver">v0.1.0</span></div>
+					<button class="restart">重启 agent</button>
+				</div>
+			</aside>
+
+			<main class="main">
+				<header class="bar">
+					<span class="kicker">工作区</span>
+					<span class="title">pi_jev_desktop</span>
+					<span class="grow"></span>
+					<span class="model"><span class="lab">模型</span> anthropic/claude-opus-4-8 <span style="opacity:.6">▾</span></span>
+				</header>
+
+				<div class="workspace">
+					<section class="conversation">
+						<div class="home">
+							<img class="mark" src="../../src/renderer/assets/logo.png" alt="" onerror="this.style.display='none'">
+							<p class="eyebrow">判断过程可见的 Agent 工作台</p>
+							<h1>我们在构建什么？</h1>
+							<p class="sub">打开项目，选择模型，然后交给 agent 一个任务。每一次工具执行和判断都保持可见。</p>
+							<div class="composer">
+								<textarea placeholder="告诉 spec.ai.jev 你想做什么（Ctrl+Enter 发送）"></textarea>
+								<div class="foot">
+									<button class="iconbtn">＋ 附加图片</button>
+									<span class="grow"></span>
+									<span class="kbd">Ctrl ↵</span>
+									<button class="btn accent">发送</button>
+								</div>
+							</div>
+							<div class="suggest">
+								<button>解释这个代码库</button>
+								<button>定位并修复失败的测试</button>
+								<button>审查我最近的改动</button>
+							</div>
+						</div>
+
+						<div class="messages">
+							<div class="msg user">
+								<span class="who">你</span>
+								<div class="body">把 Files 面板的保存改成原子写入，并保留 CRLF 行尾。</div>
+							</div>
+
+							<div class="msg assistant">
+								<span class="who">spec.ai.jev</span>
+								<div class="body">
+									<p>已改好。保存先写到同目录的临时文件再 <span class="cmd">rename</span>，失败时原文件不动；换行按原文件保持。</p>
+									<div class="code">
+										<div class="head">src/main/files.ts · TypeScript<span class="copy" onclick="this.textContent='已复制'">复制</span></div>
+										<pre><span class="k">export function</span> saveFile(root, file, text, hash) {
+  <span class="k">const</span> body = Buffer.from(matchLineEndings(current, text), <span class="s">"utf8"</span>);
+  writeAtomic(path, body); <span class="c">// 临时文件 + rename</span>
+  <span class="k">return</span> { path, hash: sha256(body), size: body.length };
+}</pre>
+									</div>
+									<p style="margin-top:8px;color:var(--muted)">边界保留：文件被别人改过即冲突，不覆盖；二进制与超过 1 MB 的文件只读。</p>
+								</div>
+							</div>
+
+							<div class="tool">
+								<div class="row">
+									<span class="name">edit</span>
+									<span class="arg">src/main/files.ts</span>
+									<span class="ok">● ok</span>
+								</div>
+								<details open>
+									<summary>输出</summary>
+									<pre>写入 2.1 KB · sha256 9f2c7a… · 行尾 CRLF 保持不变</pre>
+								</details>
+							</div>
+
+							<div class="approval">
+								<h3>运行 npm test -- --run？</h3>
+								<p>会执行全部测试，约 30 秒。</p>
+								<div class="actions">
+									<button class="btn accent">允许</button>
+									<button class="btn ghost">拒绝</button>
+								</div>
+							</div>
+
+						</div>
+
+						<div class="composer">
+							<div class="chips">
+								<span class="chip"><span class="thumb"></span>screenshot.png<span class="x">×</span></span>
+							</div>
+							<textarea placeholder="继续告诉 spec.ai.jev…"></textarea>
+							<div class="foot">
+								<button class="iconbtn">＋ 附加图片</button>
+								<span class="grow"></span>
+								<span class="kbd">Ctrl ↵</span>
+								<button class="btn accent">发送</button>
+								<button class="btn ghost">停止</button>
+							</div>
+						</div>
+					</section>
+
+					<aside class="panels">
+						<div class="tabs" role="tablist">
+							<button role="tab">任务板</button>
+							<button role="tab">文件</button>
+							<button role="tab" class="on" aria-selected="true">判决</button>
+						</div>
+						<div class="panel">
+							<div class="ph">
+								<h2>判决</h2>
+								<p class="count">9 条判决</p>
+							</div>
+							<div class="rows">
+								<div class="jrow on">
+									<div class="line"><span class="spec">turn.continue</span><span class="mode">active</span><span class="prov">jev</span></div>
+									<div class="ask">为什么测试还是失败？</div>
+								</div>
+								<div class="jdetail">
+									<dl>
+										<dt>规范</dt><dd>turn.continue</dd>
+										<dt>模式</dt><dd>active</dd>
+										<dt>提供方</dt><dd>jev</dd>
+										<dt>时间</dt><dd>2026-10-19 23:41:07</dd>
+										<dt>请求</dt><dd>为什么测试还是失败？</dd>
+										<dt>编号</dt><dd>01a1550c-4bc8-7f2e</dd>
+									</dl>
+									<button class="copy" onclick="this.textContent='已复制'">复制编号</button>
+								</div>
+								<div class="jrow">
+									<div class="line"><span class="spec">memory.capture</span><span class="mode">active</span><span class="prov">jev</span></div>
+									<div class="ask">记住：保存要保留 CRLF</div>
+								</div>
+								<div class="jrow">
+									<div class="line"><span class="spec">tool.description</span><span class="mode">active</span><span class="prov">jev</span></div>
+									<div class="ask">mcp: filesystem</div>
+								</div>
+								<div class="jrow">
+									<div class="line"><span class="spec">input.preflight</span><span class="mode">shadow</span><span class="prov">jev</span></div>
+									<div class="ask">把 Files 面板的保存改成原子写入</div>
+								</div>
+							</div>
+							<div class="footnote">同一个项目里其他会话的判决不在此列。</div>
+						</div>
+					</aside>
+				</div>
+			</main>
+		</div>
+	</div>
+	</div>
+</div>
+
+<script>
+	const root = document.documentElement;
+	const wrap = document.getElementById("wrap");
+	const frameW = 1280, frameH = 800;
+
+	function fit() {
+		const scale = Math.min(1, (window.innerWidth - 56) / frameW, (window.innerHeight - 120) / frameH);
+		wrap.style.transform = `scale(${scale})`;
+		wrap.style.width = `${frameW * scale}px`;
+		wrap.style.height = `${frameH * scale}px`;
+	}
+	window.addEventListener("resize", fit);
+	fit();
+
+	function group(attr) {
+		const buttons = [...document.querySelectorAll(`[data-${attr}]`)];
+		buttons.forEach((button) => {
+			button.addEventListener("click", () => {
+				root.dataset[attr] = button.dataset[attr];
+				buttons.forEach((other) => other.classList.toggle("on", other === button));
+			});
+		});
+	}
+	group("dir");
+	group("state");
+
+	document.querySelectorAll(".tabs button").forEach((button) => {
+		button.addEventListener("click", () => {
+			document.querySelectorAll(".tabs button").forEach((other) => {
+				other.classList.toggle("on", other === button);
+				other.setAttribute("aria-selected", String(other === button));
+			});
+		});
+	});
+</script>
+</body>
+</html>
