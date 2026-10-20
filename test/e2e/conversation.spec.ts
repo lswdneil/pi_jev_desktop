@@ -19,6 +19,7 @@ test.describe("conversation", () => {
 		try {
 			await completeFirstRun(page);
 			await expect(page.locator(".chip")).toContainText("running", { timeout: 60_000 });
+			await expect(page.getByTestId("composer-hint")).toHaveText("Ctrl+Enter to send");
 
 			// A 1x1 PNG: the fixture answers with how many images arrived and what type they were.
 			const png = Buffer.from(

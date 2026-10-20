@@ -10,7 +10,7 @@
  * are data.
  */
 
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { PromptImage, SpecApi } from "../../../shared/api.ts";
 import { type ConversationEvent, type ConversationState, visibleMessages } from "../../../shared/conversation.ts";
 import type { ConversationStore } from "../../lib/conversation-store.ts";
@@ -50,7 +50,8 @@ export function ConversationPage({
 	const state: ConversationState = useSyncExternalStore(store.subscribe, store.getSnapshot);
 	const [busy, setBusy] = useState(false);
 	const sending = useRef(false);
-	const text = (key: string): string => shellText(language, key);
+	const text = useCallback((key: string): string => shellText(language, key), [language]);
+	const copyText = useCallback((value: string) => api.app.copy(value), [api]);
 
 	const visible = useMemo(() => visibleMessages(state), [state]);
 	const empty =
@@ -99,7 +100,7 @@ export function ConversationPage({
 					state={state}
 					text={text}
 					onOpenLink={onOpenLink}
-					onCopy={(value) => api.app.copy(value)}
+					onCopy={copyText}
 					onSend={send}
 					onStop={stop}
 					onError={onError}

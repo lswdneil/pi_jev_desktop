@@ -640,6 +640,7 @@ button:disabled {
 .conversation {
 	display: flex;
 	flex-direction: column;
+	flex: 1 1 auto;
 	gap: 12px;
 	min-height: 0;
 	min-width: 0;
@@ -726,6 +727,48 @@ button:disabled {
 	position: relative;
 	border-radius: 10px;
 	transition: outline-color 120ms ease;
+}
+
+.composer-panel,
+.composer-hero {
+	transition:
+		border-color 120ms ease,
+		box-shadow 120ms ease;
+}
+
+.composer-panel:focus-within {
+	border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+	box-shadow:
+		0 0 0 2px color-mix(in srgb, var(--accent) 10%, transparent),
+		var(--shadow-1);
+}
+
+.composer-hero:focus-within {
+	border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+	box-shadow:
+		0 0 0 2px color-mix(in srgb, var(--accent) 10%, transparent),
+		var(--shadow-2);
+}
+
+.composer-drop textarea:focus {
+	border-color: var(--line);
+	box-shadow: none;
+}
+
+.composer-hint {
+	margin-left: auto;
+	color: var(--muted);
+	font-size: 10px;
+	white-space: nowrap;
+}
+
+.composer-queue {
+	padding: 1px 7px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--warn) 12%, transparent);
+	color: var(--warn);
+	font-size: 10px;
+	white-space: nowrap;
 }
 
 .attachment {

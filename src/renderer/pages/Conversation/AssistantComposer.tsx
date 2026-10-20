@@ -119,10 +119,13 @@ export function AssistantComposer({
 						}}
 					/>
 					{queued === 0 ? null : (
-						<span className="muted" data-testid="queue">
+						<span className="composer-queue" data-testid="queue">
 							{text("conversation.queued")} {queued}
 						</span>
 					)}
+					<span className="composer-hint" data-testid="composer-hint">
+						{text("conversation.sendHint")}
+					</span>
 				</div>
 			</ComposerPrimitive.Root>
 

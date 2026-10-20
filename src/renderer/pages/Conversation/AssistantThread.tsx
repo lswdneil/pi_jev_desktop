@@ -176,12 +176,16 @@ function TranscriptMessage({
 }): React.JSX.Element {
 	const hasTool = message.content.some((part) => part.type === "tool-call");
 	const role = message.role === "user" ? "user" : "assistant";
-	const components = {
-		Text: ({ text: value }: TextMessagePartProps) => (
-			<Markdown text={value} onOpenLink={onOpenLink} labels={text} onCopy={onCopy} />
-		),
-		tools: { Override: (props: ToolCallMessagePartProps) => <ToolFallback {...props} text={text} /> },
-	};
+	// A new component type each render would remount Markdown (and reset a code block's copied state).
+	const components = useMemo(
+		() => ({
+			Text: ({ text: value }: TextMessagePartProps) => (
+				<Markdown text={value} onOpenLink={onOpenLink} labels={text} onCopy={onCopy} />
+			),
+			tools: { Override: (props: ToolCallMessagePartProps) => <ToolFallback {...props} text={text} /> },
+		}),
+		[text, onOpenLink, onCopy],
+	);
 	return (
 		<MessagePrimitive.Root
 			className={hasTool ? "contents" : `message message-${role}`}
@@ -284,7 +288,7 @@ export function AssistantThread({
 						streaming={state.streaming !== undefined}
 						active={active}
 					/>
-					<section className="panel">
+					<section className="panel composer-panel">
 						<ThreadPrimitive.ViewportProvider>
 						<AssistantComposer
 							text={text}
