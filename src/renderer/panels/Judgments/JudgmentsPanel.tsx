@@ -10,7 +10,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { Copy } from "lucide-react";
+import { Copy, Scale } from "lucide-react";
 import type { JudgmentRecord, SpecApi } from "../../../shared/api.ts";
 import { Badge } from "../../ui/badge.tsx";
 import { Button } from "../../ui/button.tsx";
@@ -49,13 +49,18 @@ export function JudgmentsPanel({
 	const detail = newest.find((record) => record.id === selected);
 	return (
 		<section className="panel" data-testid="judgments-panel">
-			<h2>{text("panel.judgments")}</h2>
+			<header className="panel-head">
+				<h2>{text("panel.judgments")}</h2>
+			</header>
 			{error === "" ? null : <p className="line-error">{error}</p>}
 			{newest.length === 0 ? (
-				<p className="muted">{text("panel.noDecisions")}</p>
+				<p className="panel-empty">
+					<Scale aria-hidden="true" />
+					{text("panel.noDecisions")}
+				</p>
 			) : (
 				<>
-					<p className="muted" data-testid="judgments-count">
+					<p className="panel-sub" data-testid="judgments-count">
 						{records.length} {text("panel.decisions")}
 					</p>
 					<ul className="judgments">
@@ -64,17 +69,19 @@ export function JudgmentsPanel({
 								<Button
 									type="button"
 									variant="ghost"
-									className={`judgment-row h-auto w-full justify-start gap-2 px-2 py-1.5 text-left${record.id === selected ? " active bg-primary/10" : ""}`}
+									className={`judgment-row h-auto w-full items-stretch justify-start whitespace-normal${record.id === selected ? " active" : ""}`}
 									onClick={() => {
 										setSelected(record.id === selected ? undefined : record.id);
 										setCopied(false);
 									}}
 								>
-									<code>{record.specId}</code>{" "}
-									<Badge variant={record.mode === "active" ? "default" : "secondary"}>{record.mode}</Badge>{" "}
-									<span className="muted">{record.providerId}</span>
+									<span className="judgment-top">
+										<code className="judgment-spec">{record.specId}</code>
+										<Badge variant={record.mode === "active" ? "default" : "secondary"}>{record.mode}</Badge>
+										<span className="judgment-provider">{record.providerId}</span>
+									</span>
 									{record.userMessage === undefined ? null : (
-										<span className="muted judgment-message">{record.userMessage}</span>
+										<span className="judgment-message">{record.userMessage}</span>
 									)}
 								</Button>
 								{record.id === selected && detail !== undefined ? (

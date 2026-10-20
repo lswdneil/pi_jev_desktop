@@ -1099,7 +1099,7 @@ function Panels({
 		<Tabs
 			value={tab}
 			onValueChange={(value) => onTab(value as "board" | "files" | "judgments")}
-			className="flex min-h-0 flex-col gap-3"
+			className="flex min-h-0 flex-1 flex-col gap-3"
 		>
 			<TabsList aria-label={text("panel.sections")} className="w-full justify-start">
 				{(["board", "files", "judgments"] as const).map((name) => (
@@ -1108,13 +1108,13 @@ function Panels({
 					</TabsTrigger>
 				))}
 			</TabsList>
-			<TabsContent value="board">
+			<TabsContent value="board" className="min-h-0 flex-1">
 				<BoardPanel board={state.board} text={text} />
 			</TabsContent>
-			<TabsContent value="files">
+			<TabsContent value="files" className="min-h-0 flex-1">
 				<FilesPanel files={state.files} api={api} text={text} openFile={openFile} />
 			</TabsContent>
-			<TabsContent value="judgments">
+			<TabsContent value="judgments" className="min-h-0 flex-1">
 				<JudgmentsPanel api={api} text={text} />
 			</TabsContent>
 		</Tabs>

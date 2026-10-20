@@ -15,7 +15,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pencil, RotateCw, Save, X } from "lucide-react";
+import { FileText, Pencil, RotateCw, Save, X } from "lucide-react";
 import type { FilePreview, SpecApi } from "../../../shared/api.ts";
 import type { ChangedFile } from "../../../shared/conversation.ts";
 import { diffLines } from "../../../shared/diff.ts";
@@ -116,9 +116,15 @@ export function FilesPanel({
 
 	return (
 		<section className="panel" data-testid="files-panel">
-			<h2>{text("panel.files")}</h2>
+			<header className="panel-head">
+				<h2>{text("panel.files")}</h2>
+				{newest.length === 0 ? null : <Badge variant="secondary">{newest.length}</Badge>}
+			</header>
 			{newest.length === 0 ? (
-				<p className="muted">{text("panel.noFiles")}</p>
+				<p className="panel-empty">
+					<FileText aria-hidden="true" />
+					{text("panel.noFiles")}
+				</p>
 			) : (
 				<ul className="files">
 					{newest.map((file, index) => (
@@ -126,11 +132,13 @@ export function FilesPanel({
 							<Button
 								type="button"
 								variant="ghost"
-								className={`file-row h-auto w-full justify-start gap-2 px-2 py-1.5 text-left${file.path === selected ? " active bg-primary/10" : ""}`}
+								className={`file-row h-auto w-full justify-start whitespace-normal${file.path === selected ? " active" : ""}`}
 								onClick={() => open(file.path)}
 								title={file.path}
 							>
-								<code>{file.path}</code> <span className="muted">{file.tool}</span>
+								<FileText className="file-icon" aria-hidden="true" />
+								<code>{file.path}</code>
+								<span className="file-tool">{file.tool}</span>
 							</Button>
 						</li>
 					))}
@@ -139,7 +147,7 @@ export function FilesPanel({
 			{selected === undefined ? null : (
 				<div className="file-preview" data-testid="file-preview">
 					<div className="file-preview-head">
-						<code>{selected}</code>
+						<code title={selected}>{selected}</code>
 						{preview === undefined ? null : <span className="muted file-size">{size(preview.text)}</span>}
 						<Button type="button" variant="ghost" size="icon-sm" aria-label={text("panel.closePreview")} onClick={close}>
 							<X />
