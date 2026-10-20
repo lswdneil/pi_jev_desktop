@@ -76,7 +76,7 @@ const policy = contentSecurityPolicy(
  * The folder the agent runs in. A project selected from the rail wins; a checkout defaults to its own root, and a
  * packaged app defaults to the user's home folder until the person opens a project.
  */
-let workspaceRoot = (process.env.MU_WORKSPACE ?? "").trim() || undefined;
+let workspaceRoot = (process.env.SPEC_AI_JEV_WORKSPACE ?? process.env.MU_WORKSPACE ?? "").trim() || undefined;
 
 function defaultWorkspace(harness: Harness): string {
 	return harness.layout === "repo" ? harness.root : homedir();
@@ -128,7 +128,7 @@ const supervisor = new AgentSupervisor({
 /** The harness in use, or an error a screen can show. Settings and consent both belong to a specific harness. */
 function currentHarness(): Harness {
 	const harness = findHarness(desktopRoot);
-	if (harness === undefined) throw new Error("mu was not found, so its settings cannot be read");
+	if (harness === undefined) throw new Error("the agent runtime was not found, so its settings cannot be read");
 	return harness;
 }
 
@@ -378,7 +378,7 @@ const api = createApi({
 	},
 });
 
-/** Server the build output over `app://mu`, with the policy attached to every response. */
+/** Server the build output over `app://spec`, with the policy attached to every response. */
 function registerAppScheme(): void {
 	protocol.handle(APP_SCHEME, async (request) => {
 		const resolved = resolveAppRequest(request.url, rendererRoot, process.platform);
@@ -468,7 +468,12 @@ type ShellLogger = (level: ShellLogLevel, message: string, details?: Readonly<Re
  * user's `~/.mu`. Nothing migrates: an existing command-line installation keeps its files where they are.
  */
 const agentDir = agentDirFor(homedir(), process.platform);
-if ((process.env.MU_AGENT_DIR ?? "").trim() === "") process.env.MU_AGENT_DIR = agentDir;
+// The harness still reads `MU_AGENT_DIR`; the product's own spelling is set beside it so a future rename is a
+// configuration change rather than a data migration.
+if ((process.env.SPEC_AI_JEV_AGENT_DIR ?? process.env.MU_AGENT_DIR ?? "").trim() === "") {
+	process.env.MU_AGENT_DIR = agentDir;
+	process.env.SPEC_AI_JEV_AGENT_DIR = agentDir;
+}
 
 /** The one file the shell writes; the crash dialog names it, so both paths agree by construction. */
 const logFile = shellLogPath(agentDir);

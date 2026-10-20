@@ -3,7 +3,8 @@
 **A judgment-native desktop workspace for coding agents.**
 
 spec.ai.jev keeps the conversation, the work the agent is doing, and the decisions it made in the same place. The
-runtime remains a mu/pi harness; this repository owns the desktop product, its workspace model, and its visual system.
+the agent runtime is vendored beside the desktop shell in `spec.ai.jev/`; this repository owns the product, its
+workspace model, its visual system, and its release.
 
 ## Status
 
@@ -33,10 +34,10 @@ The product specification and clickable design prototype live in `docs/`.
 
 ## Run
 
-The runtime source lives in this repository under `mu/` (the mu/pi monorepo: `packages/`, `kyrn/`, `desktop/`,
-`desktop-next/`). A build of it lands in `mu/.artifacts/desktop-harness`, and `npm run stage:harness` copies that into
-`resources/harness/mu-agent` — which is what both development and the installer run. `MU_ROOT` can still name a different
-checkout and wins over everything else.
+The runtime source lives in this repository under `spec.ai.jev/` (`packages/`, `kyrn/`, `scripts/`, `docs/`). A build
+of it lands in `spec.ai.jev/.artifacts/desktop-harness`, and `npm run stage:harness` copies that into
+`resources/harness/mu-agent`, which is what both development and the installer run. `SPEC_AI_JEV_ROOT` names a different
+checkout and wins over everything else; the historical `MU_ROOT` is still read for compatibility.
 
 ```powershell
 npm install --ignore-scripts
@@ -47,17 +48,17 @@ npm run dev
 ```
 
 ```powershell
-npm run stage:harness   # copies a built mu-agent into resources/harness/mu-agent (git-ignored)
-npm run dev             # no MU_ROOT needed once that folder exists
+npm run stage:harness   # copies the built runtime into resources/harness/mu-agent (git-ignored)
+npm run dev             # no environment variable needed once that folder exists
 ```
 
-`MU_WORKSPACE` selects the initial project folder. Without it, a repository checkout starts in its own root and a
+`SPEC_AI_JEV_WORKSPACE` selects the initial project folder (`MU_WORKSPACE` still works). Without it, a repository checkout starts in its own root and a
 packaged app starts in the user's home folder.
 
-The Electron tests use a local fixture by default. To exercise the real mu checkout:
+The Electron tests use a local fixture by default. To exercise the real runtime checkout:
 
 ```powershell
-$env:PI_JEV_HARNESS = "C:\Users\wd_al\Downloads\DSH-Beta\mu-work"
+$env:SPEC_AI_JEV_HARNESS = "spec.ai.jev"
 npm run test:e2e
 ```
 
@@ -81,7 +82,7 @@ npm run test:e2e
 ```
 
 The integration tests use temporary `HOME`, `USERPROFILE`, browser profile, and harness data; they do not touch a
-developer's real mu state.
+developer's real agent state.
 
 ## Source control
 
@@ -91,15 +92,14 @@ Changes land in small, verifiable stages: run `npm run verify`, commit with a co
 ## Packaging
 
 ```powershell
-$env:MU_ROOT = "C:\Users\wd_al\Downloads\DSH-Beta\mu-work"
-npm run package:dir         # build + stage the mu runtime + unpacked app in dist/
+npm run package:dir         # build + stage the runtime + unpacked app in dist/
 npm run smoke:package       # launch it and wait for the agent to report "running ·"
 npm run package             # the installer: dist/spec.ai.jev-<version>-x64.exe
 node scripts/install-rehearsal.mjs   # silent install, a real turn, uninstall
 ```
 
-`scripts/stage-harness.mjs` copies the built `mu-agent` package into `resources/harness/mu-agent` (~34 MB, git-ignored);
-it accepts `--from <folder>` and `MU_HARNESS_ROOT` when the runtime lives elsewhere.
+`scripts/stage-harness.mjs` copies the built runtime package into `resources/harness/mu-agent` (~34 MB, git-ignored);
+it accepts `--from <folder>` and `MU_HARNESS_ROOT` when the runtime lives somewhere else.
 
 `.github/workflows/desktop-package.yml` builds the same installer on Windows; `docs/release.md` is the runbook (CI,
 signing secrets, the update key, and when a draft becomes a release).

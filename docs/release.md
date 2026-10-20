@@ -13,7 +13,7 @@ node scripts/install-rehearsal.mjs
 ```
 
 `scripts/stage-harness.mjs` accepts `--from <folder>` and `MU_HARNESS_ROOT` when the runtime lives somewhere other than
-`mu/.artifacts/desktop-harness` (the repository's own build of the vendored `mu/` source). The staged copy is git-ignored;
+`spec.ai.jev/.artifacts/desktop-harness` (the repository's own build of the vendored runtime source). The staged copy is git-ignored;
 ~34 MB of built package does not belong in history.
 
 The rehearsal installs the `.exe` silently into a temporary folder, starts the installed app with a temporary home and
@@ -27,7 +27,7 @@ is gone. It needs a desktop session and Windows; it is not part of CI.
 
 1. `npm ci`, then the same verify gate as a developer.
 2. `npm pack mu-agent@0.1.8`, unpack it, install its production dependencies, and stage it. CI uses the published package
-   today; the vendored `mu/` source is where the runtime is maintained, and building it in CI is the next step when the
+   today; the vendored source under `spec.ai.jev/` is where the runtime is maintained, and building it in CI is the next step when the
    runtime is patched beyond a published version.
 3. `npm run package` produces `dist/spec.ai.jev-<version>-x64.exe`, its block map, and `latest.yml`.
 4. The artifact is uploaded; on a tag it is also attached to a **draft** GitHub release.

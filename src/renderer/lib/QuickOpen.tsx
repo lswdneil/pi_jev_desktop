@@ -10,7 +10,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import type { FileHit, MuApi } from "../../shared/api.ts";
+import type { FileHit, SpecApi } from "../../shared/api.ts";
 
 /** Typing is cheaper than walking a checkout; wait for a pause before asking. */
 const DEBOUNCE_MS = 120;
@@ -21,7 +21,7 @@ export function QuickOpen({
 	onOpen,
 	onClose,
 }: {
-	readonly api: MuApi;
+	readonly api: SpecApi;
 	readonly text: (key: string) => string;
 	readonly onOpen: (path: string) => void;
 	readonly onClose: () => void;

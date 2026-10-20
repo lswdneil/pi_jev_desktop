@@ -121,7 +121,7 @@ const STRINGS: Readonly<Record<ShellLanguage, ShellStrings>> = {
 		"app.retry": "Retry",
 		"settings.title": "Settings",
 		"settings.intro":
-			"These controls are the running harness's own manifest. A change is saved to mu.json and takes effect when the agent restarts.",
+			"These controls are the running harness's own manifest. A change is saved to the agent's settings file and takes effect when the agent restarts.",
 		"settings.file": "Saved to",
 		"settings.problems": "The file has problems",
 		"settings.restart": "Restart the agent to apply this",
@@ -148,7 +148,7 @@ const STRINGS: Readonly<Record<ShellLanguage, ShellStrings>> = {
 		"firstRun.model": "Choose a model",
 		"firstRun.noModels": "The harness reported no models. You can pick one later in Settings.",
 		"firstRun.keyHint":
-			"No key is set yet. spec.ai.jev still starts and everything local works; to talk to a provider, run `mu auth` in a terminal, then restart the agent.",
+			"No key is set yet. spec.ai.jev still starts and everything local works; to talk to a provider, run the agent's auth command in a terminal, then restart the agent.",
 		"firstRun.finish": "Start using spec.ai.jev",
 		"firstRun.next": "Continue",
 		"firstRun.back": "Back",
@@ -267,7 +267,7 @@ const STRINGS: Readonly<Record<ShellLanguage, ShellStrings>> = {
 		"app.restart": "重启 agent",
 		"app.retry": "重试",
 		"settings.title": "设置",
-		"settings.intro": "这里的控件来自正在运行的内核清单。改动写入 mu.json，重启 agent 后生效。",
+		"settings.intro": "这些控件来自运行中 harness 的清单。修改会写入 agent 的设置文件，并在 agent 重启后生效。",
 		"settings.file": "保存到",
 		"settings.problems": "文件有问题",
 		"settings.restart": "重启 agent 后生效",
@@ -294,7 +294,7 @@ const STRINGS: Readonly<Record<ShellLanguage, ShellStrings>> = {
 		"firstRun.model": "选择模型",
 		"firstRun.noModels": "内核没有报告任何模型。之后可以在设置里选择。",
 		"firstRun.keyHint":
-			"还没有配置密钥。spec.ai.jev 仍可启动，本地功能可用；要与服务商对话，请在终端运行 `mu auth`，然后重启 agent。",
+			"还没有设置密钥。spec.ai.jev 仍可启动，本地功能可用；要与会话服务商对话，请在终端运行 agent 的 auth 命令，然后重启 agent。",
 		"firstRun.finish": "开始使用 spec.ai.jev",
 		"firstRun.next": "继续",
 		"firstRun.back": "上一步",
@@ -412,7 +412,7 @@ const STRINGS: Readonly<Record<ShellLanguage, ShellStrings>> = {
 		"app.restart": "重新啟動 agent",
 		"app.retry": "重試",
 		"settings.title": "設定",
-		"settings.intro": "這裡的控制項來自正在執行的核心清單。變更會寫入 mu.json，重新啟動 agent 後生效。",
+		"settings.intro": "這些控制項來自執行中 harness 的清單。修改會寫入 agent 的設定檔，並在 agent 重新啟動後生效。",
 		"settings.file": "儲存到",
 		"settings.problems": "檔案有問題",
 		"settings.restart": "重新啟動 agent 後生效",
@@ -439,7 +439,7 @@ const STRINGS: Readonly<Record<ShellLanguage, ShellStrings>> = {
 		"firstRun.model": "選擇模型",
 		"firstRun.noModels": "核心沒有回報任何模型。之後可以在設定裡選擇。",
 		"firstRun.keyHint":
-			"還沒有設定金鑰。spec.ai.jev 仍可啟動，本地功能可用；要與服務商對話，請在終端機執行 `mu auth`，然後重新啟動 agent。",
+			"還沒有設定金鑰。spec.ai.jev 仍可啟動，本地功能可用；要與服務商對話，請在終端機執行 agent 的 auth 命令，然後重新啟動 agent。",
 		"firstRun.finish": "開始使用 spec.ai.jev",
 		"firstRun.next": "繼續",
 		"firstRun.back": "上一步",

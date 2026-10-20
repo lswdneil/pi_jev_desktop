@@ -32,7 +32,7 @@ milestone rather than per commit while the UI is being rebuilt.
 The runtime is a built package, not source:
 
 ```powershell
-npm run stage:harness                                        # reads mu/.artifacts/desktop-harness
+npm run stage:harness                                        # reads spec.ai.jev/.artifacts/desktop-harness
 npm run package:dir                                          # unpacked build, fastest smoke
 npm run smoke:package                                        # starts the packaged app and waits for "running ·"
 npm run package                                              # NSIS installer in dist/
@@ -43,8 +43,8 @@ Development resolves the harness in this order: `MU_ROOT`/`KYRN_ROOT`, a package
 checkout's staged `resources/harness/mu-agent`, a sibling checkout, then a global npm install. Staging once makes the
 clone self-contained; `MU_ROOT` remains the override for work on the runtime itself.
 
-The runtime source itself is vendored at `mu/` — do not edit anything outside this repository. `mu/node_modules`,
-`mu/**/dist` and `mu/.artifacts` are rebuilt locally and never committed.
+The runtime source itself is vendored at `spec.ai.jev/` — do not edit anything outside this repository.
+`spec.ai.jev/node_modules`, `spec.ai.jev/**/dist` and `spec.ai.jev/.artifacts` are rebuilt locally and never committed.
 
 ## Conventions
 

@@ -10,7 +10,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import type { JudgmentRecord, MuApi } from "../../../shared/api.ts";
+import type { JudgmentRecord, SpecApi } from "../../../shared/api.ts";
 
 const REFRESH_MS = 3_000;
 
@@ -18,7 +18,7 @@ export function JudgmentsPanel({
 	api,
 	text,
 }: {
-	readonly api: MuApi;
+	readonly api: SpecApi;
 	readonly text: (key: string) => string;
 }): React.JSX.Element {
 	const [records, setRecords] = useState<readonly JudgmentRecord[]>([]);

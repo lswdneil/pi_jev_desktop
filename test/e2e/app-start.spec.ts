@@ -31,15 +31,18 @@ async function violations(page: Page): Promise<string[]> {
 
 test.describe("starting", () => {
 	test("starts the configured mu harness and reports it", async () => {
-		test.skip(process.env.PI_JEV_HARNESS === undefined, "set PI_JEV_HARNESS to a mu checkout to run this test");
+		test.skip(
+			(process.env.SPEC_AI_JEV_HARNESS ?? process.env.PI_JEV_HARNESS) === undefined,
+			"set SPEC_AI_JEV_HARNESS to a runtime checkout to run this test",
+		);
 		const profile = await launchApp({ harness: "checkout" });
 		const { page } = profile;
 
 		try {
 			await completeFirstRun(page);
 
-			// The window is ours, served from `app://mu`, and the preload got there.
-			expect(await page.evaluate(() => location.origin)).toBe("app://mu");
+			// The window is ours, served from `app://spec`, and the preload got there.
+			expect(await page.evaluate(() => location.origin)).toBe("app://spec");
 
 			await expect(page.locator(".chip")).toContainText("running", { timeout: 60_000 });
 			await expect(page.locator(".chip")).toHaveText(/running · (repo|package)/);
@@ -47,7 +50,7 @@ test.describe("starting", () => {
 			// The version row only renders once the bridge answered — and it is this build's version, not Electron's.
 			await expect(page.locator(".rail")).toContainText("v0.1.0");
 
-			const status = await page.evaluate(() => window.mu.harness.status());
+			const status = await page.evaluate(() => window.spec.harness.status());
 			expect(status.state).toBe("running");
 			if (status.state === "running") {
 				expect(status.layout).toBe("repo");
@@ -67,7 +70,7 @@ test.describe("starting", () => {
 
 			await expect(page.getByRole("heading", { name: "The agent could not start" })).toBeVisible({ timeout: 90_000 });
 			// The screen has to say what to change, not just that something broke. The path is the platform's own.
-			await expect(page.locator(".failure")).toContainText("MU_ROOT");
+			await expect(page.locator(".failure")).toContainText("SPEC_AI_JEV_ROOT");
 			await expect(page.locator(".failure")).toContainText(profile.home);
 			await expect(page.locator(".failure").getByRole("button", { name: "Retry" })).toBeVisible();
 			// The header offers the same way out.
@@ -160,7 +163,7 @@ test.describe("the security baseline", () => {
 
 		try {
 			await completeFirstRun(page);
-			const surface = await page.evaluate(() => Object.keys(window.mu).sort());
+			const surface = await page.evaluate(() => Object.keys(window.spec).sort());
 			expect(surface).toEqual([
 				"app",
 				"consent",
@@ -173,7 +176,7 @@ test.describe("the security baseline", () => {
 				"workspace",
 			]);
 
-			const harnessMethods = await page.evaluate(() => Object.keys(window.mu.harness).sort());
+			const harnessMethods = await page.evaluate(() => Object.keys(window.spec.harness).sort());
 			expect(harnessMethods).toEqual([
 				"abort",
 				"history",
@@ -189,22 +192,22 @@ test.describe("the security baseline", () => {
 				"status",
 				"stop",
 			]);
-			const workspaceMethods = await page.evaluate(() => Object.keys(window.mu.workspace).sort());
+			const workspaceMethods = await page.evaluate(() => Object.keys(window.spec.workspace).sort());
 			expect(workspaceMethods).toEqual(["choose", "current", "open", "readFile", "saveFile", "searchFiles"]);
-			const sessionMethods = await page.evaluate(() => Object.keys(window.mu.sessions).sort());
+			const sessionMethods = await page.evaluate(() => Object.keys(window.spec.sessions).sort());
 			expect(sessionMethods).toEqual(["list", "listAll", "open", "openAcross", "remove", "rename"]);
 
 			// There is no generic sender: a page cannot name a channel of its own.
 			const generic = await page.evaluate(() =>
-				["invoke", "send", "emit", "ipcRenderer"].filter((name) => name in (window.mu as unknown as Record<string, unknown>)),
+				["invoke", "send", "emit", "ipcRenderer"].filter((name) => name in (window.spec as unknown as Record<string, unknown>)),
 			);
 			expect(generic).toEqual([]);
 
 			// A payload the main process does not accept comes back as a typed refusal, not as a window that opens.
-			await expect(page.evaluate(() => window.mu.preview.open("file:///etc/passwd"))).rejects.toThrow(/invalid-payload/);
+			await expect(page.evaluate(() => window.spec.preview.open("file:///etc/passwd"))).rejects.toThrow(/invalid-payload/);
 			// And a setting the manifest does not describe is refused by the main process, not written.
 			await expect(
-				page.evaluate(() => window.mu.settings.write({ feature: "no-such-feature", option: "x", value: 1 })),
+				page.evaluate(() => window.spec.settings.write({ feature: "no-such-feature", option: "x", value: 1 })),
 			).rejects.toThrow(/no feature called/);
 		} finally {
 			await profile.close();

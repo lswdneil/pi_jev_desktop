@@ -56,7 +56,7 @@ test.describe("the app-wide guard", () => {
 		const profile = await launchApp();
 		try {
 			await completeFirstRun(profile.page);
-			await profile.page.evaluate((url) => window.mu.preview.open(url), origin);
+			await profile.page.evaluate((url) => window.spec.preview.open(url), origin);
 
 			// A link inside the previewed page: the preview's rule allows it, and the app-wide guard must not overrule
 			// that (which is what it would do if it treated a preview like the app's own page).

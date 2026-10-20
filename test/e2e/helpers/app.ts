@@ -54,7 +54,7 @@ export async function launchApp(
 	const profile = options.profileDir ?? mkdtempSync(join(tmpdir(), "mu-e2e-profile-"));
 	const ownsProfile = options.profileDir === undefined;
 	const harness = options.harness ?? "fixture";
-	const checkoutRoot = process.env.PI_JEV_HARNESS?.trim() || undefined;
+	const checkoutRoot = (process.env.SPEC_AI_JEV_HARNESS ?? process.env.PI_JEV_HARNESS)?.trim() || undefined;
 	const muRoot =
 		harness === "none"
 			? join(home, "no-harness-here")

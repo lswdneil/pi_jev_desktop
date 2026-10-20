@@ -15,7 +15,7 @@ test("fits the workspace at the minimum desktop window size", async () => {
 		await expect(profile.page.getByTestId("composer")).toBeVisible();
 		await expect(profile.page.getByTestId("model-picker")).toBeVisible();
 		await expect
-			.poll(() => profile.page.evaluate(() => window.mu.workspace.current().then((value) => value.path)))
+			.poll(() => profile.page.evaluate(() => window.spec.workspace.current().then((value) => value.path)))
 			.toBe(FIXTURE_HARNESS);
 		await expect.poll(() => profile.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 		await profile.page.screenshot({ path: join(__dirname, "../../test-results/branding-720.png") });
@@ -35,7 +35,7 @@ test("follows a long history to the latest message without dragging a reader dow
 			.poll(() => list.evaluate((element) => element.scrollHeight - element.scrollTop - element.clientHeight))
 			.toBeLessThan(4);
 		await page.getByTestId("nav-settings").click();
-		await page.evaluate(() => window.mu.harness.prompt("stream"));
+		await page.evaluate(() => window.spec.harness.prompt("stream"));
 		await page.getByTestId("nav-conversation").click();
 		await expect
 			.poll(() => list.evaluate((element) => element.scrollHeight - element.scrollTop - element.clientHeight))
@@ -44,7 +44,7 @@ test("follows a long history to the latest message without dragging a reader dow
 			element.scrollTop = 0;
 			element.dispatchEvent(new Event("scroll"));
 		});
-		await page.evaluate(() => window.mu.harness.prompt("stream"));
+		await page.evaluate(() => window.spec.harness.prompt("stream"));
 		await expect(page.locator('.message[data-role="assistant"] .text').last()).toHaveText("Hello from the fixture");
 		await expect.poll(() => list.evaluate((element) => element.scrollTop)).toBe(0);
 	} finally {

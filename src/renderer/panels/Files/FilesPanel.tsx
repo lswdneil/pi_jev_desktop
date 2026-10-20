@@ -15,7 +15,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { FilePreview, MuApi } from "../../../shared/api.ts";
+import type { FilePreview, SpecApi } from "../../../shared/api.ts";
 import type { ChangedFile } from "../../../shared/conversation.ts";
 import { diffLines } from "../../../shared/diff.ts";
 
@@ -36,7 +36,7 @@ export function FilesPanel({
 	openFile,
 }: {
 	readonly files: readonly ChangedFile[];
-	readonly api: MuApi;
+	readonly api: SpecApi;
 	readonly text: (key: string) => string;
 	/** A file quick-open asked for; its nonce changes on every request so the same file can be reopened. */
 	readonly openFile: { readonly path: string; readonly nonce: number } | undefined;

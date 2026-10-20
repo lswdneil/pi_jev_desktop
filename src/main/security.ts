@@ -81,7 +81,7 @@ export function windowPreferences(preloadPath: string): {
 }
 
 /** The origin the app's own pages live at. `file://` is not used: it has no origin to lock a policy to. */
-export const APP_ORIGIN = "app://mu";
+export const APP_ORIGIN = "app://spec";
 
 /** Where a navigation may go: the app's own pages, nothing else. */
 export function isAllowedNavigation(url: string): boolean {

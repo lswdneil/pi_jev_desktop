@@ -11,7 +11,7 @@
  */
 
 import { useEffect, useState } from "react";
-import type { ModelChoice, MuApi } from "../../../shared/api.ts";
+import type { ModelChoice, SpecApi } from "../../../shared/api.ts";
 import { MANIFEST_LANGUAGES } from "../../../shared/settings.ts";
 import { shellText } from "../../lib/i18n.ts";
 
@@ -24,7 +24,7 @@ export function FirstRunPage({
 	text,
 	onDone,
 }: {
-	readonly api: MuApi;
+	readonly api: SpecApi;
 	readonly language: string;
 	readonly setLanguage: (language: string) => void;
 	readonly text: (key: string) => string;

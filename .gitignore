@@ -19,13 +19,13 @@ resources/harness/mu-agent/
 # Installer output.
 dist/
 
-# The vendored mu/pi source tree. Its dependencies and build output are rebuilt, never committed; the harness the app
+# The vendored runtime source tree. Its dependencies and build output are rebuilt, never committed; the harness the app
 # ships is staged into resources/harness (also ignored).
-mu/**/node_modules/
-mu/.artifacts/
-mu/.tmp/
-mu/**/dist/
-mu/**/out/
-mu/**/coverage/
-mu/**/test-results/
-mu/**/playwright-report/
+spec.ai.jev/**/node_modules/
+spec.ai.jev/.artifacts/
+spec.ai.jev/.tmp/
+spec.ai.jev/**/dist/
+spec.ai.jev/**/out/
+spec.ai.jev/**/coverage/
+spec.ai.jev/**/test-results/
+spec.ai.jev/**/playwright-report/

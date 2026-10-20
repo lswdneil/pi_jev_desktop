@@ -123,7 +123,7 @@ async function ipcProbe(page, samples) {
 		const timings = [];
 		for (let index = 0; index < count; index++) {
 			const startedAt = performance.now();
-			await window.mu.app.version();
+			await window.spec.app.version();
 			timings.push(performance.now() - startedAt);
 		}
 		return timings;

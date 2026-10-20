@@ -65,8 +65,8 @@ describe("the window", () => {
 	});
 
 	it("serves the app from its own origin, never from file://", () => {
-		expect(APP_ORIGIN).toBe("app://mu");
-		expect(isAllowedNavigation("app://mu/index.html")).toBe(true);
+		expect(APP_ORIGIN).toBe("app://spec");
+		expect(isAllowedNavigation("app://spec/index.html")).toBe(true);
 		expect(isAllowedNavigation("file:///etc/passwd")).toBe(false);
 		expect(isAllowedNavigation("https://example.com")).toBe(false);
 	});

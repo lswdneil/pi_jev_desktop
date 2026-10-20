@@ -1,10 +1,11 @@
 # Vendored mu/pi
 
-This directory is the mu/pi monorepo, copied from the local checkout on 2026-10-20 and maintained here from then on.
+This directory is the mu/pi runtime source, copied from the local checkout on 2026-10-20 and maintained here from then on.
 
 - Source: `mu-work` at commit `9f397360` ("chore: mu-agent 0.1.9 and the app 0.1.8").
-- Contents: `packages/`, `kyrn/`, `scripts/`, `docs/`, `bench/`, `nix/`, and both desktop trees (`desktop/`, AionUi; and
-  `desktop-next/`, the shell `spec.ai.jev` was derived from).
+- Contents: `packages/`, `kyrn/`, `scripts/`, `docs/`, `bench/`, `nix/`. The two desktop trees that came with the
+  checkout (`desktop/`, AionUi; and `desktop-next/`, the shell this product was derived from) were removed: they are
+  products of their own, not runtime dependencies, and they duplicated neither the build nor the design.
 - Not copied, and ignored by the repository: `node_modules/`, `dist/`, `out/`, `.artifacts/`, `.tmp/`, coverage and test
   reports. Rebuild them locally.
 - License: MIT (`mu/LICENSE`). Upstream headers and notices are kept.
@@ -26,9 +27,9 @@ is the upstream tree unchanged.
 ## Building the runtime
 
 ```powershell
-cd mu
+cd spec.ai.jev
 npm ci
 npm run build          # produces packages/*/dist and the artifact under .artifacts
 ```
 
-The desktop stages the result from `mu/.artifacts/desktop-harness` (`npm run stage:harness` at the repository root).
+The desktop stages the result from `spec.ai.jev/.artifacts/desktop-harness` (`npm run stage:harness` at the repository root).

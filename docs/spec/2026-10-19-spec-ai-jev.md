@@ -120,7 +120,7 @@ Renderer
   ↓ typed preload bridge
 Electron main
   ↓ JSONL / line-delimited RPC
-mu harness (pi + judgment kernel)
+agent runtime (pi + judgment kernel)
   ↓
 model provider
 ```
@@ -162,7 +162,7 @@ The logo is the supplied spec.ai.jev infinity mark. It is used in the rail and a
 
 - Remote sessions and team collaboration.
 - Signed installer and update installation.
-- Full migration from the frozen `mu/desktop` AionUi profile.
+- Full migration from the frozen AionUi profile (the reference tree is not vendored; the runtime source is).
 
 These require their own specs and acceptance tests.
 

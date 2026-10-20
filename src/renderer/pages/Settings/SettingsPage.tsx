@@ -11,7 +11,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import type { ConsentState, ModelChoice, MuApi } from "../../../shared/api.ts";
+import type { ConsentState, ModelChoice, SpecApi } from "../../../shared/api.ts";
 import { localized, MANIFEST_LANGUAGES, applyChange, type SettingsSnapshot } from "../../../shared/settings.ts";
 import { fill } from "../../../shared/presentation.ts";
 import type { UpdateCheckResult, UpdateInstallOutcome } from "../../../shared/update.ts";
@@ -23,7 +23,7 @@ export function SettingsPage({
 	setLanguage,
 	text,
 }: {
-	readonly api: MuApi;
+	readonly api: SpecApi;
 	readonly language: string;
 	readonly setLanguage: (language: string) => void;
 	readonly text: (key: string) => string;
@@ -272,7 +272,7 @@ export function SettingsPage({
 }
 
 /** The update check: on demand, and it says what it found — including why it will not install it. */
-function UpdateSection({ api, text }: { readonly api: MuApi; readonly text: (key: string) => string }): React.JSX.Element {
+function UpdateSection({ api, text }: { readonly api: SpecApi; readonly text: (key: string) => string }): React.JSX.Element {
 	const [status, setStatus] = useState<UpdateCheckResult | undefined>(undefined);
 	const [install, setInstall] = useState<UpdateInstallOutcome | undefined>(undefined);
 	const [busy, setBusy] = useState(false);

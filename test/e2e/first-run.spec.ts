@@ -88,7 +88,7 @@ test.describe("first run", () => {
 				.poll(
 					async () =>
 						page.evaluate(async () => {
-							const state = await window.mu.harness.snapshot();
+							const state = await window.spec.harness.snapshot();
 							return state.model ?? "";
 						}),
 					{ timeout: 20_000 },

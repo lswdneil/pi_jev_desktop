@@ -8,7 +8,7 @@
  * turns any renderer-side bug into arbitrary main-process code. The main process keeps the same list as its
  * allow-list of IPC channels (`src/main/ipc.ts`), and the preload is the only place that touches `ipcRenderer`.
  *
- * These types are also what the renderer sees as `window.mu`; `declare global` here keeps the three sides on one
+ * These types are also what the renderer sees as `window.spec`; `declare global` here keeps the three sides on one
  * definition instead of three near-copies.
  */
 
@@ -151,7 +151,7 @@ export interface ConsentState {
 }
 
 /** The capabilities the preload exposes. Anything not here does not exist for the page. */
-export interface MuApi {
+export interface SpecApi {
 	readonly app: {
 		version(): Promise<string>;
 		platform(): Promise<string>;
@@ -337,6 +337,6 @@ export type ApiResult<T> = { readonly ok: true; readonly value: T } | { readonly
 declare global {
 	interface Window {
 		/** Injected by the preload; absent in any page that is not ours. */
-		readonly mu: MuApi;
+		readonly spec: SpecApi;
 	}
 }

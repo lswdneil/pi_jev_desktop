@@ -41,7 +41,7 @@ test.describe("a crashed renderer", () => {
 			// Every wait below is a poll, because a crash is asynchronous in three separate ways and the first version of
 			// this test read each of them once: the crashed page may still report itself open when the replacement is
 			// already there (so `find` could hand back the dead window), the new window exists before it has navigated
-			// to `app://mu`, and the old one closes a moment after the new one is up.
+			// to `app://spec`, and the old one closes a moment after the new one is up.
 			const findReplacement = async (): Promise<Page> => {
 				for (let attempt = 0; attempt < 300; attempt++) {
 					const candidate = app.windows().find((window) => window !== page && !window.isClosed());
@@ -53,7 +53,7 @@ test.describe("a crashed renderer", () => {
 			const replacement = await findReplacement();
 			await expect
 				.poll(() => replacement.evaluate(() => location.origin).catch(() => ""), { timeout: 30_000 })
-				.toBe("app://mu");
+				.toBe("app://spec");
 			await expect(replacement.locator(".chip")).toContainText("running", { timeout: 60_000 });
 			// The crashed page is gone; the app did not quit and did not fall back to a first-run wizard.
 			await expect.poll(() => page.isClosed(), { timeout: 30_000 }).toBe(true);

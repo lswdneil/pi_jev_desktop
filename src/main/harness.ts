@@ -94,7 +94,9 @@ export function holdsMu(root: string, deps: Pick<HarnessDeps, "platform" | "exis
 }
 
 function envValue(deps: HarnessDeps, name: string): string | undefined {
-	const value = deps.env[`MU_${name}`] || deps.env[`KYRN_${name}`];
+	// The product's own name first, then the runtime's historical spellings. A person who already has MU_ROOT set
+	// keeps working; new documentation only ever teaches the first.
+	const value = deps.env[`SPEC_AI_JEV_${name}`] || deps.env[`MU_${name}`] || deps.env[`KYRN_${name}`];
 	return value !== undefined && value !== "" ? value : undefined;
 }
 

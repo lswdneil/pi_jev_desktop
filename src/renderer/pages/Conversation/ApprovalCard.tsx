@@ -10,7 +10,7 @@
  */
 
 import { useState } from "react";
-import type { MuApi } from "../../../shared/api.ts";
+import type { SpecApi } from "../../../shared/api.ts";
 import type { PendingApproval } from "../../../shared/conversation.ts";
 
 export function ApprovalCard({
@@ -21,7 +21,7 @@ export function ApprovalCard({
 	text,
 }: {
 	readonly approval: PendingApproval;
-	readonly api: MuApi;
+	readonly api: SpecApi;
 	readonly onError: (message: string) => void;
 	/** The answer travels out, not in: the card takes itself down once the harness has it. */
 	readonly onAnswered: (approval: PendingApproval, answer: string) => void;

@@ -86,7 +86,7 @@ test.describe("the preview", () => {
 		const profile = await launchApp();
 		try {
 			await completeFirstRun(profile.page);
-			await profile.page.evaluate((url) => window.mu.preview.open(url), origin);
+			await profile.page.evaluate((url) => window.spec.preview.open(url), origin);
 
 			// The view is attached beside the conversation, in a session of its own rather than the app's — and that
 			// session carries the download rule. `will-download` is the one handler a listener count can prove was
@@ -131,8 +131,8 @@ test.describe("the preview", () => {
 			await completeFirstRun(profile.page);
 
 			// The payload reaches the main process and the rule there refuses it; the renderer's promise rejects.
-			await expect(profile.page.evaluate(() => window.mu.preview.open("file:///etc/passwd"))).rejects.toThrow();
-			await expect(profile.page.evaluate(() => window.mu.preview.open("javascript:alert(1)"))).rejects.toThrow();
+			await expect(profile.page.evaluate(() => window.spec.preview.open("file:///etc/passwd"))).rejects.toThrow();
+			await expect(profile.page.evaluate(() => window.spec.preview.open("javascript:alert(1)"))).rejects.toThrow();
 
 			const attached = await profile.app.evaluate(({ BrowserWindow }) => {
 				const window = BrowserWindow.getAllWindows()[0];
@@ -143,14 +143,14 @@ test.describe("the preview", () => {
 			// A refused open leaves nothing behind; an accepted one can be closed again.
 			const { server, origin } = await serve();
 			try {
-				await profile.page.evaluate((url) => window.mu.preview.open(url), origin);
+				await profile.page.evaluate((url) => window.spec.preview.open(url), origin);
 				expect(
 					await profile.app.evaluate(({ BrowserWindow }) => {
 						const window = BrowserWindow.getAllWindows()[0];
 						return (window?.contentView.children ?? []).filter((child) => "webContents" in child).length;
 					}),
 				).toBe(1);
-				await profile.page.evaluate(() => window.mu.preview.close());
+				await profile.page.evaluate(() => window.spec.preview.close());
 				expect(
 					await profile.app.evaluate(({ BrowserWindow }) => {
 						const window = BrowserWindow.getAllWindows()[0];

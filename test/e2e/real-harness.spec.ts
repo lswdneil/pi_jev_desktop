@@ -9,8 +9,8 @@ import { join } from "node:path";
 import { launchApp } from "./helpers/app.ts";
 
 test.skip(
-	process.env.PI_JEV_HARNESS === undefined,
-	"set PI_JEV_HARNESS to a mu checkout to run the real-harness tests",
+	(process.env.SPEC_AI_JEV_HARNESS ?? process.env.PI_JEV_HARNESS) === undefined,
+	"set SPEC_AI_JEV_HARNESS to a runtime checkout to run the real-harness tests",
 );
 
 /**

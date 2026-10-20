@@ -22,7 +22,7 @@ import {
 	IPC_CHANNELS,
 	type InvokeChannel,
 	type ModelChoice,
-	type MuApi,
+	type SpecApi,
 	type JudgmentRecord,
 	type PromptResult,
 	type SavedFile,
@@ -54,7 +54,7 @@ function subscribe<T>(channel: EventChannel, listener: (value: T) => void): Unsu
 	};
 }
 
-const api: MuApi = {
+const api: SpecApi = {
 	app: {
 		version: () => invoke<string>(IPC_CHANNELS.appVersion),
 		platform: () => invoke<string>(IPC_CHANNELS.appPlatform),
@@ -116,4 +116,4 @@ const api: MuApi = {
 	},
 };
 
-contextBridge.exposeInMainWorld("mu", api);
+contextBridge.exposeInMainWorld("spec", api);

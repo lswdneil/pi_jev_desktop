@@ -12,7 +12,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import logo from "../../assets/logo.png";
-import { MAX_PROMPT_IMAGES, type MuApi, PROMPT_IMAGE_TYPES } from "../../../shared/api.ts";
+import { MAX_PROMPT_IMAGES, type SpecApi, PROMPT_IMAGE_TYPES } from "../../../shared/api.ts";
 import { type ConversationEvent, type ConversationState, visibleMessages } from "../../../shared/conversation.ts";
 import type { ConversationStore } from "../../lib/conversation-store.ts";
 import { presentationText } from "../../../shared/presentation.ts";
@@ -40,7 +40,7 @@ export function ConversationPage({
 	onOpenLink,
 	language,
 }: {
-	readonly api: MuApi;
+	readonly api: SpecApi;
 	readonly store: ConversationStore;
 	readonly running: boolean;
 	readonly active: boolean;

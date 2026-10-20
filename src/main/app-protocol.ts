@@ -2,11 +2,11 @@
 // Copyright (c) 2025-2026 the mu authors
 
 /**
- * What `app://mu/...` means as a file.
+ * What `app://spec/...` means as a file.
  *
  * The app's pages are served from a custom scheme instead of `file://`: a page loaded from `file://` has an opaque
  * origin, so a Content-Security-Policy has nothing to attach to and the renderer's own `fetch`/`import` behave
- * differently than in development. `app://mu` is a real, privileged origin, and it is the only origin the window may
+ * differently than in development. `app://spec` is a real, privileged origin, and it is the only origin the window may
  * navigate to (`security.ts` `isAllowedNavigation`).
  *
  * The resolution is a pure function of the URL and the build output's folder, so the traversal rules are tested
@@ -16,7 +16,7 @@
 import { posix, win32 } from "node:path";
 
 export const APP_SCHEME = "app";
-export const APP_HOST = "mu";
+export const APP_HOST = "spec";
 
 /** The types the build emits. Anything else is served as bytes rather than guessed at. */
 const CONTENT_TYPES: Readonly<Record<string, string>> = {
@@ -38,7 +38,7 @@ export type AppResponse =
 	| { readonly kind: "refused"; readonly status: number; readonly reason: string };
 
 /**
- * Map a request to a file inside the renderer build. `app://mu/` is `index.html`; anything that escapes the folder,
+ * Map a request to a file inside the renderer build. `app://spec/` is `index.html`; anything that escapes the folder,
  * arrives on another host, or uses another scheme is refused rather than sanitised into something close.
  */
 export function resolveAppRequest(rawUrl: string, rendererRoot: string, platform: NodeJS.Platform): AppResponse {

@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import logo from "./assets/logo.png";
-import type { AgentEvent, HarnessStatus, ModelChoice, MuApi, SessionSnapshot, SessionSummary, Unsubscribe } from "../shared/api.ts";
+import type { AgentEvent, HarnessStatus, ModelChoice, SpecApi, SessionSnapshot, SessionSummary, Unsubscribe } from "../shared/api.ts";
 import type { ConversationEvent } from "../shared/conversation.ts";
 import { ConversationStore } from "./lib/conversation-store.ts";
 import { hasOnboarded, markOnboarded, useLanguage } from "./lib/i18n.ts";
@@ -43,8 +43,8 @@ function statusLabel(status: HarnessStatus, text: (key: string) => string): stri
 	}
 }
 
-function bridge(): MuApi | undefined {
-	return (window as { mu?: MuApi }).mu;
+function bridge(): SpecApi | undefined {
+	return (window as { spec?: SpecApi }).spec;
 }
 
 /** The last segment of a folder path: what a rail item is called. */
@@ -61,7 +61,7 @@ function hostOf(url: string): string {
 }
 
 export function App(): React.JSX.Element {
-	const [api] = useState<MuApi | undefined>(bridge);
+	const [api] = useState<SpecApi | undefined>(bridge);
 	const { language, setLanguage, text } = useLanguage();
 	const [onboarded, setOnboarded] = useState<boolean>(hasOnboarded);
 	const [view, setView] = useState<View>("conversation");
@@ -865,7 +865,7 @@ function Panels({
 	openFile,
 }: {
 	readonly store: ConversationStore;
-	readonly api: MuApi;
+	readonly api: SpecApi;
 	readonly text: (key: string) => string;
 	readonly tab: "board" | "files" | "judgments";
 	readonly onTab: (tab: "board" | "files" | "judgments") => void;
@@ -925,8 +925,8 @@ function Failure({
 }): React.JSX.Element {
 	const hint =
 		status.expected.layout === "package"
-			? `This build expects mu inside its own resources folder at ${status.expected.root}. Reinstalling the app restores it.`
-			: `Set MU_ROOT to a mu checkout (or install mu-agent with npm), then press Retry. This build looked for ${status.expected.root}.`;
+			? `This build expects the agent runtime inside its own resources folder at ${status.expected.root}. Reinstalling the app restores it.`
+			: `Set SPEC_AI_JEV_ROOT to a runtime checkout (or install the agent runtime with npm), then press Retry. This build looked for ${status.expected.root}.`;
 	return (
 		<main className="screen failure">
 			<h1>The agent could not start</h1>

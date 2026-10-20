@@ -15,8 +15,8 @@
  *
  * `--from` and `MU_HARNESS_ROOT` accept either the folder that holds `mu-agent` or the `mu-agent` folder itself.
  * Candidates, in order: `--from`, `MU_HARNESS_ROOT`, `$MU_ROOT` / `$KYRN_ROOT` / `$PI_JEV_HARNESS` plus
- * `.artifacts/desktop-harness`, then the repository's own `mu/.artifacts/desktop-harness`. The last one is why a clone
- * needs no path outside itself: the runtime source lives in `mu/`, and a build of it lands in that folder.
+ * `.artifacts/desktop-harness`, then the repository's own `spec.ai.jev/.artifacts/desktop-harness`. The last one is why a
+ * clone needs no path outside itself: the runtime source lives beside this script, and a build of it lands in that folder.
  *
  * The marker lives under `node_modules/.cache` rather than in `resources/`: a staged build should not carry a record
  * of this machine's paths into an installer.
@@ -70,7 +70,7 @@ function candidateSources(options) {
 		const root = process.env[name];
 		if (root) candidates.push(join(root, ".artifacts", "desktop-harness"));
 	}
-	candidates.push(join(REPO_ROOT, "mu", ".artifacts", "desktop-harness"));
+	candidates.push(join(REPO_ROOT, "spec.ai.jev", ".artifacts", "desktop-harness"));
 	return candidates;
 }
 
@@ -83,7 +83,7 @@ function locate(options) {
 	}
 	fail(
 		[
-			"no mu harness found. Pass --from <folder>, set MU_HARNESS_ROOT, or build mu/.artifacts/desktop-harness.",
+			"no agent harness found. Pass --from <folder>, set MU_HARNESS_ROOT, or build spec.ai.jev/.artifacts/desktop-harness.",
 			tried.length ? `looked in:\n${tried.join("\n")}` : "nothing was named to look in.",
 		].join("\n"),
 	);
