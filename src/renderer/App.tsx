@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { FolderOpen, MessageSquare, PanelRightClose, PanelRightOpen, Plus, RotateCw, Search, Settings, X } from "lucide-react";
 import { toast } from "sonner";
-import { Group, Panel, Separator, usePanelRef } from "react-resizable-panels";
+import { Group, Panel, Separator, useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import logo from "./assets/logo.png";
 import type { AgentEvent, HarnessStatus, ModelChoice, SpecApi, SessionSnapshot, SessionSummary, Unsubscribe } from "../shared/api.ts";
 import type { ConversationEvent } from "../shared/conversation.ts";
@@ -37,6 +37,9 @@ import { Toaster } from "./ui/sonner.tsx";
  */
 
 type View = "conversation" | "settings";
+
+/** Stable ids: the saved layout is keyed by them, and a fresh array every render would re-read storage. */
+const WORKSPACE_PANEL_IDS = ["chat", "panels"];
 
 /** The chip in the rail's footer. `layout` stays as it is: it names where spec.ai.jev came from, which is the diagnostic. */
 function statusLabel(status: HarnessStatus, text: (key: string) => string): string {
@@ -99,6 +102,12 @@ export function App(): React.JSX.Element {
 	const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
 	const zoom = useRef(0);
 	const panelsRef = usePanelRef();
+	// Drag a width once and the split comes back at that width. Folding is a separate, boolean choice.
+	const workspaceLayout = useDefaultLayout({
+		id: "spec.ai.jev.workspace",
+		panelIds: WORKSPACE_PANEL_IDS,
+		onlySaveAfterUserInteractions: true,
+	});
 	const [modelBusy, setModelBusy] = useState(false);
 
 	const report = useCallback((message: string) => {
@@ -125,6 +134,19 @@ export function App(): React.JSX.Element {
 			.finally(() => setPreviewUrl(undefined));
 	}, [api]);
 
+	const setPanels = useCallback((open: boolean) => {
+		if (open) panelsRef.current?.expand();
+		else panelsRef.current?.collapse();
+		setPanelsOpen(open);
+		rememberPanelsOpen(open);
+	}, []);
+
+	/** The panel's own state is the truth once it is mounted; before that, the remembered choice is. */
+	const togglePanels = useCallback(() => {
+		const open = panelsRef.current === null ? panelsOpen : !panelsRef.current.isCollapsed();
+		setPanels(!open);
+	}, [panelsOpen, setPanels]);
+
 	// Settings and the first run are full-window screens; a native view over them would be a panel nobody can close.
 	useEffect(() => {
 		if (view !== "conversation" && previewUrl !== undefined) closePreview();
@@ -144,13 +166,18 @@ export function App(): React.JSX.Element {
 		};
 	}, [api]);
 
-	// Ctrl+P (Cmd+P) is the one shortcut every editor shares; Ctrl+= / Ctrl+- / Ctrl+0 are the ones every window has.
+	// Ctrl+P / Ctrl+K open the palette, Ctrl+B folds the panels, Ctrl+= / Ctrl+- / Ctrl+0 are the ones every window has.
 	useEffect(() => {
 		const onKeyDown = (event: KeyboardEvent): void => {
 			if (!(event.ctrlKey || event.metaKey)) return;
 			if (event.key.toLowerCase() === "p" || event.key.toLowerCase() === "k") {
 				event.preventDefault();
 				setQuickOpen((open) => !open);
+				return;
+			}
+			if (event.key.toLowerCase() === "b") {
+				event.preventDefault();
+				togglePanels();
 				return;
 			}
 			if (event.key === "=" || event.key === "+" || event.key === "-" || event.key === "0") {
@@ -167,7 +194,7 @@ export function App(): React.JSX.Element {
 		};
 		window.addEventListener("keydown", onKeyDown);
 		return () => window.removeEventListener("keydown", onKeyDown);
-	}, [api]);
+	}, [api, togglePanels]);
 
 	// The group is only mounted once the first run is done; fold a remembered-closed panel before it paints.
 	useLayoutEffect(() => {
@@ -545,13 +572,6 @@ export function App(): React.JSX.Element {
 		)
 		.slice(0, 20);
 
-	const setPanels = (open: boolean): void => {
-		if (open) panelsRef.current?.expand();
-		else panelsRef.current?.collapse();
-		setPanelsOpen(open);
-		rememberPanelsOpen(open);
-	};
-
 	/** The separator can fold the panel too; keep the header and the palette in step with what it did. */
 	const syncPanels = (): void => {
 		const open = panelsRef.current?.isCollapsed() !== true;
@@ -593,8 +613,9 @@ export function App(): React.JSX.Element {
 			id: "action:panels",
 			label: panelsOpen ? text("app.hidePanels") : text("app.showPanels"),
 			icon: panelsOpen ? <PanelRightClose /> : <PanelRightOpen />,
+			hint: "Ctrl+B",
 			group: "action",
-			run: () => setPanels(!panelsOpen),
+			run: togglePanels,
 		},
 		...allSessions
 			.filter((session) => session.path !== snapshot?.sessionFile)
@@ -928,8 +949,14 @@ export function App(): React.JSX.Element {
 						<SettingsPage api={api} language={language} setLanguage={setLanguage} text={text} />
 					) : null}
 					<div className="flex min-h-0 flex-1" hidden={view !== "conversation"}>
-						<Group orientation="horizontal" className="min-h-0 w-full">
-							<Panel defaultSize="68" minSize="45" className="flex min-h-0 min-w-0 flex-col">
+						<Group
+							orientation="horizontal"
+							className="min-h-0 w-full"
+							defaultLayout={workspaceLayout.defaultLayout}
+							onLayoutChanged={workspaceLayout.onLayoutChanged}
+							data-testid="workspace-split"
+						>
+							<Panel id="chat" defaultSize="68" minSize="45" className="flex min-h-0 min-w-0 flex-col">
 								<ConversationPage
 									key={sessionRevision}
 									api={api}
@@ -941,8 +968,12 @@ export function App(): React.JSX.Element {
 									language={language}
 								/>
 							</Panel>
-							<Separator className="w-1.5 shrink-0 bg-transparent transition-colors hover:bg-primary/30 data-[resize-handle-state=drag]:bg-primary/50" />
+							<Separator
+								className="w-1.5 shrink-0 bg-transparent transition-colors hover:bg-primary/30 data-[resize-handle-state=drag]:bg-primary/50"
+								data-testid="panel-separator"
+							/>
 							<Panel
+								id="panels"
 								defaultSize="32"
 								minSize="22"
 								maxSize="48"

@@ -174,6 +174,9 @@ export function QuickOpen({
 							</Command.Group>
 						)}
 					</Command.List>
+					<p className="quick-open-footer" data-testid="quick-open-hint" aria-hidden="true">
+						{text("quickOpen.hint")}
+					</p>
 				</Command>
 			</div>
 		</div>

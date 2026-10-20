@@ -1201,6 +1201,14 @@ select:focus {
 	overflow-wrap: anywhere;
 }
 
+.quick-open-footer {
+	margin: 8px 2px 0;
+	padding-top: 8px;
+	border-top: 1px solid var(--line);
+	color: var(--muted);
+	font-size: 10px;
+}
+
 @media (max-width: 860px) {
 	.rail {
 		flex-basis: 200px;

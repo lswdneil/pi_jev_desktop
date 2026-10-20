@@ -4,7 +4,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { completeFirstRun, FIXTURE_HARNESS, launchApp } from "./helpers/app.ts";
 
 test("fits the workspace at the minimum desktop window size", async () => {
@@ -136,6 +136,7 @@ test("Ctrl+K opens the palette and runs an action", async () => {
 
 		await page.keyboard.press("Control+K");
 		await expect(page.getByTestId("quick-open")).toBeVisible();
+		await expect(page.getByTestId("quick-open-hint")).toContainText("Esc");
 		await page.getByTestId("quick-open-input").fill("settings");
 
 		await page.getByTestId("quick-open-action").filter({ hasText: "Settings" }).click();
@@ -220,6 +221,69 @@ test("folds the right panel away without losing the draft, and remembers the cho
 			.poll(() => second.page.getByTestId("right-panel").evaluate((element) => element.getBoundingClientRect().width))
 			.toBe(0);
 		await expect(second.page.getByTestId("toggle-panels")).toHaveAttribute("aria-label", "Show panels");
+	} finally {
+		await second.close();
+		rmSync(profileDir, { recursive: true, force: true });
+	}
+});
+
+test("Ctrl+B folds the panels and puts them back", async () => {
+	const profile = await launchApp();
+	try {
+		const { page } = profile;
+		await completeFirstRun(page);
+		const width = () =>
+			page.getByTestId("right-panel").evaluate((element) => element.getBoundingClientRect().width);
+		await expect(page.getByTestId("board-panel")).toBeVisible();
+
+		await page.keyboard.press("Control+B");
+		await expect.poll(width).toBe(0);
+		await expect(page.getByTestId("toggle-panels")).toHaveAttribute("aria-label", "Show panels");
+
+		await page.keyboard.press("Control+B");
+		await expect.poll(width).toBeGreaterThan(0);
+		await expect(page.getByTestId("toggle-panels")).toHaveAttribute("aria-label", "Hide panels");
+	} finally {
+		await profile.close();
+	}
+});
+
+test("restores the split where it was dragged", async () => {
+	const profileDir = mkdtempSync(join(tmpdir(), "spec-e2e-split-"));
+	const share = (page: Page) =>
+		page.evaluate(() => {
+			const group = document.querySelector('[data-testid="workspace-split"]');
+			const panel = document.querySelector('[data-testid="right-panel"]');
+			if (group === null || panel === null) return 0;
+			return panel.getBoundingClientRect().width / group.getBoundingClientRect().width;
+		});
+	const first = await launchApp({ profileDir });
+	let dragged = 0;
+	try {
+		const { page } = first;
+		await completeFirstRun(page);
+		await expect(page.getByTestId("board-panel")).toBeVisible();
+
+		const handle = await page.getByTestId("panel-separator").boundingBox();
+		expect(handle).not.toBeNull();
+		const x = handle === null ? 0 : handle.x + handle.width / 2;
+		const y = handle === null ? 0 : handle.y + handle.height / 2;
+		await page.mouse.move(x, y);
+		await page.mouse.down();
+		await page.mouse.move(x - 100, y, { steps: 12 });
+		await page.mouse.up();
+
+		await expect.poll(() => share(page)).toBeGreaterThan(0.36);
+		dragged = await share(page);
+	} finally {
+		await first.close();
+	}
+
+	const second = await launchApp({ profileDir });
+	try {
+		await expect(second.page.getByTestId("composer")).toBeVisible();
+		await expect.poll(() => share(second.page)).toBeGreaterThan(0.36);
+		expect(Math.abs((await share(second.page)) - dragged)).toBeLessThan(0.03);
 	} finally {
 		await second.close();
 		rmSync(profileDir, { recursive: true, force: true });
