@@ -33,12 +33,12 @@ The product specification and clickable design prototype live in `docs/`.
 
 ## Run
 
-The app needs a mu harness: a checkout that contains `kyrn/bin/mu.mjs`, or the runtime staged into this repository's
-`resources/harness/mu-agent` (`npm run stage:harness`). `MU_ROOT` names a checkout and wins over everything else; without
-it, a staged runtime is what a clone runs, and the same folder is what an installer ships.
+The runtime source lives in this repository under `mu/` (the mu/pi monorepo: `packages/`, `kyrn/`, `desktop/`,
+`desktop-next/`). A build of it lands in `mu/.artifacts/desktop-harness`, and `npm run stage:harness` copies that into
+`resources/harness/mu-agent` — which is what both development and the installer run. `MU_ROOT` can still name a different
+checkout and wins over everything else.
 
 ```powershell
-$env:MU_ROOT = "C:\Users\wd_al\Downloads\DSH-Beta\mu-work"
 npm install --ignore-scripts
 npm run typecheck
 npm test

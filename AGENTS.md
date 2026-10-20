@@ -32,7 +32,7 @@ milestone rather than per commit while the UI is being rebuilt.
 The runtime is a built package, not source:
 
 ```powershell
-$env:MU_ROOT = "C:\Users\wd_al\Downloads\DSH-Beta\mu-work"   # the script reads $env:MU_ROOT\.artifacts\desktop-harness
+npm run stage:harness                                        # reads mu/.artifacts/desktop-harness
 npm run package:dir                                          # unpacked build, fastest smoke
 npm run smoke:package                                        # starts the packaged app and waits for "running ·"
 npm run package                                              # NSIS installer in dist/
@@ -42,6 +42,9 @@ node scripts/install-rehearsal.mjs                           # silent install, a
 Development resolves the harness in this order: `MU_ROOT`/`KYRN_ROOT`, a packaged app's `resources/harness/mu-agent`, this
 checkout's staged `resources/harness/mu-agent`, a sibling checkout, then a global npm install. Staging once makes the
 clone self-contained; `MU_ROOT` remains the override for work on the runtime itself.
+
+The runtime source itself is vendored at `mu/` — do not edit anything outside this repository. `mu/node_modules`,
+`mu/**/dist` and `mu/.artifacts` are rebuilt locally and never committed.
 
 ## Conventions
 

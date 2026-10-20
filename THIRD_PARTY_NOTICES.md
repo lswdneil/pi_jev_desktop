@@ -23,5 +23,6 @@ Freebuff is Apache-2.0. No Freebuff application code is bundled; only color valu
 
 ## pi / mu
 
-The runtime is not vendored into this desktop product. The application launches a separately installed or configured
-mu harness and speaks its JSONL RPC protocol. pi, mu, and their judgment kernel remain the runtime's property.
+The mu/pi runtime source is vendored under `mu/` (MIT, `mu/LICENSE`), together with its own `desktop/`,
+`desktop-next/`, `packages/` and `kyrn/` trees. It is maintained in this repository from 2026-10-20 onward; the app
+launches the built harness and speaks its JSONL RPC protocol. The vendored tree keeps its upstream license and headers.

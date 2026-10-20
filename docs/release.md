@@ -6,7 +6,6 @@ runbook: what a build needs, what CI does, and which secrets only a person can s
 ## Locally
 
 ```powershell
-$env:MU_ROOT = "C:\Users\wd_al\Downloads\DSH-Beta\mu-work"   # a mu checkout with .artifacts/desktop-harness
 npm ci
 npm run verify          # typecheck, tests, build, size budget
 npm run package         # build + stage the runtime + installer in dist/
@@ -14,7 +13,8 @@ node scripts/install-rehearsal.mjs
 ```
 
 `scripts/stage-harness.mjs` accepts `--from <folder>` and `MU_HARNESS_ROOT` when the runtime lives somewhere other than
-`$MU_ROOT/.artifacts/desktop-harness`. The staged copy is git-ignored; ~34 MB of built package does not belong in history.
+`mu/.artifacts/desktop-harness` (the repository's own build of the vendored `mu/` source). The staged copy is git-ignored;
+~34 MB of built package does not belong in history.
 
 The rehearsal installs the `.exe` silently into a temporary folder, starts the installed app with a temporary home and
 profile, walks the first run, answers a turn through a local stub provider, checks a write approval reaches the model,
@@ -26,8 +26,9 @@ is gone. It needs a desktop session and Windows; it is not part of CI.
 `.github/workflows/desktop-package.yml` runs on `workflow_dispatch` and on tags matching `v*`:
 
 1. `npm ci`, then the same verify gate as a developer.
-2. `npm pack mu-agent@0.1.8`, unpack it, install its production dependencies, and stage it — the runtime version is
-   pinned in the workflow so a build does not move under the product.
+2. `npm pack mu-agent@0.1.8`, unpack it, install its production dependencies, and stage it. CI uses the published package
+   today; the vendored `mu/` source is where the runtime is maintained, and building it in CI is the next step when the
+   runtime is patched beyond a published version.
 3. `npm run package` produces `dist/spec.ai.jev-<version>-x64.exe`, its block map, and `latest.yml`.
 4. The artifact is uploaded; on a tag it is also attached to a **draft** GitHub release.
 

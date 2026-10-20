@@ -14,8 +14,9 @@
  *   node scripts/stage-harness.mjs --from <dir> --force  # restage even when the marker matches
  *
  * `--from` and `MU_HARNESS_ROOT` accept either the folder that holds `mu-agent` or the `mu-agent` folder itself.
- * Without either, the script falls back to `<MU_ROOT>/.artifacts/desktop-harness`, which is where the mu build puts
- * the package it produced.
+ * Candidates, in order: `--from`, `MU_HARNESS_ROOT`, `$MU_ROOT` / `$KYRN_ROOT` / `$PI_JEV_HARNESS` plus
+ * `.artifacts/desktop-harness`, then the repository's own `mu/.artifacts/desktop-harness`. The last one is why a clone
+ * needs no path outside itself: the runtime source lives in `mu/`, and a build of it lands in that folder.
  *
  * The marker lives under `node_modules/.cache` rather than in `resources/`: a staged build should not carry a record
  * of this machine's paths into an installer.
@@ -69,6 +70,7 @@ function candidateSources(options) {
 		const root = process.env[name];
 		if (root) candidates.push(join(root, ".artifacts", "desktop-harness"));
 	}
+	candidates.push(join(REPO_ROOT, "mu", ".artifacts", "desktop-harness"));
 	return candidates;
 }
 
@@ -81,7 +83,7 @@ function locate(options) {
 	}
 	fail(
 		[
-			"no mu harness found. Pass --from <folder>, or set MU_HARNESS_ROOT (or MU_ROOT to a mu checkout).",
+			"no mu harness found. Pass --from <folder>, set MU_HARNESS_ROOT, or build mu/.artifacts/desktop-harness.",
 			tried.length ? `looked in:\n${tried.join("\n")}` : "nothing was named to look in.",
 		].join("\n"),
 	);
