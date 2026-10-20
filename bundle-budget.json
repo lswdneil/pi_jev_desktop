@@ -1,10 +1,10 @@
 {
-	"generatedAt": "2026-10-19",
+	"generatedAt": "2026-10-20",
 	"note": "Byte budgets for the desktop build. A change may exceed the tolerance only by raising this file on purpose.",
 	"metrics": {
-		"rendererJs": 296741,
-		"rendererCss": 17146,
-		"mainJs": 52193,
-		"total": 557675
+		"rendererJs": 301793,
+		"rendererCss": 19424,
+		"mainJs": 54352,
+		"total": 567372
 	}
 }

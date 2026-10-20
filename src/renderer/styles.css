@@ -5,10 +5,12 @@
 	color-scheme: dark;
 	/* Freebuff dark palette, mapped to semantic roles. */
 	--surface: #0d0f12;
-	--panel: #202327;
-	--panel-2: #2a2f36;
+	--panel: #1c1f24;
+	--panel-2: #242930;
 	--surface-hover: #334155;
-	--line: #536175;
+	/* Borders are a hairline, not a frame: the old blue-grey read as a wireframe around every box. */
+	--line: #2c333d;
+	--edge: #3a434f;
 	--rail: #090b0e;
 	--text: #f1f5f9;
 	--muted: #acb3bf;
@@ -23,8 +25,13 @@
 	--code-bg: #374151;
 	--code-inline: #ff8534;
 	--heading: #facc15;
+	--radius-sm: 8px;
+	--radius-md: 12px;
+	--radius-lg: 20px;
+	--shadow-1: 0 1px 2px rgb(0 0 0 / 35%);
+	--shadow-2: 0 24px 60px rgb(0 0 0 / 45%);
 	font-family: "Bahnschrift", "Aptos", "Segoe UI Variable", "Segoe UI", sans-serif;
-	font-size: 14px;
+	font-size: 13.5px;
 }
 
 * {
@@ -62,11 +69,11 @@ body {
 
 .rail {
 	display: flex;
-	flex: 0 0 236px;
+	flex: 0 0 248px;
 	flex-direction: column;
-	gap: 16px;
+	gap: 18px;
 	min-height: 0;
-	padding: 18px 14px;
+	padding: 20px 16px;
 	overflow-y: auto;
 	border-right: 1px solid var(--line);
 	background: linear-gradient(180deg, #090b0e 0%, #12161b 100%);
@@ -104,7 +111,8 @@ body {
 
 .rail-primary {
 	width: 100%;
-	padding: 9px 12px;
+	padding: 10px 14px;
+	border-radius: var(--radius-md);
 	border-color: transparent;
 	background: var(--accent);
 	color: #071006;
@@ -422,7 +430,7 @@ body {
 	flex: 1 1 auto;
 	height: 100%;
 	min-width: 0;
-	padding: 12px 16px 16px;
+	padding: 14px 20px 18px;
 }
 
 .bar {
@@ -430,8 +438,8 @@ body {
 	align-items: center;
 	gap: 10px;
 	flex-wrap: wrap;
-	min-height: 36px;
-	padding-bottom: 10px;
+	min-height: 40px;
+	padding-bottom: 12px;
 	border-bottom: 1px solid var(--line);
 }
 
@@ -506,8 +514,9 @@ body {
 .panel {
 	background: var(--panel);
 	border: 1px solid var(--line);
-	border-radius: 10px;
-	padding: 12px;
+	border-radius: var(--radius-md);
+	padding: 14px;
+	box-shadow: var(--shadow-1);
 }
 
 .row {
@@ -541,9 +550,9 @@ input.url {
 button {
 	background: var(--panel-2);
 	color: var(--text);
-	border: 1px solid var(--line);
-	border-radius: 8px;
-	padding: 6px 12px;
+	border: 1px solid var(--edge);
+	border-radius: 9px;
+	padding: 7px 13px;
 	font: inherit;
 	cursor: pointer;
 }
@@ -634,7 +643,7 @@ button:disabled {
 .workspace {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
-	gap: 12px;
+	gap: 16px;
 	min-height: 0;
 	flex: 1 1 auto;
 }
@@ -651,10 +660,19 @@ button:disabled {
 	display: flex;
 	flex: 1 1 auto;
 	flex-direction: column;
+	align-items: center;
 	justify-content: center;
-	width: min(780px, 100%);
+	width: min(760px, 100%);
 	margin: 0 auto;
-	padding: 24px 8px;
+	padding: 24px 8px 40px;
+	text-align: center;
+}
+
+.hero-mark {
+	width: 56px;
+	height: auto;
+	margin-bottom: 18px;
+	filter: drop-shadow(0 12px 32px rgb(158 252 98 / 16%));
 }
 
 .hero-eyebrow {
@@ -662,32 +680,57 @@ button:disabled {
 	color: var(--accent);
 	font-size: 11px;
 	font-weight: 700;
-	letter-spacing: 0.14em;
+	letter-spacing: 0.16em;
 	text-transform: uppercase;
 }
 
 .workspace-home h1 {
-	max-width: 700px;
 	margin: 0;
-	font-size: clamp(38px, 5.2vw, 64px);
-	line-height: 0.96;
-	letter-spacing: -0.055em;
+	font-size: clamp(30px, 3.8vw, 44px);
+	line-height: 1.06;
+	letter-spacing: -0.03em;
 }
 
 .hero-copy {
-	max-width: 590px;
-	margin: 16px 0 0;
+	max-width: 560px;
+	margin: 14px auto 0;
 	color: var(--muted);
+	font-size: 13.5px;
 	line-height: 1.55;
 }
 
 .composer-hero {
-	margin-top: 28px;
-	padding: 14px;
-	border: 1px solid color-mix(in srgb, var(--line) 65%, transparent);
-	border-radius: 16px;
+	box-sizing: border-box;
+	width: 100%;
+	margin-top: 26px;
+	padding: 16px;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-lg);
 	background: var(--panel);
-	box-shadow: 0 22px 70px rgb(0 0 0 / 28%);
+	box-shadow: var(--shadow-2);
+	text-align: left;
+}
+
+.hero-suggestions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 8px;
+	margin-top: 16px;
+}
+
+.hero-suggestion {
+	padding: 6px 14px;
+	border-color: var(--line);
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--panel) 70%, transparent);
+	color: var(--muted);
+	font-size: 12px;
+}
+
+.hero-suggestion:hover:not(:disabled) {
+	border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+	color: var(--accent);
 }
 
 .composer-hero textarea.composer-large {
@@ -789,14 +832,36 @@ button.attach:hover:not(:disabled) {
 }
 
 .tabs {
-	display: flex;
-	gap: 6px;
+	display: inline-flex;
+	align-self: flex-start;
+	gap: 2px;
+	padding: 3px;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-md);
+	background: color-mix(in srgb, var(--panel) 70%, transparent);
+}
+
+.tabs button {
+	padding: 5px 13px;
+	border: 0;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--muted);
+	font-size: 12px;
+}
+
+.tabs button:hover:not(:disabled) {
+	border-color: transparent;
+	background: var(--surface-hover);
+	color: var(--text);
 }
 
 .tabs button.active,
 .nav button.active {
-	border-color: var(--accent);
-	color: var(--accent);
+	border-color: transparent;
+	background: var(--accent);
+	color: #071006;
+	font-weight: 650;
 }
 
 .nav {
@@ -809,36 +874,58 @@ button.attach:hover:not(:disabled) {
 	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 16px;
 	min-height: 0;
+	padding: 2px 2px 6px;
 }
 
 .message {
 	margin: 0;
-	border-left: 2px solid var(--line);
-	padding-left: 10px;
 }
 
 .message .who {
 	display: block;
-	font-size: 11px;
+	margin-bottom: 5px;
+	font-size: 10px;
 	text-transform: uppercase;
-	letter-spacing: 0.06em;
+	letter-spacing: 0.1em;
 	color: var(--muted);
 }
 
 .message .text {
-	margin: 2px 0 0;
+	margin: 0;
 	white-space: pre-wrap;
 	overflow-wrap: anywhere;
 }
 
 .message-user {
-	border-left-color: var(--user-line);
+	align-self: flex-end;
+	max-width: 78%;
+	padding: 10px 14px;
+	border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+	border-radius: 16px 16px 5px 16px;
+	background: color-mix(in srgb, var(--accent) 9%, var(--panel));
+}
+
+.message-user .who {
+	color: color-mix(in srgb, var(--accent) 70%, var(--muted));
 }
 
 .message-assistant {
-	border-left-color: var(--ai-line);
+	max-width: 92%;
+}
+
+.message-assistant .text {
+	font-size: 14px;
+	line-height: 1.6;
+}
+
+.message-tool {
+	padding: 8px 12px;
+	border: 1px solid var(--line);
+	border-left: 3px solid var(--ai-line);
+	border-radius: 10px;
+	background: color-mix(in srgb, var(--panel) 55%, transparent);
 }
 
 .tool-running {

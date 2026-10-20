@@ -11,6 +11,7 @@
  */
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import logo from "../../assets/logo.png";
 import { MAX_PROMPT_IMAGES, type MuApi, PROMPT_IMAGE_TYPES } from "../../../shared/api.ts";
 import { type ConversationEvent, type ConversationState, visibleMessages } from "../../../shared/conversation.ts";
 import type { ConversationStore } from "../../lib/conversation-store.ts";
@@ -147,6 +148,7 @@ export function ConversationPage({
 		<div className="conversation" data-testid="conversation" lang={language}>
 			{empty ? (
 				<section className="workspace-home">
+					<img className="hero-mark" src={logo} alt="" />
 					<p className="hero-eyebrow">{text("conversation.eyebrow")}</p>
 					<h1>{text("conversation.hero")}</h1>
 					<p className="hero-copy">{text("conversation.heroBody")}</p>
@@ -165,6 +167,13 @@ export function ConversationPage({
 							text={text}
 							large
 						/>
+					</div>
+					<div className="hero-suggestions">
+						{["conversation.suggest1", "conversation.suggest2", "conversation.suggest3"].map((key) => (
+							<button key={key} type="button" className="hero-suggestion" onClick={() => setDraft(text(key))}>
+								{text(key)}
+							</button>
+						))}
 					</div>
 				</section>
 			) : null}
