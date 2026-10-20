@@ -12,22 +12,26 @@
 import {
 	AssistantRuntimeProvider,
 	useExternalStoreRuntime,
-	useThreadMessages,
 } from "@assistant-ui/core/react";
 import {
 	SimpleImageAttachmentAdapter,
 	type AppendMessage,
 	type AttachmentAdapter,
 	type CompleteAttachment,
-	type MessageState,
 	type PendingAttachment,
 	type ThreadMessageLike,
-	type ToolCallMessagePart,
 } from "@assistant-ui/core";
-import { ThreadPrimitive } from "@assistant-ui/react";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import {
+	MessagePrimitive,
+	ThreadPrimitive,
+	type MessageState,
+	type TextMessagePartProps,
+	type ToolCallMessagePartProps,
+} from "@assistant-ui/react";
+import { useMemo } from "react";
 import { MAX_PROMPT_IMAGES, PROMPT_IMAGE_TYPES, type PromptImage } from "../../../shared/api.ts";
 import { type ConversationState, visibleMessages } from "../../../shared/conversation.ts";
+import { toolResultText } from "../../../shared/conversation.ts";
 import { Markdown } from "../../lib/markdown-view.tsx";
 import logo from "../../assets/logo.png";
 import { AssistantComposer } from "./AssistantComposer.tsx";
@@ -66,17 +70,6 @@ function toThreadMessages(state: ConversationState): readonly ThreadMessageLike[
 		});
 	}
 	return rows;
-}
-
-function textOf(message: MessageState): string {
-	return message.content
-		.map((part) => (part.type === "text" ? part.text : ""))
-		.filter((part) => part !== "")
-		.join("\n");
-}
-
-function toolOf(message: MessageState): ToolCallMessagePart | undefined {
-	return message.content.find((part): part is ToolCallMessagePart => part.type === "tool-call");
 }
 
 function promptImages(message: AppendMessage): readonly PromptImage[] {
@@ -126,7 +119,33 @@ class SpecImageAttachmentAdapter implements AttachmentAdapter {
 	}
 }
 
-function ThreadRow({
+function ToolFallback({
+	toolName,
+	argsText,
+	result,
+	status,
+	isError,
+	text,
+}: ToolCallMessagePartProps & { readonly text: (key: string) => string }): React.JSX.Element {
+	const state = isError === true ? "error" : status.type === "running" ? "running" : "ok";
+	const output = toolResultText(result);
+	return (
+		<article className={`message message-tool tool-${state}`} data-role="tool">
+			<span className="who">{toolName}</span>
+			<p className="text">
+				<code>{argsText ?? ""}</code> <span className="muted">({state})</span>
+			</p>
+			{output === undefined ? null : (
+				<details className="tool-output" data-testid="tool-output">
+					<summary>{text("conversation.output")}</summary>
+					<pre>{output}</pre>
+				</details>
+			)}
+		</article>
+	);
+}
+
+function TranscriptMessage({
 	message,
 	text,
 	onOpenLink,
@@ -135,34 +154,28 @@ function ThreadRow({
 	readonly text: (key: string) => string;
 	readonly onOpenLink: (url: string) => void;
 }): React.JSX.Element {
-	const tool = toolOf(message);
-	if (tool !== undefined) {
-		const status = tool.isError === true ? "error" : message.status?.type === "running" ? "running" : "ok";
-		const output = typeof tool.result === "string" ? tool.result : undefined;
-		return (
-			<article className={`message message-tool tool-${status}`} data-role="tool">
-				<span className="who">{tool.toolName}</span>
-				<p className="text">
-					<code>{tool.argsText ?? ""}</code> <span className="muted">({status})</span>
-				</p>
-				{output === undefined ? null : (
-					<details className="tool-output" data-testid="tool-output">
-						<summary>{text("conversation.output")}</summary>
-						<pre>{output}</pre>
-					</details>
-				)}
-			</article>
-		);
-	}
-
+	const hasTool = message.content.some((part) => part.type === "tool-call");
 	const role = message.role === "user" ? "user" : "assistant";
+	const components = {
+		Text: ({ text: value }: TextMessagePartProps) => <Markdown text={value} onOpenLink={onOpenLink} />,
+		tools: { Override: (props: ToolCallMessagePartProps) => <ToolFallback {...props} text={text} /> },
+	};
 	return (
-		<article className={`message message-${role}`} data-role={role}>
-			<span className="who">{text(`role.${role}`)}</span>
-			<div className="text">
-				<Markdown text={textOf(message)} onOpenLink={onOpenLink} />
-			</div>
-		</article>
+		<MessagePrimitive.Root
+			className={hasTool ? "contents" : `message message-${role}`}
+			data-role={hasTool ? "tool" : role}
+		>
+			{hasTool ? (
+				<MessagePrimitive.Parts components={components} />
+			) : (
+				<>
+					<span className="who">{text(`role.${role}`)}</span>
+					<div className="text">
+						<MessagePrimitive.Parts components={components} />
+					</div>
+				</>
+			)}
+		</MessagePrimitive.Root>
 	);
 }
 
@@ -240,7 +253,12 @@ export function AssistantThread({
 				</section>
 			) : (
 				<>
-					<Transcript text={text} onOpenLink={onOpenLink} streaming={state.streaming !== undefined} active={active} />
+					<Transcript
+						text={text}
+						onOpenLink={onOpenLink}
+						streaming={state.streaming !== undefined}
+						active={active}
+					/>
 					<section className="panel">
 						<ThreadPrimitive.ViewportProvider>
 						<AssistantComposer
@@ -270,33 +288,20 @@ function Transcript({
 	readonly streaming: boolean;
 	readonly active: boolean;
 }): React.JSX.Element {
-	const messages = useThreadMessages();
-	const viewport = useRef<HTMLDivElement | null>(null);
-	const followEnd = useRef(true);
-
-	useLayoutEffect(() => {
-		const list = viewport.current;
-		if (active && list !== null && followEnd.current) list.scrollTop = list.scrollHeight;
-	}, [messages, active]);
-
 	return (
-		<div
-			className="panel messages"
-			ref={viewport}
-			data-testid="messages"
-			onScroll={(event) => {
-				const list = event.currentTarget;
-				followEnd.current = list.scrollHeight - list.scrollTop - list.clientHeight < 120;
-			}}
-		>
-			{messages.map((message) => (
-				<ThreadRow key={message.id} message={message} text={text} onOpenLink={onOpenLink} />
-			))}
-			{streaming ? (
-				<span className="cursor" data-testid="streaming" aria-hidden="true">
-					…
-				</span>
-			) : null}
-		</div>
+		<ThreadPrimitive.Root className="flex min-h-0 flex-1 flex-col">
+			<ThreadPrimitive.Viewport className="panel messages" data-testid="messages" autoScroll={active}>
+				<ThreadPrimitive.Messages>
+					{({ message }) => (
+						<TranscriptMessage key={message.id} message={message} text={text} onOpenLink={onOpenLink} />
+					)}
+				</ThreadPrimitive.Messages>
+				{streaming ? (
+					<span className="cursor" data-testid="streaming" aria-hidden="true">
+						…
+					</span>
+				) : null}
+			</ThreadPrimitive.Viewport>
+		</ThreadPrimitive.Root>
 	);
 }
