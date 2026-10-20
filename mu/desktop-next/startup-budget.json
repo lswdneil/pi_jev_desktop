@@ -1,8 +1,0 @@
-{
-	"generatedAt": "2026-10-18",
-	"note": "p50 of three launches of the built app against the fixture harness. Painted by hand, on purpose: startup is a product number, not a test flake to be retried away.",
-	"metrics": {
-		"windowMs": 212,
-		"readyMs": 535
-	}
-}
