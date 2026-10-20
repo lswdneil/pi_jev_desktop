@@ -91,6 +91,16 @@ let chosenModel;
 let pendingApproval;
 /** Whether the fixture's session still holds its earlier messages; `new_session` clears them. */
 let hasSession = true;
+/** A real file so deleting the current session can be exercised; the messages themselves stay scripted. */
+const sessionDir = join(agentDir, "sessions");
+const sessionFile = join(sessionDir, "fixture-session.jsonl");
+let sessionName;
+mkdirSync(sessionDir, { recursive: true });
+writeFileSync(
+	sessionFile,
+	`${JSON.stringify({ type: "session", version: 3, id: "fixture-session", cwd: process.env.SPEC_AI_JEV_WORKSPACE ?? process.cwd() })}\n`,
+	"utf8",
+);
 
 function emit(event) {
 	process.stdout.write(`${JSON.stringify(event)}\n`);
@@ -252,6 +262,7 @@ reader.on("line", (line) => {
 			}
 			// A fresh session: the history is gone, which is exactly what "new conversation" has to mean on screen.
 			hasSession = false;
+			sessionName = undefined;
 			answer(command.id, "new_session", { cancelled: false });
 			break;
 		case "get_messages":
@@ -262,6 +273,8 @@ reader.on("line", (line) => {
 		case "get_state":
 			answer(command.id, "get_state", {
 				...(chosenModel === undefined ? {} : { model: chosenModel }),
+				...(sessionName === undefined ? {} : { sessionName }),
+				...(hasSession ? { sessionFile } : {}),
 				thinkingLevel: "medium",
 				isStreaming: false,
 				isCompacting: false,
@@ -279,6 +292,7 @@ reader.on("line", (line) => {
 			answer(command.id, "switch_session", { cancelled: false });
 			break;
 		case "set_session_name":
+			sessionName = command.name;
 			answer(command.id, "set_session_name", {});
 			break;
 		case "get_available_models":

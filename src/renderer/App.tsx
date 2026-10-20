@@ -2,9 +2,22 @@
 // Copyright (c) 2025-2026 the mu authors
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
-import { FolderOpen, MessageSquare, PanelRightClose, PanelRightOpen, Plus, RotateCw, Search, Settings, X } from "lucide-react";
+import {
+	FolderOpen,
+	MessageSquare,
+	PanelRightClose,
+	PanelRightOpen,
+	Pencil,
+	Plus,
+	RotateCw,
+	Search,
+	Settings,
+	Trash2,
+	X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Group, Panel, Separator, useDefaultLayout, usePanelRef } from "react-resizable-panels";
+import * as Dialog from "@radix-ui/react-dialog";
 import logo from "./assets/logo.png";
 import type { AgentEvent, HarnessStatus, ModelChoice, SpecApi, SessionSnapshot, SessionSummary, Unsubscribe } from "../shared/api.ts";
 import type { ConversationEvent } from "../shared/conversation.ts";
@@ -105,6 +118,7 @@ export function App(): React.JSX.Element {
 	const [renaming, setRenaming] = useState(false);
 	const [sessionName, setSessionName] = useState("");
 	const [confirmDelete, setConfirmDelete] = useState<string | undefined>(undefined);
+	const [confirmSessionDelete, setConfirmSessionDelete] = useState(false);
 	const [panelTab, setPanelTab] = useState<PanelTab>(readPanelTab);
 	const [quickOpen, setQuickOpen] = useState(false);
 	const [panelsOpen, setPanelsOpen] = useState(readPanelsOpen);
@@ -566,6 +580,13 @@ export function App(): React.JSX.Element {
 		[api, store, report, snapshot?.sessionFile, text],
 	);
 
+	const deleteCurrentSession = useCallback(() => {
+		const file = snapshot?.sessionFile;
+		if (file === undefined) return;
+		setConfirmSessionDelete(false);
+		void removeSession(file);
+	}, [removeSession, snapshot?.sessionFile]);
+
 	if (api === undefined) {
 		return (
 			<main className="screen">
@@ -664,6 +685,33 @@ export function App(): React.JSX.Element {
 				group: "action",
 				run: togglePanels,
 			},
+			...(running && snapshot?.sessionFile !== undefined
+				? [
+						{
+							id: "action:rename-session",
+							label: text("app.renameSession"),
+							icon: <Pencil />,
+							group: "action" as const,
+							run: () => {
+								setSessionName(snapshot?.sessionName ?? "");
+								setRenaming(true);
+								setView("conversation");
+							},
+						},
+					]
+				: []),
+			...(snapshot?.sessionFile === undefined
+				? []
+				: [
+						{
+							id: "action:delete-session",
+							label: text("app.deleteSessionCurrent"),
+							icon: <Trash2 />,
+							tone: "danger" as const,
+							group: "action" as const,
+							run: () => setConfirmSessionDelete(true),
+						},
+					]),
 			...allSessions
 				.filter((session) => session.path !== snapshot?.sessionFile)
 				.slice(0, 40)
@@ -1070,6 +1118,30 @@ export function App(): React.JSX.Element {
 						setQuickOpen(false);
 					}}
 				/>
+			) : null}
+			{confirmSessionDelete && snapshot?.sessionFile !== undefined ? (
+				<Dialog.Root
+					open
+					onOpenChange={(open) => {
+						if (!open) setConfirmSessionDelete(false);
+					}}
+				>
+					<Dialog.Portal>
+						<Dialog.Overlay className="confirm-backdrop" />
+						<Dialog.Content className="confirm-dialog" data-testid="confirm-session-delete">
+							<Dialog.Title>{text("app.deleteSessionTitle")}</Dialog.Title>
+							<Dialog.Description className="confirm-body">{text("app.deleteSessionBody")}</Dialog.Description>
+							<div className="confirm-actions">
+								<Button type="button" variant="ghost" onClick={() => setConfirmSessionDelete(false)}>
+									{text("app.cancel")}
+								</Button>
+								<Button type="button" variant="destructive" data-testid="confirm-delete-current" onClick={deleteCurrentSession}>
+									{text("app.delete")}
+								</Button>
+							</div>
+						</Dialog.Content>
+					</Dialog.Portal>
+				</Dialog.Root>
 			) : null}
 				</main>
 			</div>

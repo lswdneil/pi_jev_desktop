@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2025-2026 the mu authors
 
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
@@ -209,6 +209,51 @@ test("the palette traps focus and closes from the backdrop", async () => {
 		const viewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
 		await page.mouse.click(viewport.width / 2, viewport.height - 8);
 		await expect(page.getByTestId("quick-open")).toHaveCount(0);
+	} finally {
+		await profile.close();
+	}
+});
+
+test("renames the current session from the command palette", async () => {
+	const profile = await launchApp();
+	try {
+		const { page } = profile;
+		await completeFirstRun(page);
+		await expect(page.locator(".chip")).toContainText("running", { timeout: 60_000 });
+
+		await page.keyboard.press("Control+K");
+		await page.getByTestId("quick-open-input").fill("rename current");
+		await page.getByTestId("quick-open-action").filter({ hasText: "Rename current session" }).click();
+
+		const input = page.locator(".session-rename input");
+		await expect(input).toBeVisible();
+		await input.fill("Palette rename");
+		await page.locator(".session-rename").press("Enter");
+		await expect(page.locator(".session-card")).toContainText("Palette rename");
+	} finally {
+		await profile.close();
+	}
+});
+
+test("deletes the current session from the command palette after asking", async () => {
+	const profile = await launchApp();
+	try {
+		const { page } = profile;
+		await completeFirstRun(page);
+		await expect(page.locator(".chip")).toContainText("running", { timeout: 60_000 });
+		const sessionFile = join(profile.home, ".spec.ai.jev", "agent", "sessions", "fixture-session.jsonl");
+		await expect.poll(() => existsSync(sessionFile)).toBe(true);
+
+		await page.keyboard.press("Control+K");
+		await page.getByTestId("quick-open-input").fill("delete current");
+		await page.getByTestId("quick-open-action").filter({ hasText: "Delete current session" }).click();
+
+		const dialog = page.getByRole("dialog", { name: "Delete this session?" });
+		await expect(dialog).toBeVisible();
+		await page.getByTestId("confirm-delete-current").click();
+		await expect(dialog).toHaveCount(0);
+		await expect(page.locator(".message")).toHaveCount(0);
+		await expect.poll(() => existsSync(sessionFile)).toBe(false);
 	} finally {
 		await profile.close();
 	}

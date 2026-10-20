@@ -23,6 +23,7 @@ export interface PaletteItem {
 	readonly label: string;
 	readonly hint?: string;
 	readonly shortcut?: string;
+	readonly tone?: "danger";
 	readonly icon?: ReactNode;
 	readonly group: "action" | "session";
 	readonly run: () => void;
@@ -134,7 +135,7 @@ export function QuickOpen({
 											key={item.id}
 											value={item.id}
 											onSelect={() => select(item.run)}
-											className="quick-open-row"
+											className={`quick-open-row${item.tone === "danger" ? " quick-open-danger" : ""}`}
 											data-testid="quick-open-action"
 										>
 											<span className="quick-open-text">
